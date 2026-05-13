@@ -20,7 +20,8 @@ export function scrollToPageSection(hashOrId: string) {
   if (scrollContainer && scrollContainer.contains(target) && usesInternalScroll) {
     const containerRect = scrollContainer.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
-    const top = targetRect.top - containerRect.top + scrollContainer.scrollTop;
+    const scrollMarginTop = parseFloat(window.getComputedStyle(target).scrollMarginTop || '0') || 0;
+    const top = targetRect.top - containerRect.top + scrollContainer.scrollTop - scrollMarginTop;
 
     scrollContainer.scrollTo({ top, behavior: 'smooth' });
   } else {

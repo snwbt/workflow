@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import styles from './AnchorNav.module.css';
 import { useState, useEffect } from 'react';
 import { handleSectionLinkClick, MAIN_SCROLL_CONTAINER_ID } from '@/lib/scroll';
@@ -16,9 +17,10 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
     { id: 'schedule', label: 'Schedule' },
     { id: 'venue_reveal', label: 'Venue' },
     { id: 'travel', label: 'Travel' },
+    { href: '/seating', label: 'Seating' },
     { id: 'faq', label: 'Details' },
     { id: 'rsvp', label: 'RSVP' },
-  ];
+  ] as const;
 
   useEffect(() => {
     // Observe the hero section to show/hide the nav
@@ -55,7 +57,7 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
     if (rsvp && rsvpObserver) rsvpObserver.observe(rsvp);
 
     // Observe all nav sections for active highlighting
-    const sectionIds = navItems.map(n => n.id);
+    const sectionIds = navItems.flatMap((item) => ('id' in item ? [item.id] : []));
     const sectionObserver = new IntersectionObserver(
       (entries) => {
         const visible = entries.filter(e => e.isIntersecting);
@@ -107,22 +109,28 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
         )}
         <ul className={styles.list}>
           {navItems.map((item) => (
-            <li key={item.id}>
-              <a
-                href={`#${item.id}`}
-                className={`${styles.link} ${activeSection === item.id ? styles.active : ''}`}
-                onClick={(e) => handleClick(e, item.id)}
-              >
-                {item.label}
-              </a>
+            <li key={'id' in item ? item.id : item.href}>
+              {'href' in item ? (
+                <Link href={item.href} className={styles.link}>
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  href={`#${item.id}`}
+                  className={`${styles.link} ${activeSection === item.id ? styles.active : ''}`}
+                  onClick={(e) => handleClick(e, item.id)}
+                >
+                  {item.label}
+                </a>
+              )}
             </li>
           ))}
         </ul>
       </nav>
       <a
-        href="#rsvp"
+        href="#rsvp-form"
         className={`${styles.mobileCta} ${isHeroVisible || isRsvpVisible ? styles.mobileCtaHidden : ''}`}
-        onClick={(e) => handleClick(e, 'rsvp')}
+        onClick={(e) => handleClick(e, 'rsvp-form')}
       >
         RSVP
       </a>

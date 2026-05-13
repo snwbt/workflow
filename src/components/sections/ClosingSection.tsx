@@ -19,6 +19,13 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
   const ctaLink   = config?.ctaLink  || '#rsvp';
   
   const isExternalLink = ctaLink.startsWith('http');
+  const getCtaScrollTarget = () => {
+    if (ctaLink !== '#rsvp') return ctaLink;
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
+      return '#rsvp-form';
+    }
+    return ctaLink;
+  };
 
   return (
     <section id="closing" ref={ref as React.RefObject<HTMLElement>} className={styles.closing}>
@@ -50,7 +57,7 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
             className={styles.rsvpButton}
             onClick={(e) => {
               trackEvent('rsvp_cta_clicked');
-              if (!isExternalLink) handleSectionLinkClick(e, ctaLink);
+              if (!isExternalLink) handleSectionLinkClick(e, getCtaScrollTarget());
             }}
           >
             {ctaLabel}

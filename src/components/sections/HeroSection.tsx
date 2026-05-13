@@ -41,6 +41,13 @@ export default function HeroSection({ config }: { config?: any }) {
   const img2 = collageImages[2] || null;
 
   const isExternalLink = ctaLink.startsWith('http');
+  const getCtaScrollTarget = () => {
+    if (ctaLink !== '#rsvp') return ctaLink;
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
+      return '#rsvp-form';
+    }
+    return ctaLink;
+  };
 
   useEffect(() => {
     if (collageImages.length <= 1) return;
@@ -154,7 +161,7 @@ export default function HeroSection({ config }: { config?: any }) {
             className={styles.rsvpButton}
             onClick={(e) => {
               trackEvent('rsvp_cta_clicked');
-              if (!isExternalLink) handleSectionLinkClick(e, ctaLink);
+              if (!isExternalLink) handleSectionLinkClick(e, getCtaScrollTarget());
             }}
           >
             {ctaLabel}

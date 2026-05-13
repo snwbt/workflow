@@ -28,6 +28,10 @@ function getFirstGuestName(value: string) {
     .find(Boolean) || '';
 }
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.18 });
   const [step, setStep] = useState<RsvpStep>('initial');
@@ -38,7 +42,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
   const [email, setEmail] = useState('');
   const [attendance, setAttendance] = useState<AttendanceStatus | null>(null);
   const [guestCount, setGuestCount] = useState(1);
-  const [additionalGuestNames, setAdditionalGuestNames] = useState('');
+  const [companionNames, setCompanionNames] = useState<string[]>([]);
   const [dietary, setDietary] = useState('');
   const [accessibility, setAccessibility] = useState('');
   const [dinnerAttendance, setDinnerAttendance] = useState<EventAnswer>('');
@@ -73,6 +77,25 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
 
   const fieldInvalid = (value: unknown) => hasSubmitted && !value;
   const additionalNamesRequired = attendance === 'attending' && guestCount > 1;
+  const requiredCompanionCount = Math.max(0, guestCount - 1);
+  const companionValues = companionNames.slice(0, requiredCompanionCount);
+  const additionalGuestNames = companionValues.map((name) => name.trim()).filter(Boolean).join('\n');
+
+  const updateGuestCount = (count: number) => {
+    const nextCount = Math.max(1, Math.min(4, count));
+    setGuestCount(nextCount);
+    setCompanionNames((current) => (
+      Array.from({ length: Math.max(0, nextCount - 1) }, (_, index) => current[index] || '')
+    ));
+  };
+
+  const updateCompanionName = (index: number, value: string) => {
+    setCompanionNames((current) => {
+      const next = Array.from({ length: requiredCompanionCount }, (_, itemIndex) => current[itemIndex] || '');
+      next[index] = value;
+      return next;
+    });
+  };
 
   const handleInitialSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +113,11 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
       return;
     }
 
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     if (!attendance) {
       setError('Please let us know if you can make it.');
       return;
@@ -104,7 +132,15 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
   const validateDetails = () => {
     if (attendance === 'declined') return true;
 
-    if (additionalNamesRequired && !additionalGuestNames.trim()) {
+    if (!Number.isInteger(guestCount) || guestCount < 1 || guestCount > 4) {
+      setError('Please select between 1 and 4 guests attending.');
+      return false;
+    }
+
+    if (
+      additionalNamesRequired &&
+      (companionValues.length < requiredCompanionCount || companionValues.some((name) => !name.trim()))
+    ) {
       setError('Please include the names of everyone attending with you.');
       return false;
     }
@@ -182,7 +218,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
     setEmail('');
     setAttendance(null);
     setGuestCount(1);
-    setAdditionalGuestNames('');
+    setCompanionNames([]);
     setDietary('');
     setAccessibility('');
     setDinnerAttendance('');
@@ -207,7 +243,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
 
   return (
     <section id="rsvp" className={styles.rsvp} ref={ref as React.RefObject<HTMLElement>}>
-      <div className={`${styles.content} ${isVisible ? styles.visible : ''}`}>
+      <div id="rsvp-form" className={`${styles.content} ${isVisible ? styles.visible : ''}`}>
         {step === 'initial' && (
           <div className={styles.fadeContainer}>
             <p className={styles.eyebrow}>The favour of your reply is requested</p>
@@ -249,7 +285,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
                 <input
                   id="email"
                   type="email"
-                  className={`${styles.input} ${fieldInvalid(email.trim()) ? styles.invalid : ''}`}
+                  className={`${styles.input} ${hasSubmitted && !isValidEmail(email) ? styles.invalid : ''}`}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="jane@example.com"
@@ -262,6 +298,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
                   type="button"
                   className={`${styles.attendanceBtn} ${attendance === 'attending' ? styles.activeAttending : ''} ${fieldInvalid(attendance) ? styles.invalidChoice : ''}`}
                   onClick={() => setAttendance('attending')}
+                  aria-pressed={attendance === 'attending'}
                 >
                   Joyfully Accepts
                 </button>
@@ -269,6 +306,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
                   type="button"
                   className={`${styles.attendanceBtn} ${attendance === 'declined' ? styles.activeDeclined : ''} ${fieldInvalid(attendance) ? styles.invalidChoice : ''}`}
                   onClick={() => setAttendance('declined')}
+                  aria-pressed={attendance === 'declined'}
                 >
                   Regretfully Declines
                 </button>
@@ -300,7 +338,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
                   id="guestCount"
                   className={styles.select}
                   value={guestCount}
-                  onChange={(e) => setGuestCount(Number(e.target.value))}
+                  onChange={(e) => updateGuestCount(Number(e.target.value))}
                 >
                   {[1, 2, 3, 4].map((count) => (
                     <option key={count} value={count}>{count}</option>
@@ -309,17 +347,24 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
               </div>
 
               {guestCount > 1 && (
-                <div className={styles.field}>
-                  <label htmlFor="additionalGuestNames" className={styles.label}>{labels.additionalGuests} *</label>
-                  <textarea
-                    id="additionalGuestNames"
-                    className={`${styles.textarea} ${fieldInvalid(additionalGuestNames.trim()) ? styles.invalid : ''}`}
-                    value={additionalGuestNames}
-                    onChange={(e) => setAdditionalGuestNames(e.target.value)}
-                    placeholder="List each guest name"
-                    required
-                  />
-                </div>
+                <fieldset className={styles.companionField}>
+                  <legend className={styles.label}>{labels.additionalGuests} *</legend>
+                  <div className={styles.companionGrid}>
+                    {Array.from({ length: requiredCompanionCount }, (_, index) => (
+                      <label key={index} className={styles.companionLabel}>
+                        Guest {index + 2} name
+                        <input
+                          type="text"
+                          className={`${styles.input} ${hasSubmitted && !companionValues[index]?.trim() ? styles.invalid : ''}`}
+                          value={companionValues[index] || ''}
+                          onChange={(e) => updateCompanionName(index, e.target.value)}
+                          placeholder={`Guest ${index + 2}`}
+                          required
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
               )}
 
               {inviteType === 'friday_saturday' && (
@@ -470,6 +515,7 @@ function EventToggle({
           type="button"
           className={`${styles.eventButton} ${value === 'yes' ? styles.activeAttending : ''}`}
           onClick={() => onChange('yes')}
+          aria-pressed={value === 'yes'}
         >
           Yes
         </button>
@@ -477,6 +523,7 @@ function EventToggle({
           type="button"
           className={`${styles.eventButton} ${value === 'no' ? styles.activeDeclined : ''}`}
           onClick={() => onChange('no')}
+          aria-pressed={value === 'no'}
         >
           No
         </button>

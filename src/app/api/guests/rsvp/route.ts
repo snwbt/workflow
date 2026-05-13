@@ -3,6 +3,17 @@ import { getDb, saveRsvp } from '@/lib/db';
 import { randomUUID } from 'crypto';
 import { sendRsvpConfirmation, sendAdminNotification } from '@/lib/email';
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+function splitGuestNames(value: unknown) {
+  return String(value || '')
+    .split(/\r?\n|,|;/)
+    .map((name) => name.trim())
+    .filter(Boolean);
+}
+
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
@@ -28,6 +39,14 @@ export async function POST(request: Request) {
 
     if (!guest_name || !email || !attendance_status || !invite_code || !invite_type) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (!isValidEmail(String(email))) {
+      return NextResponse.json({ error: 'Please enter a valid email address.' }, { status: 400 });
+    }
+
+    if (!['attending', 'declined'].includes(attendance_status)) {
+      return NextResponse.json({ error: 'Please select a valid attendance response.' }, { status: 400 });
     }
 
     const db = await getDb();
@@ -57,11 +76,16 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Please select the number of guests attending.' }, { status: 400 });
       }
 
-      if (resolvedInviteType === 'friday_saturday' && !dinner_attendance) {
+      const additionalNames = splitGuestNames(additional_guest_names || plus_one_name);
+      if (attendingCount > 1 && additionalNames.length < attendingCount - 1) {
+        return NextResponse.json({ error: 'Please include the names of everyone attending with you.' }, { status: 400 });
+      }
+
+      if (resolvedInviteType === 'friday_saturday' && !['yes', 'no'].includes(dinner_attendance)) {
         return NextResponse.json({ error: 'Please confirm dinner reception attendance.' }, { status: 400 });
       }
 
-      if (!mass_attendance) {
+      if (!['yes', 'no'].includes(mass_attendance)) {
         return NextResponse.json({ error: 'Please confirm solemnisation Mass attendance.' }, { status: 400 });
       }
     }
