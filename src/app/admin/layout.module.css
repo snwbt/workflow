@@ -1,0 +1,42 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--spacing-4) var(--spacing-8);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0;
+  font-size: 1.25rem;
+}
+
+.nav {
+  display: flex;
+  gap: var(--spacing-6);
+}
+
+.navLink {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.navLink:hover {
+  color: var(--color-text-primary);
+}
+
+.main {
+  flex-grow: 1;
+  padding: var(--spacing-8);
+  background-color: var(--color-bg);
+}

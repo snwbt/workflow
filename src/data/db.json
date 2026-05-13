@@ -1,0 +1,357 @@
+{
+  "config": {
+    "WEDDING_DATE": "2026-10-23T00:00:00Z",
+    "RSVP_DEADLINE": "2026-10-01T00:00:00Z",
+    "RSVP_DEADLINE_DISPLAY": "1 October 2026",
+    "COUPLE_NAMES": "Russell & Siaw Min",
+    "VENUE_NAME": "The Westin Singapore",
+    "VENUE_ADDRESS": "12 Marina View, Asia Square Tower 2, Singapore 018961",
+    "VENUE_LAT": 1.27831,
+    "VENUE_LNG": 103.8508,
+    "VENUE_ARRIVAL_NOTE": "Valet parking is available at the main entrance.",
+    "WHATSAPP_NUMBER": "6597553585",
+    "WHATSAPP_LABEL": "Message Wedding Concierge",
+    "TRAVEL_MRT_STATION": "Downtown MRT (DT17)",
+    "TRAVEL_MRT_DIRECTIONS": "Take the Downtown Line to Downtown MRT (DT17). Use Exit A and walk approximately 5 minutes via Marina View.",
+    "TRAVEL_BUS_STOP": "Marina Bay Financial Centre",
+    "TRAVEL_BUS_DIRECTIONS": "Alight at Bus Stop 03519 and walk 3 minutes to The Westin.",
+    "TRAVEL_PARKING": "Self-parking is available at Asia Square Tower 2 basement from $1.10 per 10-minute block ($6.60/hr) on weekdays.",
+    "TRAVEL_DROPOFF": "Drop-off at the main hotel entrance on Marina View. Taxis and private hire vehicles may stop here.",
+    "TRAVEL_HOTEL_DIRECTIONS": "The celebration will be held in the Grand Ballroom on Level 3. From the hotel lobby, take the lifts to Level 3.",
+    "TRAVEL_ACCESSIBILITY": "Wheelchair accessible entrances are available on Level 1. Please contact our concierge team at least 48 hours in advance to arrange assistance.",
+    "RSVP_FIELDS": {
+      "guest_count": {
+        "enabled": true,
+        "label": "Number of guests in your party",
+        "required": true
+      },
+      "plus_one_name": {
+        "enabled": true,
+        "label": "Name of your guest(s)",
+        "required": true
+      },
+      "meal_preference": {
+        "enabled": true,
+        "label": "Meal Preference",
+        "required": true,
+        "options": [
+          {
+            "value": "beef",
+            "label": "Filet Mignon"
+          },
+          {
+            "value": "fish",
+            "label": "Seared Halibut"
+          },
+          {
+            "value": "vegetarian",
+            "label": "Roasted Cauliflower Steak"
+          }
+        ]
+      },
+      "dietary_restrictions": {
+        "enabled": true,
+        "label": "Dietary Restrictions",
+        "required": false
+      },
+      "transport": {
+        "enabled": true,
+        "label": "I will need shuttle transport from the hotel to the venue.",
+        "required": false
+      },
+      "message": {
+        "enabled": true,
+        "label": "Note to the Couple (Optional)",
+        "required": false
+      }
+    },
+    "RSVP_CUSTOM_QUESTIONS": [],
+    "SIGNATURE_MOTIF": "ROP & TSM",
+    "ENABLE_MOTIF": true
+  },
+  "rsvps": [
+    {
+      "rsvp_id": "d240dbfc-46b0-4f60-9c3e-851779da4b0f",
+      "guest_name": "Russe",
+      "email": "russell@outlook.com",
+      "attendance_status": "attending",
+      "guest_count": 2,
+      "plus_one_name": "My partner",
+      "meal_preference": "beef",
+      "dietary_restrictions": "Not halal",
+      "transport_needed": false,
+      "message": "Congrats",
+      "custom_answers": {},
+      "submitted_at": "2026-05-11T14:51:59.124Z",
+      "updated_at": "2026-05-11T14:51:59.124Z",
+      "source": "guest"
+    }
+  ],
+  "homepage_sections": [
+    {
+      "id": "hero",
+      "type": "hero",
+      "enabled": true,
+      "heading": "Russell & Siaw Min",
+      "bodyCopy": "Together with their families, they invite you to a weekend of celebration.",
+      "eyebrow": "The Wedding Of",
+      "date": "23—24 October 2026",
+      "venueText": "The Westin Singapore",
+      "ctaLabel": "RSVP Now",
+      "ctaLink": "#rsvp",
+      "collageImages": [
+        {
+          "url": "/media/1778500302209-vo8o92.jpeg",
+          "alt": "The couple"
+        },
+        {
+          "url": "/media/1778500315797-r7b4t.jpeg",
+          "alt": "Wedding details"
+        },
+        {
+          "url": "/media/1778500330755-douskk.jpeg",
+          "alt": "Candid moment"
+        }
+      ]
+    },
+    {
+      "id": "at_a_glance",
+      "type": "at_a_glance",
+      "enabled": true,
+      "heading": "A Weekend in Singapore",
+      "date": "23 October 2026",
+      "venueText": "The Westin Singapore",
+      "roomText": "Dinner Reception · Grand Ballroom, Level 3",
+      "dressCode": "Smart Formal",
+      "rsvpText": "RSVP by 1 October 2026"
+    },
+    {
+      "id": "welcome",
+      "type": "welcome",
+      "enabled": true,
+      "heading": "A Note From Us",
+      "bodyCopy": "We are so thrilled to share this special moment with the people we love most. Thank you for your endless support, laughter, and love.",
+      "mediaUrl": "/media/1778500340498-hvw3r.jpeg"
+    },
+    {
+      "id": "schedule",
+      "type": "schedule",
+      "enabled": true,
+      "heading": "Our Wedding Weekend",
+      "bodyCopy": "",
+      "days": [
+        {
+          "label": "Friday",
+          "date": "23 October 2026",
+          "events": [
+            {
+              "time": "6:45 PM",
+              "title": "Guest Arrival",
+              "location": "Hotel Lobby",
+              "notes": "Please make your way to the Grand Ballroom on Level 3. Our welcome team will be on hand to guide you."
+            },
+            {
+              "time": "7:00 PM",
+              "title": "Cocktail Reception",
+              "location": "Grand Ballroom Foyer, Level 3",
+              "notes": "Join us for light refreshments and a few moments of celebration before dinner begins."
+            },
+            {
+              "time": "7:15 PM",
+              "title": "Guests to be Seated",
+              "location": "Grand Ballroom, Level 3",
+              "notes": "Kindly take your seats as we prepare to begin the evening’s celebration."
+            },
+            {
+              "time": "7:30PM",
+              "title": "Wedding Dinner",
+              "location": "Grand Ballroom, Level 3",
+              "notes": "Dinner will be served following the couple’s entrance."
+            },
+            {
+              "time": "9:30 PM",
+              "title": "Toasts & Table Photos",
+              "location": "Grand Ballroom, Level 3",
+              "notes": "Raise a glass with us and share in a few treasured moments with the newlyweds."
+            },
+            {
+              "time": "10:00 PM",
+              "title": "Evening Concludes",
+              "location": "Grand Ballroom, Level 3",
+              "notes": "Thank you for joining us on this special evening. We look forward to saying goodbye before you depart."
+            }
+          ]
+        },
+        {
+          "label": "Saturday",
+          "date": "24 October 2026",
+          "events": [
+            {
+              "time": "10:00 AM",
+              "title": "Guest Arrival",
+              "location": "Church of the Holy Family",
+              "notes": "Kindly arrive early to be seated before Mass begins."
+            },
+            {
+              "time": "10:30 AM",
+              "title": "Nuptial Mass",
+              "location": "Church of the Holy Family",
+              "notes": "Join us as we celebrate the sacrament of matrimony in the presence of family and friends."
+            },
+            {
+              "time": "11:45 AM",
+              "title": "Congratulations & Family Photos",
+              "location": "Church of the Holy Family",
+              "notes": "Following Mass, guests are warmly invited to greet the newlyweds and join us for photographs."
+            },
+            {
+              "time": "12:15 PM",
+              "title": "Light Reception",
+              "location": "Church of the Holy Family",
+              "notes": "Please join us for light refreshments and fellowship after the ceremony."
+            },
+            {
+              "time": "1:00 PM",
+              "title": "Celebration Concludes",
+              "location": "Church of the Holy Family",
+              "notes": "Thank you for sharing in this blessed occasion with us."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "venue_reveal",
+      "type": "venue_reveal",
+      "enabled": true,
+      "heading": "The Westin Singapore",
+      "bodyCopy": "Set above Marina Bay, the celebration will take place in the Grand Ballroom on Level 3.",
+      "mediaUrl": "/media/1778506365630-b39em7.jpg",
+      "imageAlt": "The Westin Singapore exterior",
+      "displayMode": "image",
+      "ctaLabel": "Get Directions"
+    },
+    {
+      "id": "travel",
+      "type": "travel",
+      "enabled": true,
+      "heading": "Arrival at The Westin",
+      "bodyCopy": ""
+    },
+    {
+      "id": "gallery_interlude",
+      "type": "gallery_interlude",
+      "enabled": true,
+      "heading": "",
+      "bodyCopy": "A weekend of family, friends, and the city we love.",
+      "collageImages": [
+        {
+          "url": "/media/1778500315797-r7b4t.jpeg",
+          "alt": "Detail 1"
+        },
+        {
+          "url": "/media/1778500330755-douskk.jpeg",
+          "alt": "Detail 2"
+        },
+        {
+          "url": "/media/1778500340498-hvw3r.jpeg",
+          "alt": "Detail 3"
+        }
+      ]
+    },
+    {
+      "id": "faq",
+      "type": "faq",
+      "enabled": true,
+      "heading": "What to Know",
+      "bodyCopy": "",
+      "faqs": [
+        {
+          "question": "Am I invited to both the dinner and the Nuptial Mass?",
+          "answer": "Our dinner reception on Friday, 23 October will be an intimate celebration with limited seating, so attendance is by invitation only. We would be truly honoured to have you join us for our Nuptial Mass on Saturday, 24 October at Church of the Holy Family, as we celebrate our marriage before God, family, and friends.",
+          "enabled": true
+        },
+        {
+          "question": "Can I bring a plus-one?",
+          "answer": "As we have made dinner arrangements based on the guests named in each invitation, we kindly ask that only those listed attend the dinner reception. If you would like to bring a plus-one for dinner, please let us know and we will do our best to accommodate where possible.",
+          "enabled": true
+        },
+        {
+          "question": "Are children invited?",
+          "answer": "We love your little ones. Please refer to your invitation for the guests included in your party. If you need any clarification, please feel free to reach out to us.",
+          "enabled": true
+        },
+        {
+          "question": "Where can I park?",
+          "answer": "Self-parking is available at Asia Square Tower 2 basement. There is parking available on-site at the Church of the Holy Family, but parking lots may be limited. We recommend arriving early or using ride-hailing services where convenient.",
+          "enabled": true
+        },
+        {
+          "question": "What should I wear?",
+          "answer": "For the dinner reception, semi-casual, formal, or semi-formal attire is warmly welcome. For the Nuptial Mass, we kindly ask guests to dress modestly and respectfully for the church setting.",
+          "enabled": true
+        },
+        {
+          "question": "Will there be assigned seating at the dinner reception?",
+          "answer": "Yes, seating arrangements will be prepared for the evening. Please refer to the seating chart or approach our welcome team, who will be happy to assist you.",
+          "enabled": true
+        },
+        {
+          "question": "Is there wheelchair access?",
+          "answer": "Yes. Both the ballroom and church have lifts which are available on Level 1.",
+          "enabled": true
+        },
+        {
+          "question": "What time will the dinner reception end?",
+          "answer": "The dinner reception is expected to conclude around 10:00 PM.",
+          "enabled": true
+        },
+        {
+          "question": "What time should I arrive for the Nuptial Mass on Saturday, 24 October?",
+          "answer": "Mass begins at 10:30 AM at Church of the Holy Family. We kindly recommend arriving by 10:00 AM so you have time to settle in before the ceremony begins.",
+          "enabled": true
+        },
+        {
+          "question": "Do I need to be Catholic to attend the Mass?",
+          "answer": "Not at all. Guests of all faiths are very welcome. You may simply remain seated or follow along respectfully during the service.",
+          "enabled": true
+        },
+        {
+          "question": "May non-Catholic guests receive Holy Communion?",
+          "answer": "Holy Communion is reserved for practising Catholics. Guests who are not receiving Communion are welcome to remain seated during this part of the Mass.",
+          "enabled": true
+        },
+        {
+          "question": "Can I take photos during the church ceremony?",
+          "answer": "We kindly ask guests to be present and mindful during Mass, and to avoid blocking the aisle or photographer. There will be time for greetings and photographs after the ceremony.",
+          "enabled": true
+        },
+        {
+          "question": "Will there be refreshments after Mass?",
+          "answer": "Light refreshments will be served after the ceremony, and we would love for you to stay a while and share in the joy of the morning with us.",
+          "enabled": true
+        },
+        {
+          "question": "Who can I contact on the day itself?",
+          "answer": "Please reach out to a member of our wedding party or welcome team for assistance on the day, as we may be occupied with the celebration.",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "id": "closing",
+      "type": "closing",
+      "enabled": true,
+      "heading": "We cannot wait to celebrate with you.",
+      "bodyCopy": "",
+      "date": "23–24 October 2026",
+      "venueText": "The Westin Singapore",
+      "mediaUrl": "/media/1778507050391-xo691nl.jpeg",
+      "imageAlt": "Russell and Siaw Min",
+      "ctaLabel": "Kindly Respond",
+      "ctaLink": "#rsvp",
+      "signOff": "Russell & Siaw Min"
+    }
+  ],
+  "events": []
+}

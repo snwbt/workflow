@@ -1,0 +1,111 @@
+.container {
+  /* No min-height: 100vh — this is a transition section, not full-screen */
+  padding: var(--spacing-20) var(--spacing-4);
+  background-color: var(--color-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Faint watermark behind the card */
+.container::before {
+  content: attr(data-motif);
+  position: absolute;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(6rem, 15vw, 12rem);
+  color: var(--color-champagne);
+  opacity: 0.07;
+  letter-spacing: 0.06em;
+  user-select: none;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 0;
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 560px;
+  background-color: var(--color-surface);
+  padding: var(--spacing-12) var(--spacing-10);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 24px rgba(44, 36, 32, 0.04);
+  text-align: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 1s var(--ease-luxury), transform 1s var(--ease-luxury);
+}
+
+.card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Top and bottom fine rules on the card */
+.card::before,
+.card::after {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 1px;
+  background-color: var(--color-champagne);
+  margin: 0 auto;
+}
+
+.card::before {
+  margin-bottom: var(--spacing-8);
+}
+
+.card::after {
+  margin-top: var(--spacing-8);
+}
+
+.heading {
+  font-family: var(--font-serif);
+  font-size: 1.875rem;
+  color: var(--color-espresso);
+  margin-bottom: var(--spacing-6);
+  letter-spacing: 0.01em;
+}
+
+.divider {
+  width: 32px;
+  height: 1px;
+  background-color: var(--color-accent);
+  margin: 0 auto var(--spacing-6);
+}
+
+.detailsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+}
+
+.highlight {
+  font-weight: 500;
+  color: var(--color-espresso);
+  margin-top: var(--spacing-4);
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: var(--spacing-10) var(--spacing-6);
+  }
+  .heading {
+    font-size: 1.5rem;
+  }
+}

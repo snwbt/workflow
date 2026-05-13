@@ -1,0 +1,206 @@
+.hero {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collageContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(12, 1fr);
+  padding: var(--spacing-4);
+  gap: var(--spacing-4);
+  z-index: 1;
+}
+
+.collageItem {
+  position: relative;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(44, 36, 32, 0.15);
+  border: 1px solid rgba(255, 253, 248, 0.3);
+  opacity: 0;
+  animation: fadeUp 1.2s var(--ease-luxury) forwards;
+}
+
+/* Warm grading overlay — reduced from 0.15 to 0.07 so faces are clear */
+.collageItem::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(250, 242, 228, 1); /* warm ivory, not grey */
+  mix-blend-mode: multiply;
+  opacity: 0.055;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.image {
+  object-fit: cover;
+  transition: transform 0.1s linear;
+  filter: contrast(1.04) saturate(1.05);
+}
+
+.imageMain {
+  grid-column: 2 / 12;
+  grid-row: 2 / 12;
+  animation-delay: 0.1s;
+}
+
+.imageSmall1, .imageSmall2 {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .collageContainer {
+    padding: var(--spacing-8);
+  }
+
+  .imageMain {
+    grid-column: 3 / 9;
+    grid-row: 1 / 12;
+  }
+
+  .imageSmall1 {
+    display: block;
+    grid-column: 1 / 4;
+    grid-row: 6 / 13;
+    z-index: 2;
+    animation-delay: 0.3s;
+  }
+
+  .imageSmall2 {
+    display: block;
+    grid-column: 8 / 12;
+    grid-row: 2 / 9;
+    z-index: 2;
+    animation-delay: 0.5s;
+  }
+}
+
+/* Reduced white wash — top barely visible, bottom softened to 0.52 */
+.contentOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(
+    to bottom,
+    rgba(250, 245, 235, 0.015) 0%,
+    rgba(250, 245, 235, 0.34) 100%
+  );
+}
+
+/* Glassmorphism card — slightly more opaque to stay readable with less overlay */
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);
+  text-align: center;
+  padding: var(--spacing-12) var(--spacing-8);
+  background: rgba(255, 253, 248, 0.76);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 253, 248, 0.55);
+  box-shadow: 
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 10px 40px rgba(44, 36, 32, 0.1);
+  border-radius: 2px;
+  animation: fadeUp 1.2s var(--ease-luxury) 0.6s forwards;
+  opacity: 0;
+  transform: translateY(20px);
+  max-width: 90%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collageItem,
+  .content {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .image {
+    transition: none;
+  }
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.names {
+  font-family: var(--font-serif);
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  line-height: 1;
+  font-weight: 400;
+  color: var(--color-espresso);
+  margin-bottom: var(--spacing-2);
+}
+
+.details {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.rsvpButton {
+  display: inline-block;
+  margin-top: var(--spacing-6);
+  padding: var(--spacing-3) var(--spacing-8);
+  background-color: var(--color-espresso);
+  color: var(--color-surface);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard);
+}
+
+.rsvpButton:hover {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-2px);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

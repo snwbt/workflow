@@ -1,0 +1,181 @@
+.schedule {
+  padding: var(--spacing-24) var(--spacing-4);
+  background-color: var(--color-bg);
+  /* No min-height: 100vh — multi-day schedules shouldn't be cut off */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.content {
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+  padding-top: var(--spacing-4);
+}
+
+/* ── Section title ── */
+.title {
+  font-family: var(--font-serif);
+  text-align: center;
+  margin-bottom: var(--spacing-4);
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+  color: var(--color-espresso);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 1s var(--ease-luxury), transform 1s var(--ease-luxury);
+}
+
+.title.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Optional intro line ── */
+.intro {
+  font-family: var(--font-serif);
+  font-style: italic;
+  text-align: center;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-16);
+  line-height: 1.6;
+}
+
+/* ── Day group ── */
+.dayGroup {
+  margin-bottom: var(--spacing-20);
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.8s var(--ease-luxury), transform 0.8s var(--ease-luxury);
+}
+
+.dayGroup.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dayGroup:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Day header ── */
+.dayHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--spacing-8);
+  gap: var(--spacing-1);
+  padding-bottom: var(--spacing-6);
+  border-bottom: 1px solid var(--color-champagne);
+}
+
+.dayLabel {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--color-accent);
+}
+
+.dayDate {
+  font-family: var(--font-serif);
+  font-size: clamp(1.375rem, 2.5vw, 2rem);
+  color: var(--color-espresso);
+  font-weight: 400;
+}
+
+/* ── Timeline ── */
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Single event row ── */
+.event {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-2);
+  padding: var(--spacing-6) 0;
+  border-bottom: 1px solid var(--color-border);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s var(--ease-luxury), transform 0.8s var(--ease-luxury);
+}
+
+.event:last-child {
+  border-bottom: none;
+}
+
+.event.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (min-width: 640px) {
+  .event {
+    grid-template-columns: 180px 1fr;
+    gap: var(--spacing-8);
+    align-items: baseline;
+  }
+}
+
+/* ── Time column ── */
+.timeColumn {
+  display: flex;
+  align-items: flex-start;
+}
+
+@media (min-width: 640px) {
+  .timeColumn {
+    justify-content: flex-end;
+    padding-top: 0.25rem;
+  }
+}
+
+/* Darker time label — was text-tertiary, now text-secondary for readability */
+.time {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  letter-spacing: 0.15em;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── Event content ── */
+.eventContent {
+  flex: 1;
+}
+
+/* Slightly larger event titles */
+.eventName {
+  font-family: var(--font-serif);
+  font-size: clamp(1.375rem, 2.5vw, 1.75rem);
+  margin-bottom: var(--spacing-2);
+  color: var(--color-espresso);
+  font-weight: 400;
+}
+
+.eventDetails {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.location {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+.dressCode {
+  font-style: italic;
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  color: var(--color-text-tertiary);
+  margin-top: var(--spacing-2);
+}

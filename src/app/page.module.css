@@ -1,0 +1,39 @@
+.main {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.main::-webkit-scrollbar {
+  display: none;
+}
+
+.section {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  scroll-snap-align: start;
+}
+
+/* Sections that sit below the fixed nav need top padding to not clip */
+.withNav {
+  padding-top: var(--nav-height, 60px);
+  min-height: calc(100vh);
+  box-sizing: border-box;
+}
+
+.compactSection,
+.naturalSection {
+  min-height: auto;
+}
+
+.compactSection.withNav,
+.naturalSection.withNav {
+  min-height: auto;
+}

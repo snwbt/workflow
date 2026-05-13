@@ -1,0 +1,756 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import {
+  formatEventDate,
+  fromDateInputValue,
+  hasInvalidRsvpDeadline,
+  toDateInputValue,
+} from '@/lib/eventDisplay';
+import styles from './page.module.css';
+
+interface SectionConfig {
+  id: string;
+  type: string;
+  enabled: boolean;
+  heading: string;
+  bodyCopy: string;
+  mediaUrl?: string;
+  imageAlt?: string;
+  displayMode?: 'image' | 'fallback';
+  motionPreset?: string;
+  // Hero specific
+  eyebrow?: string;
+  date?: string;
+  venueText?: string;
+  ctaLabel?: string;
+  ctaLink?: string;
+  collageImages?: { url: string; alt?: string }[];
+  // Schedule specific
+  days?: { label: string; date: string; events: { time: string; title: string; location: string; notes?: string; dressCode?: string; }[] }[];
+  // FAQ specific
+  faqs?: { question: string; answer: string; enabled: boolean }[];
+  // At A Glance / Details
+  roomText?: string;
+  dressCode?: string;
+  rsvpText?: string;
+  // Generic / Motif
+  signOff?: string;
+}
+
+const defaultSections: SectionConfig[] = [
+  { id: 'hero', type: 'hero', enabled: true, heading: 'Russell & Siaw Min', bodyCopy: 'Together with their families, they invite you to a weekend of celebration.' },
+  { id: 'at_a_glance', type: 'at_a_glance', enabled: true, heading: 'A Weekend in Singapore', bodyCopy: '' },
+  { id: 'welcome', type: 'welcome', enabled: true, heading: 'A Note From Us', bodyCopy: 'We are so thrilled to share this special moment with the people we love most.' },
+  { id: 'schedule', type: 'schedule', enabled: true, heading: 'Our Wedding Weekend', bodyCopy: '' },
+  { id: 'venue_reveal', type: 'venue_reveal', enabled: true, heading: 'The Westin Singapore', bodyCopy: 'Set above Marina Bay...' },
+  { id: 'travel', type: 'travel', enabled: true, heading: 'Arrival at The Westin', bodyCopy: '' },
+  { id: 'gallery_interlude', type: 'gallery_interlude', enabled: true, heading: '', bodyCopy: 'A weekend of family, friends, and the city we love.' },
+  { id: 'faq', type: 'faq', enabled: true, heading: 'What to Know', bodyCopy: '' },
+  { id: 'closing', type: 'closing', enabled: true, heading: 'We cannot wait to celebrate with you.', bodyCopy: '' },
+];
+
+export default function EditorPage() {
+  const [sections, setSections] = useState<SectionConfig[]>([]);
+  const [config, setConfig] = useState<any>({});
+  const [activeSectionId, setActiveSectionId] = useState<string>('config');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/admin/cms/sections').then(res => res.json()),
+      fetch('/api/admin/config').then(res => res.json())
+    ])
+    .then(([sectionsData, configData]) => {
+      if (sectionsData.sections && sectionsData.sections.length > 0) {
+        setSections(sectionsData.sections);
+      } else {
+        setSections(defaultSections);
+      }
+      setConfig(configData.config || {});
+      setLoading(false);
+    })
+    .catch(() => {
+      setSections(defaultSections);
+      setLoading(false);
+    });
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMessage('');
+    try {
+      const resSections = await fetch('/api/admin/cms/sections', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sections }),
+      });
+      const resConfig = await fetch('/api/admin/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config }),
+      });
+      if (resSections.ok && resConfig.ok) {
+        setMessage('Changes saved successfully.');
+      } else {
+        setMessage('Failed to save some changes.');
+      }
+    } catch (e) {
+      setMessage('Error saving changes.');
+    }
+    setSaving(false);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  if (loading) return <div style={{padding: '2rem'}}>Loading editor...</div>;
+
+  const activeSection = sections.find(s => s.id === activeSectionId);
+
+  const updateActiveSection = (field: keyof SectionConfig, value: any) => {
+    setSections(prev => prev.map(s => 
+      s.id === activeSectionId ? { ...s, [field]: value } : s
+    ));
+  };
+
+  const updateConfig = (field: string, value: any) => {
+    setConfig((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const updateConfigFields = (updates: Record<string, any>) => {
+    setConfig((prev: any) => ({ ...prev, ...updates }));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setMessage('Uploading media...');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/admin/media/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.url) {
+        callback(data.url);
+        setMessage('Media uploaded successfully!');
+      } else {
+        setMessage(data.error || 'Failed to upload media.');
+      }
+    } catch (err) {
+      setMessage('Error uploading media.');
+    }
+    
+    setUploading(false);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  // Site Settings Sub-editor
+  const renderSiteSettings = () => {
+    const invalidRsvpDeadline = hasInvalidRsvpDeadline(config);
+
+    return (
+    <div style={{maxWidth: '800px'}}>
+      <h3 style={{marginBottom: '1rem'}}>Design Settings</h3>
+      <div className={styles.formGroup} style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+        <label className={styles.label} style={{margin: 0}}>
+          <input type="checkbox" checked={config.ENABLE_MOTIF !== false} onChange={(e) => updateConfig('ENABLE_MOTIF', e.target.checked)} style={{marginRight: '0.5rem'}} />
+          Enable Signature Motif
+        </label>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Signature Motif Text (e.g. R & S or ·)</label>
+        <input className={styles.input} value={config.SIGNATURE_MOTIF || ''} onChange={(e) => updateConfig('SIGNATURE_MOTIF', e.target.value)} placeholder="R & S" disabled={config.ENABLE_MOTIF === false} />
+      </div>
+
+      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>Venue Details (Google Maps)</h3>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Name</label>
+        <input className={styles.input} value={config.VENUE_NAME || ''} onChange={(e) => updateConfig('VENUE_NAME', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Address</label>
+        <input className={styles.input} value={config.VENUE_ADDRESS || ''} onChange={(e) => updateConfig('VENUE_ADDRESS', e.target.value)} />
+      </div>
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Latitude</label>
+          <input type="number" step="any" className={styles.input} value={config.VENUE_LAT || ''} onChange={(e) => updateConfig('VENUE_LAT', parseFloat(e.target.value))} />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Longitude</label>
+          <input type="number" step="any" className={styles.input} value={config.VENUE_LNG || ''} onChange={(e) => updateConfig('VENUE_LNG', parseFloat(e.target.value))} />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Arrival / Parking Note</label>
+        <input className={styles.input} value={config.VENUE_ARRIVAL_NOTE || ''} onChange={(e) => updateConfig('VENUE_ARRIVAL_NOTE', e.target.value)} />
+      </div>
+
+      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>WhatsApp Concierge</h3>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>WhatsApp Phone Number (include country code, e.g. 1234567890)</label>
+        <input className={styles.input} value={config.WHATSAPP_NUMBER || ''} onChange={(e) => updateConfig('WHATSAPP_NUMBER', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Concierge Label</label>
+        <input className={styles.input} value={config.WHATSAPP_LABEL || ''} onChange={(e) => updateConfig('WHATSAPP_LABEL', e.target.value)} placeholder="Wedding Concierge" />
+      </div>
+
+      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>Travel & Directions</h3>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>MRT Station</label>
+        <input className={styles.input} value={config.TRAVEL_MRT_STATION || ''} onChange={(e) => updateConfig('TRAVEL_MRT_STATION', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>MRT Directions</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_MRT_DIRECTIONS || ''} onChange={(e) => updateConfig('TRAVEL_MRT_DIRECTIONS', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Bus Stop</label>
+        <input className={styles.input} value={config.TRAVEL_BUS_STOP || ''} onChange={(e) => updateConfig('TRAVEL_BUS_STOP', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Bus Directions</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_BUS_DIRECTIONS || ''} onChange={(e) => updateConfig('TRAVEL_BUS_DIRECTIONS', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Driving & Parking Info</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_PARKING || ''} onChange={(e) => updateConfig('TRAVEL_PARKING', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Drop-off Info</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_DROPOFF || ''} onChange={(e) => updateConfig('TRAVEL_DROPOFF', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Hotel-to-Ballroom Directions</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_HOTEL_DIRECTIONS || ''} onChange={(e) => updateConfig('TRAVEL_HOTEL_DIRECTIONS', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Accessibility Notes</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_ACCESSIBILITY || ''} onChange={(e) => updateConfig('TRAVEL_ACCESSIBILITY', e.target.value)} />
+      </div>
+
+      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>RSVP Configuration</h3>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Couple Names</label>
+        <input className={styles.input} value={config.COUPLE_NAMES || ''} onChange={(e) => updateConfig('COUPLE_NAMES', e.target.value)} placeholder="Russell & Siaw Min" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Wedding Date</label>
+        <input type="date" className={styles.input} value={toDateInputValue(config.WEDDING_DATE)} onChange={(e) => updateConfig('WEDDING_DATE', fromDateInputValue(e.target.value))} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>RSVP Deadline</label>
+        <input type="date" className={styles.input} value={toDateInputValue(config.RSVP_DEADLINE)} onChange={(e) => {
+          const nextDeadline = fromDateInputValue(e.target.value);
+          updateConfigFields({
+            RSVP_DEADLINE: nextDeadline,
+            RSVP_DEADLINE_DISPLAY: formatEventDate(nextDeadline, ''),
+          });
+        }} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>RSVP Deadline Display Text</label>
+        <input className={styles.input} value={config.RSVP_DEADLINE_DISPLAY || ''} onChange={(e) => updateConfig('RSVP_DEADLINE_DISPLAY', e.target.value)} placeholder="1 October 2026" />
+      </div>
+      {invalidRsvpDeadline && (
+        <p role="alert" style={{color: '#8a3b2d', background: '#fff4ef', border: '1px solid #e3b5a9', padding: '0.75rem 1rem', marginBottom: '1rem'}}>
+          RSVP deadline should be before the wedding date.
+        </p>
+      )}
+
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Custom RSVP Questions</label>
+        {(config.RSVP_CUSTOM_QUESTIONS || []).map((q: any, i: number) => (
+          <div key={i} style={{padding: '1rem', border: '1px solid var(--color-border)', marginBottom: '1rem', borderRadius: '4px'}}>
+            <div style={{display: 'flex', gap: '1rem', marginBottom: '0.5rem'}}>
+              <input className={styles.input} style={{flex: 1}} placeholder="Question Label" value={q.label} onChange={(e) => {
+                const newQ = [...config.RSVP_CUSTOM_QUESTIONS];
+                newQ[i].label = e.target.value;
+                updateConfig('RSVP_CUSTOM_QUESTIONS', newQ);
+              }} />
+              <select className={styles.select} value={q.type} onChange={(e) => {
+                const newQ = [...config.RSVP_CUSTOM_QUESTIONS];
+                newQ[i].type = e.target.value;
+                updateConfig('RSVP_CUSTOM_QUESTIONS', newQ);
+              }}>
+                <option value="text">Text Input</option>
+                <option value="dropdown">Dropdown</option>
+              </select>
+              <label style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                <input type="checkbox" checked={q.required} onChange={(e) => {
+                  const newQ = [...config.RSVP_CUSTOM_QUESTIONS];
+                  newQ[i].required = e.target.checked;
+                  updateConfig('RSVP_CUSTOM_QUESTIONS', newQ);
+                }} /> Required
+              </label>
+              <button className={styles.secondaryButton} style={{color: 'red', borderColor: 'red'}} onClick={() => {
+                const newQ = config.RSVP_CUSTOM_QUESTIONS.filter((_: any, idx: number) => idx !== i);
+                updateConfig('RSVP_CUSTOM_QUESTIONS', newQ);
+              }}>Remove</button>
+            </div>
+            {q.type === 'dropdown' && (
+              <div>
+                <label className={styles.label}>Options (comma separated)</label>
+                <input className={styles.input} value={(q.options || []).join(', ')} onChange={(e) => {
+                  const newQ = [...config.RSVP_CUSTOM_QUESTIONS];
+                  newQ[i].options = e.target.value.split(',').map(s => s.trim()).filter(s => s);
+                  updateConfig('RSVP_CUSTOM_QUESTIONS', newQ);
+                }} />
+              </div>
+            )}
+          </div>
+        ))}
+        <button className={styles.secondaryButton} onClick={() => {
+          updateConfig('RSVP_CUSTOM_QUESTIONS', [...(config.RSVP_CUSTOM_QUESTIONS || []), { label: '', type: 'text', required: false, options: [] }]);
+        }}>+ Add Custom Question</button>
+      </div>
+
+    </div>
+  );
+  };
+
+  // Hero Sub-editor
+  const renderHeroEditor = () => (
+    <>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Eyebrow Text</label>
+        <input className={styles.input} value={activeSection?.eyebrow || ''} onChange={(e) => updateActiveSection('eyebrow', e.target.value)} placeholder="e.g. The Wedding Of" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Main Heading (Couple Names)</label>
+        <input className={styles.input} value={activeSection?.heading || ''} onChange={(e) => updateActiveSection('heading', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Date Text</label>
+        <input className={styles.input} value={activeSection?.date || ''} onChange={(e) => updateActiveSection('date', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Text</label>
+        <input className={styles.input} value={activeSection?.venueText || ''} onChange={(e) => updateActiveSection('venueText', e.target.value)} />
+      </div>
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>CTA Label</label>
+          <input className={styles.input} value={activeSection?.ctaLabel || ''} onChange={(e) => updateActiveSection('ctaLabel', e.target.value)} />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>CTA Link</label>
+          <input className={styles.input} value={activeSection?.ctaLink || ''} onChange={(e) => updateActiveSection('ctaLink', e.target.value)} />
+        </div>
+      </div>
+      
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Collage Images (Up to 3)</label>
+        {(activeSection?.collageImages || []).map((img, i) => (
+          <div key={i} style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center'}}>
+            <span style={{width: '20px'}}>{i+1}.</span>
+            <input className={styles.input} style={{flex: 1}} placeholder="Image URL" value={img.url} onChange={(e) => {
+              const newImgs = [...(activeSection?.collageImages || [])];
+              newImgs[i].url = e.target.value;
+              updateActiveSection('collageImages', newImgs);
+            }} />
+            <label className={styles.secondaryButton} style={{cursor: 'pointer'}}>
+              Upload
+              <input type="file" style={{display: 'none'}} accept="image/*" onChange={(e) => handleFileUpload(e, (url) => {
+                const newImgs = [...(activeSection?.collageImages || [])];
+                newImgs[i].url = url;
+                updateActiveSection('collageImages', newImgs);
+              })} />
+            </label>
+            <button className={styles.secondaryButton} style={{color: 'red', borderColor: 'red'}} onClick={() => {
+              const newImgs = (activeSection?.collageImages || []).filter((_, idx) => idx !== i);
+              updateActiveSection('collageImages', newImgs);
+            }}>X</button>
+          </div>
+        ))}
+        {(activeSection?.collageImages || []).length < 3 && (
+          <button className={styles.secondaryButton} onClick={() => {
+            updateActiveSection('collageImages', [...(activeSection?.collageImages || []), { url: '', alt: '' }]);
+          }}>+ Add Image</button>
+        )}
+      </div>
+    </>
+  );
+
+  // Schedule Sub-editor
+  const renderScheduleEditor = () => (
+    <>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Schedule Title</label>
+        <input className={styles.input} value={activeSection?.heading || ''} onChange={(e) => updateActiveSection('heading', e.target.value)} />
+      </div>
+      
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Schedule Days</label>
+        {(activeSection?.days || []).map((day, dIdx) => (
+          <div key={dIdx} style={{padding: '1rem', border: '1px solid var(--color-border)', marginBottom: '1rem', borderRadius: '4px'}}>
+            <div style={{display: 'flex', gap: '1rem', marginBottom: '1rem'}}>
+              <div style={{flex: 1}}>
+                <label className={styles.label}>Day Label (e.g. Day One)</label>
+                <input className={styles.input} value={day.label} onChange={(e) => {
+                  const newDays = [...(activeSection?.days || [])];
+                  newDays[dIdx].label = e.target.value;
+                  updateActiveSection('days', newDays);
+                }} />
+              </div>
+              <div style={{flex: 1}}>
+                <label className={styles.label}>Date (e.g. Friday, Dec 12)</label>
+                <input className={styles.input} value={day.date} onChange={(e) => {
+                  const newDays = [...(activeSection?.days || [])];
+                  newDays[dIdx].date = e.target.value;
+                  updateActiveSection('days', newDays);
+                }} />
+              </div>
+              <button className={styles.secondaryButton} style={{alignSelf: 'flex-end', color: 'red', borderColor: 'red'}} onClick={() => {
+                const newDays = (activeSection?.days || []).filter((_, i) => i !== dIdx);
+                updateActiveSection('days', newDays);
+              }}>Remove Day</button>
+            </div>
+            
+            <h4 style={{marginBottom: '0.5rem', fontSize: '0.875rem'}}>Events</h4>
+            {(day.events || []).map((evt, eIdx) => (
+              <div key={eIdx} style={{padding: '0.5rem', background: 'var(--color-bg)', marginBottom: '0.5rem', borderRadius: '4px'}}>
+                <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
+                  <input className={styles.input} style={{width: '100px'}} placeholder="Time" value={evt.time} onChange={(e) => {
+                    const newDays = [...(activeSection?.days || [])];
+                    newDays[dIdx].events[eIdx].time = e.target.value;
+                    updateActiveSection('days', newDays);
+                  }} />
+                  <input className={styles.input} style={{flex: 1}} placeholder="Title" value={evt.title} onChange={(e) => {
+                    const newDays = [...(activeSection?.days || [])];
+                    newDays[dIdx].events[eIdx].title = e.target.value;
+                    updateActiveSection('days', newDays);
+                  }} />
+                  <input className={styles.input} style={{flex: 1}} placeholder="Location" value={evt.location} onChange={(e) => {
+                    const newDays = [...(activeSection?.days || [])];
+                    newDays[dIdx].events[eIdx].location = e.target.value;
+                    updateActiveSection('days', newDays);
+                  }} />
+                </div>
+                <div style={{display: 'flex', gap: '0.5rem'}}>
+                  <input className={styles.input} style={{flex: 2}} placeholder="Notes (Optional)" value={evt.notes || ''} onChange={(e) => {
+                    const newDays = [...(activeSection?.days || [])];
+                    newDays[dIdx].events[eIdx].notes = e.target.value;
+                    updateActiveSection('days', newDays);
+                  }} />
+                  <input className={styles.input} style={{flex: 1}} placeholder="Dress Code (Optional)" value={evt.dressCode || ''} onChange={(e) => {
+                    const newDays = [...(activeSection?.days || [])];
+                    newDays[dIdx].events[eIdx].dressCode = e.target.value;
+                    updateActiveSection('days', newDays);
+                  }} />
+                  <button className={styles.secondaryButton} style={{color: 'red', borderColor: 'red'}} onClick={() => {
+                    const newDays = [...(activeSection?.days || [])];
+                    newDays[dIdx].events = newDays[dIdx].events.filter((_, i) => i !== eIdx);
+                    updateActiveSection('days', newDays);
+                  }}>X</button>
+                </div>
+              </div>
+            ))}
+            <button className={styles.secondaryButton} onClick={() => {
+              const newDays = [...(activeSection?.days || [])];
+              newDays[dIdx].events.push({ time: '', title: '', location: '' });
+              updateActiveSection('days', newDays);
+            }}>+ Add Event</button>
+          </div>
+        ))}
+        <button className={styles.secondaryButton} onClick={() => {
+          updateActiveSection('days', [...(activeSection?.days || []), { label: 'New Day', date: '', events: [] }]);
+        }}>+ Add Day</button>
+      </div>
+    </>
+  );
+
+  // FAQ Sub-editor
+  const renderFaqEditor = () => (
+    <>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>FAQ Title</label>
+        <input className={styles.input} value={activeSection?.heading || ''} onChange={(e) => updateActiveSection('heading', e.target.value)} />
+      </div>
+      
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Questions & Answers</label>
+        {(activeSection?.faqs || []).map((faq, idx) => (
+          <div key={idx} style={{padding: '1rem', border: '1px solid var(--color-border)', marginBottom: '1rem', borderRadius: '4px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem'}}>
+              <label style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                <input type="checkbox" checked={faq.enabled !== false} onChange={(e) => {
+                  const newFaqs = [...(activeSection?.faqs || [])];
+                  newFaqs[idx].enabled = e.target.checked;
+                  updateActiveSection('faqs', newFaqs);
+                }} /> Enabled
+              </label>
+              <button className={styles.secondaryButton} style={{color: 'red', borderColor: 'red', padding: '0.25rem 0.5rem'}} onClick={() => {
+                const newFaqs = (activeSection?.faqs || []).filter((_, i) => i !== idx);
+                updateActiveSection('faqs', newFaqs);
+              }}>Remove</button>
+            </div>
+            <input className={styles.input} style={{marginBottom: '0.5rem'}} placeholder="Question" value={faq.question} onChange={(e) => {
+              const newFaqs = [...(activeSection?.faqs || [])];
+              newFaqs[idx].question = e.target.value;
+              updateActiveSection('faqs', newFaqs);
+            }} />
+            <textarea className={styles.textarea} rows={3} placeholder="Answer" value={faq.answer} onChange={(e) => {
+              const newFaqs = [...(activeSection?.faqs || [])];
+              newFaqs[idx].answer = e.target.value;
+              updateActiveSection('faqs', newFaqs);
+            }} />
+          </div>
+        ))}
+        <button className={styles.secondaryButton} onClick={() => {
+          updateActiveSection('faqs', [...(activeSection?.faqs || []), { question: '', answer: '', enabled: true }]);
+        }}>+ Add Question</button>
+      </div>
+    </>
+  );
+
+  // Closing Sub-editor
+  const renderClosingEditor = () => (
+    <>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Closing Message</label>
+        <input className={styles.input} value={activeSection?.heading || ''} onChange={(e) => updateActiveSection('heading', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Sign-off (e.g. Russell & Siaw Min)</label>
+        <input className={styles.input} value={activeSection?.signOff || ''} onChange={(e) => updateActiveSection('signOff', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Date</label>
+        <input className={styles.input} value={activeSection?.date || ''} onChange={(e) => updateActiveSection('date', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Text</label>
+        <input className={styles.input} value={activeSection?.venueText || ''} onChange={(e) => updateActiveSection('venueText', e.target.value)} placeholder={config.VENUE_NAME || 'The Westin Singapore'} />
+      </div>
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>CTA Label</label>
+          <input className={styles.input} value={activeSection?.ctaLabel || ''} onChange={(e) => updateActiveSection('ctaLabel', e.target.value)} />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>CTA Link</label>
+          <input className={styles.input} value={activeSection?.ctaLink || ''} onChange={(e) => updateActiveSection('ctaLink', e.target.value)} />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Background Image</label>
+        <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
+          <input className={styles.input} style={{flex: 1}} placeholder="/media/image.jpg" value={activeSection?.mediaUrl || ''} onChange={(e) => updateActiveSection('mediaUrl', e.target.value)} />
+          <label className={styles.secondaryButton} style={{padding: '0.5rem 1rem', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center'}}>
+            {uploading ? 'Uploading...' : 'Upload File'}
+            <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => handleFileUpload(e, (url) => updateActiveSection('mediaUrl', url))} disabled={uploading} />
+          </label>
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Background Image Alt Text</label>
+        <input className={styles.input} value={activeSection?.imageAlt || ''} onChange={(e) => updateActiveSection('imageAlt', e.target.value)} placeholder="Russell and Siaw Min" />
+      </div>
+    </>
+  );
+
+  // Venue Reveal Sub-editor
+  const renderVenueRevealEditor = () => (
+    <>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Reveal Title</label>
+        <input className={styles.input} value={activeSection?.heading || ''} onChange={(e) => updateActiveSection('heading', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Description</label>
+        <textarea className={styles.textarea} value={activeSection?.bodyCopy || ''} onChange={(e) => updateActiveSection('bodyCopy', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Visual Mode</label>
+        <select className={styles.select} value={activeSection?.displayMode || 'image'} onChange={(e) => updateActiveSection('displayMode', e.target.value as 'image' | 'fallback')}>
+          <option value="image">Image when available</option>
+          <option value="fallback">Designed location card</option>
+        </select>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Reveal Image</label>
+        <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
+          <input className={styles.input} style={{flex: 1}} placeholder="/media/image.jpg" value={activeSection?.mediaUrl || ''} onChange={(e) => updateActiveSection('mediaUrl', e.target.value)} />
+          <label className={styles.secondaryButton} style={{padding: '0.5rem 1rem', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center'}}>
+            {uploading ? 'Uploading...' : 'Upload File'}
+            <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => handleFileUpload(e, (url) => updateActiveSection('mediaUrl', url))} disabled={uploading} />
+          </label>
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Image Alt Text</label>
+        <input className={styles.input} value={activeSection?.imageAlt || ''} onChange={(e) => updateActiveSection('imageAlt', e.target.value)} placeholder="The Westin Singapore Grand Ballroom" />
+      </div>
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>CTA Label</label>
+          <input className={styles.input} value={activeSection?.ctaLabel || ''} onChange={(e) => updateActiveSection('ctaLabel', e.target.value)} placeholder="Get Directions" />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Directions Link Override</label>
+          <input className={styles.input} value={activeSection?.ctaLink || ''} onChange={(e) => updateActiveSection('ctaLink', e.target.value)} placeholder="Leave blank to use address/map coordinates" />
+        </div>
+      </div>
+    </>
+  );
+
+  // At A Glance Sub-editor
+  const renderAtAGlanceEditor = () => (
+    <>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Section Heading</label>
+        <input className={styles.input} value={activeSection?.heading || ''} onChange={(e) => updateActiveSection('heading', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Date Line</label>
+        <input className={styles.input} value={activeSection?.date || ''} onChange={(e) => updateActiveSection('date', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Line</label>
+        <input className={styles.input} value={activeSection?.venueText || ''} onChange={(e) => updateActiveSection('venueText', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Room / Location Details</label>
+        <input className={styles.input} value={activeSection?.roomText || ''} onChange={(e) => updateActiveSection('roomText', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Dress Code</label>
+        <input className={styles.input} value={activeSection?.dressCode || ''} onChange={(e) => updateActiveSection('dressCode', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>RSVP Reminder Line</label>
+        <input className={styles.input} value={activeSection?.rsvpText || ''} onChange={(e) => updateActiveSection('rsvpText', e.target.value)} />
+      </div>
+    </>
+  );
+
+  // Gallery Sub-editor
+  const renderGalleryEditor = () => (
+    <>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Caption / Short Copy</label>
+        <input className={styles.input} value={activeSection?.bodyCopy || ''} onChange={(e) => updateActiveSection('bodyCopy', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Detail Images (Up to 3)</label>
+        {(activeSection?.collageImages || []).map((img, i) => (
+          <div key={i} style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center'}}>
+            <span style={{width: '20px'}}>{i+1}.</span>
+            <input className={styles.input} style={{flex: 1}} placeholder="Image URL" value={img.url} onChange={(e) => {
+              const newImgs = [...(activeSection?.collageImages || [])];
+              newImgs[i].url = e.target.value;
+              updateActiveSection('collageImages', newImgs);
+            }} />
+            <label className={styles.secondaryButton} style={{cursor: 'pointer'}}>
+              Upload
+              <input type="file" style={{display: 'none'}} accept="image/*" onChange={(e) => handleFileUpload(e, (url) => {
+                const newImgs = [...(activeSection?.collageImages || [])];
+                newImgs[i].url = url;
+                updateActiveSection('collageImages', newImgs);
+              })} />
+            </label>
+            <button className={styles.secondaryButton} style={{color: 'red', borderColor: 'red'}} onClick={() => {
+              const newImgs = (activeSection?.collageImages || []).filter((_, idx) => idx !== i);
+              updateActiveSection('collageImages', newImgs);
+            }}>X</button>
+          </div>
+        ))}
+        {(activeSection?.collageImages || []).length < 3 && (
+          <button className={styles.secondaryButton} onClick={() => {
+            updateActiveSection('collageImages', [...(activeSection?.collageImages || []), { url: '', alt: '' }]);
+          }}>+ Add Image</button>
+        )}
+      </div>
+    </>
+  );
+
+  // Generic Sub-editor (Welcome, Travel)
+  const renderGenericEditor = () => (
+    <>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Heading</label>
+        <input className={styles.input} value={activeSection?.heading || ''} onChange={(e) => updateActiveSection('heading', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Body Copy</label>
+        <textarea className={styles.textarea} value={activeSection?.bodyCopy || ''} onChange={(e) => updateActiveSection('bodyCopy', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Media URL</label>
+        <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
+          <input className={styles.input} style={{flex: 1}} placeholder="/media/image.jpg" value={activeSection?.mediaUrl || ''} onChange={(e) => updateActiveSection('mediaUrl', e.target.value)} />
+          <label className={styles.secondaryButton} style={{padding: '0.5rem 1rem', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center'}}>
+            {uploading ? 'Uploading...' : 'Upload File'}
+            <input type="file" accept="image/*,video/*" style={{display: 'none'}} onChange={(e) => handleFileUpload(e, (url) => updateActiveSection('mediaUrl', url))} disabled={uploading} />
+          </label>
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <div className={styles.container}>
+      <aside className={styles.sidebar}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Sections</h2>
+        </div>
+        <div className={styles.sectionList}>
+          <button className={`${styles.sectionItem} ${activeSectionId === 'config' ? styles.active : ''}`} onClick={() => setActiveSectionId('config')}>
+            Site Settings
+          </button>
+          <div style={{height: '1px', background: 'var(--color-border)', margin: 'var(--spacing-2) 0'}}></div>
+          {sections.map(section => (
+            <button key={section.id} className={`${styles.sectionItem} ${section.id === activeSectionId ? styles.active : ''}`} onClick={() => setActiveSectionId(section.id)}>
+              {section.type.charAt(0).toUpperCase() + section.type.slice(1)} Section
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      <main className={styles.editor}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>
+            {activeSectionId === 'config' ? 'Site Settings' : `Edit ${activeSection?.type}`}
+          </h2>
+          <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+            {message && <span style={{color: 'green', fontSize: '0.875rem'}}>{message}</span>}
+            <button className={styles.primaryButton} onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving...' : 'Publish Changes'}
+            </button>
+          </div>
+        </div>
+
+        {activeSectionId === 'config' ? renderSiteSettings() : (
+          <div style={{maxWidth: '800px'}}>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                <input type="checkbox" checked={activeSection?.enabled} onChange={(e) => updateActiveSection('enabled', e.target.checked)} style={{marginRight: '0.5rem'}} />
+                Enable Section
+              </label>
+            </div>
+            {activeSection?.type === 'hero' && renderHeroEditor()}
+            {activeSection?.type === 'at_a_glance' && renderAtAGlanceEditor()}
+            {activeSection?.type === 'schedule' && renderScheduleEditor()}
+            {activeSection?.type === 'venue_reveal' && renderVenueRevealEditor()}
+            {activeSection?.type === 'faq' && renderFaqEditor()}
+            {activeSection?.type === 'closing' && renderClosingEditor()}
+            {activeSection?.type === 'gallery_interlude' && renderGalleryEditor()}
+            {(activeSection?.type === 'welcome' || activeSection?.type === 'travel') && renderGenericEditor()}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
