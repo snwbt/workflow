@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function proxy(req: NextRequest) {
+export function middleware(req: NextRequest) {
   // Only protect /admin routes
   if (req.nextUrl.pathname.startsWith('/admin')) {
     const basicAuth = req.headers.get('authorization');
@@ -11,6 +11,7 @@ export function proxy(req: NextRequest) {
       const [user, pwd] = atob(authValue).split(':');
 
       // Simple hardcoded check for MVP
+      // NOTE: For a production app, these should ideally be environment variables
       if (user === 'admin' && pwd === 'wedding2026') {
         return NextResponse.next();
       }
