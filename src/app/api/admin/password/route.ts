@@ -4,7 +4,7 @@ import { updateAdminPassword, validateNewPassword } from '@/lib/adminAuth';
 export async function POST(request: Request) {
   try {
     const { currentPassword, newPassword, confirmPassword } = await request.json();
-    const validationError = validateNewPassword(
+    const validationError = await validateNewPassword(
       currentPassword,
       newPassword,
       confirmPassword
@@ -14,11 +14,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: validationError }, { status: 400 });
     }
 
-    updateAdminPassword(newPassword);
+    await updateAdminPassword(newPassword);
 
     return NextResponse.json({
       success: true,
-      message: 'Password updated. Your browser may ask you to sign in again.',
+      message: 'Password updated. Please sign in again with the new password.',
+      reauthRequired: true,
     });
   } catch (error) {
     console.error('Error updating admin password:', error);

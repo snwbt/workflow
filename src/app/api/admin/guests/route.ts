@@ -4,7 +4,7 @@ import { getDb, saveDb } from '@/lib/db';
 // GET: Return all RSVP submissions (open model — no guests array)
 export async function GET() {
   try {
-    const db = getDb();
+    const db = await getDb();
     const rsvps = db.rsvps || [];
     return NextResponse.json(rsvps);
   } catch (error) {
@@ -26,7 +26,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'rsvp_id is required' }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const rsvps = db.rsvps || [];
     const idx = rsvps.findIndex((r: any) => r.rsvp_id === rsvp_id);
 
@@ -48,7 +48,7 @@ export async function PUT(request: Request) {
     };
 
     db.rsvps = rsvps;
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({ success: true, rsvp: rsvps[idx] });
   } catch (error) {
@@ -70,7 +70,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'rsvp_id is required' }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const before = (db.rsvps || []).length;
     db.rsvps = (db.rsvps || []).filter((r: any) => r.rsvp_id !== rsvp_id);
 
@@ -78,7 +78,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'RSVP not found' }, { status: 404 });
     }
 
-    saveDb(db);
+    await saveDb(db);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting RSVP:', error);

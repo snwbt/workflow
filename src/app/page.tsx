@@ -12,14 +12,16 @@ import SignatureMotif from '@/components/SignatureMotif';
 import ClosingSection from '@/components/sections/ClosingSection';
 import AnchorNav from '@/components/AnchorNav';
 import { getDb } from '@/lib/db';
+import { connection } from 'next/server';
 
 export const metadata = {
   title: 'Russell & Siaw Min - Wedding Celebration',
   description: 'Together with their families, they invite you to a weekend of celebration.',
 };
 
-export default function Home() {
-  const db = getDb();
+export default async function Home() {
+  await connection();
+  const db = await getDb();
   const globalConfig = db.config || {};
 
   // Build a dictionary of section config keyed by type

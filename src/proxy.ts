@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { isAdminRequestAuthorized } from '@/lib/adminAuth';
 
-export function middleware(request: NextRequest) {
-  if (isAdminRequestAuthorized(request)) {
+export async function proxy(request: NextRequest) {
+  if (await isAdminRequestAuthorized(request)) {
     return NextResponse.next();
   }
 

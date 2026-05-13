@@ -3,7 +3,7 @@ import { getDb } from '@/lib/db';
 
 export async function GET() {
   try {
-    const db = getDb();
+    const db = await getDb();
     const rsvps = db.rsvps || [];
     let totalResponses = rsvps.length;
     let totalAttending = 0;

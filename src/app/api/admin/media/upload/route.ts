@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { put } from '@vercel/blob';
 
 
 export async function POST(request: Request) {
@@ -24,11 +25,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'File size exceeds 50MB limit.' }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    
     // Create unique filename
     const ext = path.extname(file.name) || `.${file.type.split('/')[1]}`;
     const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}${ext}`;
+
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      const blob = await put(`media/${filename}`, file, {
+        access: 'public',
+        addRandomSuffix: true,
+        contentType: file.type,
+      });
+
+      return NextResponse.json({
+        success: true,
+        url: blob.url,
+        type: file.type.startsWith('video/') ? 'video' : 'image',
+      });
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
     
     // Ensure directory exists
     const mediaDir = path.join(process.cwd(), 'public', 'media');
@@ -36,7 +51,6 @@ export async function POST(request: Request) {
       fs.mkdirSync(mediaDir, { recursive: true });
     }
 
-    // Save file
     const filePath = path.join(mediaDir, filename);
     fs.writeFileSync(filePath, buffer);
 

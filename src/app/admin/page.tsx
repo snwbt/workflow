@@ -151,6 +151,11 @@ export default function AdminDashboard() {
 
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setPasswordMessage(data.message || 'Password updated.');
+      if (data.reauthRequired) {
+        window.setTimeout(() => {
+          window.location.assign('/admin');
+        }, 800);
+      }
     } catch (err) {
       setPasswordError(err instanceof Error ? err.message : 'Failed to update password.');
     } finally {

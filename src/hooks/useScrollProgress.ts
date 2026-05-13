@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { MAIN_SCROLL_CONTAINER_ID } from '@/lib/scroll';
 
 export function useScrollProgress() {
   const ref = useRef<HTMLElement>(null);
@@ -16,6 +17,7 @@ export function useScrollProgress() {
     const currentRef = ref.current;
     if (!currentRef) return;
 
+    const scrollContainer = document.getElementById(MAIN_SCROLL_CONTAINER_ID);
     let rafId: number;
 
     const handleScroll = () => {
@@ -23,10 +25,13 @@ export function useScrollProgress() {
       
       rafId = requestAnimationFrame(() => {
         const rect = currentRef.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
+        const rootRect = scrollContainer?.getBoundingClientRect();
+        const viewportTop = rootRect?.top || 0;
+        const viewportHeight = rootRect?.height || window.innerHeight;
+        const relativeTop = rect.top - viewportTop;
         
         // Element is below viewport
-        if (rect.top > windowHeight) {
+        if (relativeTop > viewportHeight) {
           setProgress(0);
           return;
         }
@@ -38,19 +43,20 @@ export function useScrollProgress() {
         }
 
         // Calculate progress as element moves from bottom of viewport to top
-        const totalDistance = windowHeight + rect.height;
-        const scrolledDistance = windowHeight - rect.top;
+        const totalDistance = viewportHeight + rect.height;
+        const scrolledDistance = viewportHeight - relativeTop;
         const calculatedProgress = Math.max(0, Math.min(1, scrolledDistance / totalDistance));
         
         setProgress(calculatedProgress);
       });
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    const scrollTarget = scrollContainer || window;
+    scrollTarget.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Initial call
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      scrollTarget.removeEventListener('scroll', handleScroll);
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);

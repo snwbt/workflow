@@ -8,7 +8,7 @@
 }
 
 .content {
-  max-width: 960px;
+  max-width: 1180px;
   margin: 0 auto;
   width: 100%;
   padding-top: var(--spacing-4);
@@ -42,6 +42,20 @@
   line-height: 1.6;
 }
 
+.daysGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-12);
+}
+
+@media (min-width: 960px) {
+  .daysGrid {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: var(--spacing-16);
+    align-items: start;
+  }
+}
+
 /* ── Day group ── */
 .dayGroup {
   margin-bottom: var(--spacing-20);
@@ -57,6 +71,12 @@
 
 .dayGroup:last-child {
   margin-bottom: 0;
+}
+
+@media (min-width: 960px) {
+  .dayGroup {
+    margin-bottom: 0;
+  }
 }
 
 /* ── Day header ── */
@@ -117,6 +137,13 @@
     grid-template-columns: 180px 1fr;
     gap: var(--spacing-8);
     align-items: baseline;
+  }
+}
+
+@media (min-width: 960px) {
+  .event {
+    grid-template-columns: 96px 1fr;
+    gap: var(--spacing-4);
   }
 }
 

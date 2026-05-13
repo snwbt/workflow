@@ -1,9 +1,9 @@
 'use client';
 
 import { useReveal } from '@/hooks/useReveal';
-import Link from 'next/link';
 import Image from 'next/image';
 import { trackEvent } from '@/lib/analytics';
+import { handleSectionLinkClick } from '@/lib/scroll';
 import styles from './ClosingSection.module.css';
 
 export default function ClosingSection({ config, globalConfig }: { config?: any, globalConfig?: any }) {
@@ -45,23 +45,16 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
         {venueText && <p className={styles.venueText}>{venueText}</p>}
         
         <div className={styles.ctaGroup}>
-          {isExternalLink ? (
-            <a 
-              href={ctaLink} 
-              className={styles.rsvpButton}
-              onClick={() => trackEvent('rsvp_cta_clicked')}
-            >
-              {ctaLabel}
-            </a>
-          ) : (
-            <Link 
-              href={ctaLink} 
-              className={styles.rsvpButton}
-              onClick={() => trackEvent('rsvp_cta_clicked')}
-            >
-              {ctaLabel}
-            </Link>
-          )}
+          <a
+            href={ctaLink}
+            className={styles.rsvpButton}
+            onClick={(e) => {
+              trackEvent('rsvp_cta_clicked');
+              if (!isExternalLink) handleSectionLinkClick(e, ctaLink);
+            }}
+          >
+            {ctaLabel}
+          </a>
           
           {globalConfig?.WHATSAPP_NUMBER && (
             <a 

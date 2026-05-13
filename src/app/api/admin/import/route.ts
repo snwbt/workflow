@@ -19,7 +19,8 @@ export async function POST(request: Request) {
     }
 
     // Expected format: Party ID, First Name, Last Name, Max Party Size, Plus One Allowed, Invited Events (semicolon separated)
-    const db = getDb();
+    const db = await getDb();
+    db.guests = db.guests || [];
     let imported = 0;
     const errors: string[] = [];
 
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
       }
     }
 
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@
 
 import styles from './AnchorNav.module.css';
 import { useState, useEffect } from 'react';
+import { handleSectionLinkClick, MAIN_SCROLL_CONTAINER_ID } from '@/lib/scroll';
 
 export default function AnchorNav({ globalConfig }: { globalConfig?: Record<string, unknown> }) {
   const [activeSection, setActiveSection] = useState<string>('');
@@ -21,7 +22,7 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
   useEffect(() => {
     // Observe the hero section to show/hide the nav
     const hero = document.getElementById('hero');
-    const scrollContainer = document.getElementById('main-scroll-container');
+    const scrollContainer = document.getElementById(MAIN_SCROLL_CONTAINER_ID);
 
     if (!hero || !scrollContainer) return;
 
@@ -68,11 +69,7 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
-    const scrollContainer = document.getElementById('main-scroll-container');
-    const element = document.getElementById(id);
-    if (element && scrollContainer) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+    handleSectionLinkClick(e, `#${id}`);
   };
 
   return (

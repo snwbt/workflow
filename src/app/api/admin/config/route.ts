@@ -3,7 +3,7 @@ import { getDb, saveDb } from '@/lib/db';
 
 export async function GET() {
   try {
-    const db = getDb();
+    const db = await getDb();
     return NextResponse.json({ config: db.config || {} });
   } catch (error) {
     return NextResponse.json(
@@ -20,9 +20,9 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Config is required' }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     db.config = { ...db.config, ...config };
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({ success: true, config: db.config });
   } catch (error) {

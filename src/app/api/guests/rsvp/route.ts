@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     
     // Check deadline
     if (db.config?.RSVP_DEADLINE && new Date(db.config.RSVP_DEADLINE) < new Date()) {
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       db.rsvps.push(newRsvp);
     }
 
-    saveDb(db);
+    await saveDb(db);
 
     // Format details for email
     let detailsStr = '';

@@ -3,48 +3,31 @@ import { getDb } from '@/lib/db';
 
 export async function GET() {
   try {
-    const db = getDb();
-    
-    let csv = 'Party ID,Guest Name,RSVP Status,Attending Count,Meal Choice,Dietary Restrictions,Plus-One Name,Invited Events,Submitted At,Updated At,Invite Code\n';
-    
-    db.guests.forEach((guest: any) => {
-      let rsvpStatus = 'pending';
-      let attendingCount = 0;
-      let mealChoice = '';
-      let dietaryRestrictions = '';
-      let plusOneName = '';
-      let submittedAt = '';
-      let updatedAt = '';
-      
-      const rsvp = db.rsvps.find((r: any) => r.party_id === guest.party_id);
-      if (rsvp) {
-        submittedAt = rsvp.submitted_at || '';
-        updatedAt = rsvp.updated_at || '';
-        
-        // Count attending in this party
-        attendingCount = rsvp.attendees.filter((a: any) => a.attendance_status === 'attending').length;
+    const db = await getDb();
 
-        const attendeeData = rsvp.attendees.find((a: any) => a.guest_id === guest.guest_id);
-        if (attendeeData) {
-          rsvpStatus = attendeeData.attendance_status;
-          mealChoice = attendeeData.meal_choice || '';
-          dietaryRestrictions = attendeeData.dietary_restrictions || '';
-        }
+    const quote = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    let csv = 'Name,Email,Status,Guest Count,Plus One Name,Meal,Dietary,Transport Needed,Message,Custom Answers,Submitted At,Updated At,Source\n';
 
-        // Find if they brought a plus one
-        const plusOne = rsvp.attendees.find((a: any) => a.is_plus_one);
-        if (plusOne && plusOne.attendance_status === 'attending') {
-          plusOneName = plusOne.name;
-        }
-      }
+    (db.rsvps || []).forEach((rsvp: any) => {
+      const customAnswers = rsvp.custom_answers
+        ? Object.entries(rsvp.custom_answers).map(([key, value]) => `${key}: ${value}`).join(' | ')
+        : '';
 
-      // Escape quotes for CSV
-      const name = `"${guest.first_name} ${guest.last_name}"`;
-      const dietary = `"${dietaryRestrictions.replace(/"/g, '""')}"`;
-      const plusOneStr = `"${plusOneName.replace(/"/g, '""')}"`;
-      const eventsStr = `"${(guest.invited_events || []).join(';')}"`;
-
-      csv += `${guest.party_id},${name},${rsvpStatus},${attendingCount},${mealChoice},${dietary},${plusOneStr},${eventsStr},${submittedAt},${updatedAt},${guest.invite_code_hash}\n`;
+      csv += [
+        quote(rsvp.guest_name),
+        quote(rsvp.email),
+        quote(rsvp.attendance_status),
+        rsvp.guest_count || 0,
+        quote(rsvp.plus_one_name),
+        quote(rsvp.meal_preference),
+        quote(rsvp.dietary_restrictions),
+        rsvp.transport_needed ? 'Yes' : 'No',
+        quote(rsvp.message),
+        quote(customAnswers),
+        quote(rsvp.submitted_at),
+        quote(rsvp.updated_at),
+        quote(rsvp.source),
+      ].join(',') + '\n';
     });
 
     const response = new NextResponse(csv);

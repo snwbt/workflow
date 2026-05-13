@@ -1,21 +1,9 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const DB_PATH = path.join(process.cwd(), 'src', 'data', 'db.json');
-
-function readDB() {
-  const data = fs.readFileSync(DB_PATH, 'utf8');
-  return JSON.parse(data);
-}
-
-function writeDB(data: any) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-}
+import { getDb, saveDb } from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
-    const db = readDB();
+    const db = await getDb();
     return NextResponse.json({ sections: db.homepage_sections || [] });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to read database' }, { status: 500 });
@@ -30,9 +18,9 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Sections must be an array' }, { status: 400 });
     }
 
-    const db = readDB();
+    const db = await getDb();
     db.homepage_sections = sections;
-    writeDB(db);
+    await saveDb(db);
 
     return NextResponse.json({ success: true, sections: db.homepage_sections });
   } catch (error) {

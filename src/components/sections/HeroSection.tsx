@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { trackEvent } from '@/lib/analytics';
+import { handleSectionLinkClick } from '@/lib/scroll';
 import { useScrollProgress } from '@/hooks/useScrollProgress';
 import styles from './HeroSection.module.css';
 import { useEffect } from 'react';
@@ -103,23 +103,16 @@ export default function HeroSection({ config }: { config?: any }) {
             {venueText && <span>{venueText}</span>}
           </div>
 
-          {isExternalLink ? (
-            <a
-              href={ctaLink}
-              className={styles.rsvpButton}
-              onClick={() => trackEvent('rsvp_cta_clicked')}
-            >
-              {ctaLabel}
-            </a>
-          ) : (
-            <Link
-              href={ctaLink}
-              className={styles.rsvpButton}
-              onClick={() => trackEvent('rsvp_cta_clicked')}
-            >
-              {ctaLabel}
-            </Link>
-          )}
+          <a
+            href={ctaLink}
+            className={styles.rsvpButton}
+            onClick={(e) => {
+              trackEvent('rsvp_cta_clicked');
+              if (!isExternalLink) handleSectionLinkClick(e, ctaLink);
+            }}
+          >
+            {ctaLabel}
+          </a>
         </div>
       </div>
     </section>

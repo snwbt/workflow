@@ -96,7 +96,15 @@ export default function EditorPage() {
       if (resSections.ok && resConfig.ok) {
         setMessage('Changes saved successfully.');
       } else {
-        setMessage('Failed to save some changes.');
+        const [sectionsError, configError] = await Promise.all([
+          resSections.ok ? Promise.resolve(null) : resSections.json().catch(() => ({})),
+          resConfig.ok ? Promise.resolve(null) : resConfig.json().catch(() => ({})),
+        ]);
+        const failures = [
+          !resSections.ok ? `sections (${sectionsError?.error || `HTTP ${resSections.status}`})` : '',
+          !resConfig.ok ? `settings (${configError?.error || `HTTP ${resConfig.status}`})` : '',
+        ].filter(Boolean);
+        setMessage(`Failed to save ${failures.join(' and ')}.`);
       }
     } catch (e) {
       setMessage('Error saving changes.');

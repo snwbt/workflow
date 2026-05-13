@@ -42,38 +42,40 @@ export default function ScheduleSection({ config }: { config?: any }) {
         <h2 className={`${styles.title} ${isVisible ? styles.visible : ''}`}>{heading}</h2>
         {intro && <p className={styles.intro}>{intro}</p>}
 
-        {days.map((day, dayIndex) => (
-          <div key={dayIndex} className={`${styles.dayGroup} ${isVisible ? styles.visible : ''}`} style={{ transitionDelay: `${dayIndex * 0.1}s` }}>
-            <div className={styles.dayHeader}>
-              <span className={styles.dayLabel}>{day.label}</span>
-              <span className={styles.dayDate}>{day.date}</span>
-            </div>
+        <div className={styles.daysGrid}>
+          {days.map((day, dayIndex) => (
+            <div key={dayIndex} className={`${styles.dayGroup} ${isVisible ? styles.visible : ''}`} style={{ transitionDelay: `${dayIndex * 0.1}s` }}>
+              <div className={styles.dayHeader}>
+                <span className={styles.dayLabel}>{day.label}</span>
+                <span className={styles.dayDate}>{day.date}</span>
+              </div>
 
-            <div className={styles.timeline}>
-              {day.events.map((event, eventIndex) => (
-                <div
-                  key={eventIndex}
-                  className={`${styles.event} ${isVisible ? styles.visible : ''}`}
-                  style={{ transitionDelay: `${0.2 + dayIndex * 0.1 + eventIndex * 0.12}s` }}
-                >
-                  <div className={styles.timeColumn}>
-                    <span className={styles.time}>{event.time}</span>
-                  </div>
-                  <div className={styles.eventContent}>
-                    <h3 className={styles.eventName}>{event.title}</h3>
-                    <div className={styles.eventDetails}>
-                      <span className={styles.location}>{event.location}</span>
-                      {event.notes && <span>{event.notes}</span>}
-                      {event.dressCode && (
-                        <span className={styles.dressCode}>Dress Code: {event.dressCode}</span>
-                      )}
+              <div className={styles.timeline}>
+                {day.events.map((event, eventIndex) => (
+                  <div
+                    key={eventIndex}
+                    className={`${styles.event} ${isVisible ? styles.visible : ''}`}
+                    style={{ transitionDelay: `${0.2 + dayIndex * 0.1 + eventIndex * 0.12}s` }}
+                  >
+                    <div className={styles.timeColumn}>
+                      <span className={styles.time}>{event.time}</span>
+                    </div>
+                    <div className={styles.eventContent}>
+                      <h3 className={styles.eventName}>{event.title}</h3>
+                      <div className={styles.eventDetails}>
+                        <span className={styles.location}>{event.location}</span>
+                        {event.notes && <span>{event.notes}</span>}
+                        {event.dressCode && (
+                          <span className={styles.dressCode}>Dress Code: {event.dressCode}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </section>
   );

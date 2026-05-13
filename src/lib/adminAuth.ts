@@ -1,20 +1,12 @@
+import 'server-only';
+
 import crypto from 'crypto';
 import type { NextRequest } from 'next/server';
-import { getDb, saveDb } from '@/lib/db';
+import { getAdminAuth, saveAdminAuth, type AdminAuthRecord } from '@/lib/db';
 
 const DEFAULT_USERNAME = 'admin';
 const DEFAULT_PASSWORD = 'wedding2026';
 const MIN_PASSWORD_LENGTH = 8;
-
-interface AdminAuthRecord {
-  username: string;
-  passwordHash: string;
-  salt: string;
-  iterations: number;
-  keyLength: number;
-  digest: string;
-  updatedAt?: string;
-}
 
 function hashPassword(
   password: string,
@@ -41,28 +33,24 @@ function safeEqual(a: string, b: string) {
   return crypto.timingSafeEqual(left, right);
 }
 
-export function ensureAdminAuth(): AdminAuthRecord {
-  const db = getDb();
-
-  if (!db.config) {
-    db.config = {};
+export async function ensureAdminAuth(): Promise<AdminAuthRecord> {
+  const existing = await getAdminAuth();
+  if (existing?.passwordHash && existing?.salt) {
+    return existing;
   }
 
-  if (!db.config.ADMIN_AUTH?.passwordHash || !db.config.ADMIN_AUTH?.salt) {
-    const password = hashPassword(DEFAULT_PASSWORD);
-    db.config.ADMIN_AUTH = {
-      username: DEFAULT_USERNAME,
-      ...password,
-      updatedAt: new Date().toISOString(),
-    };
-    saveDb(db);
-  }
+  const auth: AdminAuthRecord = {
+    username: DEFAULT_USERNAME,
+    ...hashPassword(DEFAULT_PASSWORD),
+    updatedAt: new Date().toISOString(),
+  };
 
-  return db.config.ADMIN_AUTH;
+  await saveAdminAuth(auth);
+  return auth;
 }
 
-export function verifyAdminCredentials(username: string, password: string) {
-  const auth = ensureAdminAuth();
+export async function verifyAdminCredentials(username: string, password: string) {
+  const auth = await ensureAdminAuth();
 
   if (username !== auth.username) {
     return false;
@@ -101,7 +89,7 @@ export function parseBasicAuthHeader(header: string | null) {
   }
 }
 
-export function isAdminRequestAuthorized(request: NextRequest | Request) {
+export async function isAdminRequestAuthorized(request: NextRequest | Request) {
   const credentials = parseBasicAuthHeader(request.headers.get('authorization'));
 
   if (!credentials) {
@@ -111,7 +99,7 @@ export function isAdminRequestAuthorized(request: NextRequest | Request) {
   return verifyAdminCredentials(credentials.username, credentials.password);
 }
 
-export function validateNewPassword(
+export async function validateNewPassword(
   currentPassword: string,
   newPassword: string,
   confirmPassword: string
@@ -128,25 +116,17 @@ export function validateNewPassword(
     return 'New password and confirmation do not match.';
   }
 
-  if (!verifyAdminCredentials(DEFAULT_USERNAME, currentPassword)) {
+  if (!(await verifyAdminCredentials(DEFAULT_USERNAME, currentPassword))) {
     return 'Current password is incorrect.';
   }
 
   return null;
 }
 
-export function updateAdminPassword(newPassword: string) {
-  const db = getDb();
-
-  if (!db.config) {
-    db.config = {};
-  }
-
-  db.config.ADMIN_AUTH = {
+export async function updateAdminPassword(newPassword: string) {
+  await saveAdminAuth({
     username: DEFAULT_USERNAME,
     ...hashPassword(newPassword),
     updatedAt: new Date().toISOString(),
-  };
-
-  saveDb(db);
+  });
 }

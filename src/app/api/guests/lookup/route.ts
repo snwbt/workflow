@@ -31,11 +31,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = getDb();
+    const db = await getDb();
     
     // In a real app, inviteCode would be hashed and compared.
     // Here we'll just check if it matches "1234" for the mock since we stored "1234" as hash for MVP
-    const guest = db.guests.find(
+    const guest = (db.guests || []).find(
       (g: any) =>
         g.first_name.toLowerCase() === firstName.toLowerCase().trim() &&
         g.last_name.toLowerCase() === lastName.toLowerCase().trim() &&
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     rateLimitMap.delete(ip);
 
     // Find all members of this guest's party
-    const party = db.guests.filter((g: any) => g.party_id === guest.party_id);
+    const party = (db.guests || []).filter((g: any) => g.party_id === guest.party_id);
     
     // Check if an RSVP already exists for this party
     const existingRsvp = db.rsvps.find((r: any) => r.party_id === guest.party_id) || null;
