@@ -39,10 +39,16 @@ const zh: Record<string, string> = {
   'Open route': '打开路线',
   'Reception': '晚宴',
   'Find your seat': '查询座位',
+  'MRT': '地铁',
+  'BUS': '巴士',
+  'DRIVING': '驾车',
+  'HOTEL': '酒店',
+  'ACCESS': '无障碍',
   'Getting Here': '交通指南',
   'Arrival at The Westin': '抵达威斯汀酒店',
   'Travel information coming soon.': '交通信息即将更新。',
   'Map Preview': '地图预览',
+  'Location details will be shared soon.': '地点详情将稍后分享。',
   'Driving & Parking': '驾车与停车',
   'From Your Hotel': '从酒店出发',
   'Accessibility': '无障碍设施',
@@ -52,6 +58,7 @@ const zh: Record<string, string> = {
   'Alight at Bus Stop 03519 and walk 3 minutes to The Westin.': '在03519巴士站下车，步行约3分钟抵达威斯汀酒店。',
   'Self-parking is available at Asia Square Tower 2 basement from $1.10 per 10-minute block ($6.60/hr) on weekdays.': 'Asia Square Tower 2 地下停车场提供自助泊车，平日收费为每10分钟1.10新元（每小时6.60新元）。',
   'Drop-off at the main hotel entrance on Marina View. Taxis and private hire vehicles may stop here.': '可在 Marina View 的酒店正门下车。德士与私召车可在此停靠。',
+  'Self-parking is available at Asia Square Tower 2 basement from $1.10 per 10-minute block ($6.60/hr) on weekdays.\n\nDrop-off at the main hotel entrance on Marina View. Taxis and private hire vehicles may stop here.': 'Asia Square Tower 2 地下停车场提供自助泊车，平日收费为每10分钟1.10新元（每小时6.60新元）。\n\n可在 Marina View 的酒店正门下车。德士与私召车可在此停靠。',
   'The celebration will be held in the Grand Ballroom on Level 3. From the hotel lobby, take the lifts to Level 3.': '庆祝活动将在三楼大宴会厅举行。请从酒店大堂搭乘电梯至三楼。',
   'Wheelchair accessible entrances are available on Level 1. Please contact our concierge team at least 48 hours in advance to arrange assistance.': '一楼设有无障碍入口。如需协助，请至少提前48小时联系礼宾团队安排。',
   'Dress Code: {dressCode}': '着装：{dressCode}',
@@ -74,6 +81,7 @@ const zh: Record<string, string> = {
   'Saturday': '星期六',
   '23 October 2026': '2026年10月23日',
   '24 October 2026': '2026年10月24日',
+  'June 25, 2026': '2026年6月25日',
   'Guest Arrival': '宾客抵达',
   'Hotel Lobby': '酒店大堂',
   'Please make your way to the Grand Ballroom on Level 3. Our welcome team will be on hand to guide you.': '请前往三楼大宴会厅。迎宾团队将在现场为您指引。',
@@ -109,6 +117,34 @@ const zh: Record<string, string> = {
   'A weekend of family, friends, and the city we love.': '与家人、朋友，以及我们喜爱的城市共度周末。',
   'What to Know': '须知事项',
   'Check back soon for frequently asked questions.': '常见问题即将更新。',
+  'Am I invited to both the dinner and the Nuptial Mass?': '我是否受邀参加晚宴和婚配弥撒？',
+  'Our dinner reception on Friday, 23 October will be an intimate celebration with limited seating, so attendance is by invitation only. We would be truly honoured to have you join us for our Nuptial Mass on Saturday, 24 October at Church of the Holy Family, as we celebrate our marriage before God, family, and friends.': '10月23日星期五的晚宴是席位有限的温馨庆祝，因此仅限受邀宾客出席。10月24日星期六，我们诚挚邀请您到圣家堂参加婚配弥撒，与我们在天主、家人和朋友面前庆祝婚姻。',
+  'Can I bring a plus-one?': '我可以携带同行宾客吗？',
+  'As we have made dinner arrangements based on the guests named in each invitation, we kindly ask that only those listed attend the dinner reception. If you would like to bring a plus-one for dinner, please let us know and we will do our best to accommodate where possible.': '由于晚宴安排是根据每份邀请中列明的宾客准备的，我们恳请只有名单上的宾客出席晚宴。如您希望携带同行宾客参加晚宴，请告诉我们，我们会尽量安排。',
+  'Are children invited?': '小朋友是否受邀？',
+  'We love your little ones. Please refer to your invitation for the guests included in your party. If you need any clarification, please feel free to reach out to us.': '我们很喜欢您的小朋友。请以您的邀请函中列明的宾客为准。如需确认，欢迎联系我们。',
+  'Where can I park?': '哪里可以停车？',
+  'Self-parking is available at Asia Square Tower 2 basement. There is parking available on-site at the Church of the Holy Family, but parking lots may be limited. We recommend arriving early or using ride-hailing services where convenient.': 'Asia Square Tower 2 地下停车场提供自助泊车。圣家堂现场也有停车位，但车位可能有限。建议提早抵达，或视情况使用叫车服务。',
+  'What should I wear?': '应该穿什么？',
+  'For the dinner reception, semi-casual, formal, or semi-formal attire is warmly welcome. For the Nuptial Mass, we kindly ask guests to dress modestly and respectfully for the church setting.': '晚宴欢迎半休闲、正式或半正式着装。婚配弥撒将在教堂举行，恳请宾客穿着端庄得体。',
+  'Will there be assigned seating at the dinner reception?': '晚宴是否有指定座位？',
+  'Yes, seating arrangements will be prepared for the evening. Please refer to the seating chart or approach our welcome team, who will be happy to assist you.': '是的，晚宴将安排指定座位。请查看座位图，或向迎宾团队询问，他们会很乐意协助您。',
+  'Is there wheelchair access?': '是否有轮椅通道？',
+  'Yes. Both the ballroom and church have lifts which are available on Level 1.': '有。宴会厅和教堂均有电梯，可从一楼使用。',
+  'What time will the dinner reception end?': '晚宴预计几点结束？',
+  'The dinner reception is expected to conclude around 10:00 PM.': '晚宴预计于晚上10点左右结束。',
+  'What time should I arrive for the Nuptial Mass on Saturday, 24 October?': '10月24日星期六的婚配弥撒应几点抵达？',
+  'Mass begins at 10:30 AM at Church of the Holy Family. We kindly recommend arriving by 10:00 AM so you have time to settle in before the ceremony begins.': '弥撒将于上午10:30在圣家堂开始。我们建议您于上午10:00前抵达，以便在仪式开始前安顿入座。',
+  'Do I need to be Catholic to attend the Mass?': '我需要是天主教徒才能参加弥撒吗？',
+  'Not at all. Guests of all faiths are very welcome. You may simply remain seated or follow along respectfully during the service.': '不需要。我们欢迎不同信仰的宾客参加。弥撒期间您可以安坐，或以尊重的方式跟随礼仪。',
+  'May non-Catholic guests receive Holy Communion?': '非天主教宾客可以领圣体吗？',
+  'Holy Communion is reserved for practising Catholics. Guests who are not receiving Communion are welcome to remain seated during this part of the Mass.': '圣体只供守规的天主教徒领受。不领圣体的宾客可在此环节安坐。',
+  'Can I take photos during the church ceremony?': '教堂仪式期间可以拍照吗？',
+  'We kindly ask guests to be present and mindful during Mass, and to avoid blocking the aisle or photographer. There will be time for greetings and photographs after the ceremony.': '弥撒期间恳请宾客专注参与，并避免阻挡通道或摄影师。仪式结束后会有问候与拍照时间。',
+  'Will there be refreshments after Mass?': '弥撒后会有茶点吗？',
+  'Light refreshments will be served after the ceremony, and we would love for you to stay a while and share in the joy of the morning with us.': '仪式后将提供简单茶点，欢迎您留下来与我们分享上午的喜悦。',
+  'Who can I contact on the day itself?': '婚礼当天可以联系谁？',
+  'Please reach out to a member of our wedding party or welcome team for assistance on the day, as we may be occupied with the celebration.': '当天如需协助，请联系婚礼团队或迎宾团队成员，因为我们可能正在忙于庆祝流程。',
   'We cannot wait to celebrate with you.': '我们迫不及待想与你一同庆祝。',
 
   'The favour of your reply is requested': '敬请回复',
@@ -194,9 +230,26 @@ const zh: Record<string, string> = {
   'Cake': '蛋糕',
   'Champagne': '香槟',
   'Fountain': '塔',
+  'Wedding detail': '婚礼细节',
+  'Detail 1': '细节一',
+  'Detail 2': '细节二',
+  'Detail 3': '细节三',
+  'Wedding photo gallery': '婚礼照片集',
+  'Gallery slides': '相册幻灯片',
+  'Show gallery image {number}': '显示第{number}张照片',
+  'Section navigation': '章节导航',
+  'Scroll to previous section': '滚动到上一节',
+  'Scroll to next section': '滚动到下一节',
+  'Scroll to {section}': '滚动到{section}',
+  'Hero': '首页',
+  'At a glance': '概览',
+  'Gallery': '相册',
+  'FAQ': '常见问题',
+  'Closing': '结尾',
 };
 
 const SitePreferencesContext = createContext<SitePreferences | null>(null);
+const missingTranslations = new Set<string>();
 
 function applyTemplate(text: string, vars?: Record<string, string | number>) {
   if (!vars) return text;
@@ -245,6 +298,10 @@ export function SitePreferencesProvider({ children }: { children: React.ReactNod
       if (!text) return '';
       const source = String(text);
       if (language !== 'zh') return applyTemplate(source, vars);
+      if (!zh[source] && process.env.NODE_ENV === 'development' && !missingTranslations.has(source)) {
+        missingTranslations.add(source);
+        console.warn(`[i18n] Missing Mandarin translation: ${source}`);
+      }
       return applyTemplate(zh[source] || source, vars);
     },
   }), [fontScale, language]);

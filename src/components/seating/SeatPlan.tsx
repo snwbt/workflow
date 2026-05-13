@@ -1,7 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
+import { animate, motion, useMotionValue } from 'framer-motion';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FloorPlanData, SeatingAssignment, SeatingPerson, Table } from '@/lib/seatingTypes';
 import { useSiteText } from '@/lib/sitePreferences';
 import styles from './SeatPlan.module.css';
@@ -31,6 +31,18 @@ interface RouteData {
   focusX: number;
   focusY: number;
 }
+
+interface ViewBoxRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const FOLLOW_WIDTH = 500;
+const ROUTE_DRAW_DELAY = 300;
+const ROUTE_DRAW_DURATION = 2;
+const EASE_ELEGANT = [0.22, 1, 0.36, 1] as const;
 
 function seatPosition(table: Table, angle: number, radius: number) {
   const rad = (angle * Math.PI) / 180;
@@ -85,14 +97,24 @@ function buildWayfindingRoute(floorplan: FloorPlanData, selectedSeat?: { tableId
   };
 }
 
-function getZoomTransform(floorplan: FloorPlanData, route: RouteData | null) {
-  if (!route) return 'translate(0 0) scale(1)';
-  const scale = 1.72;
-  const centerX = floorplan.viewBox.width / 2;
-  const centerY = floorplan.viewBox.height / 2;
-  const translateX = centerX - route.focusX * scale;
-  const translateY = centerY - route.focusY * scale;
-  return `translate(${translateX} ${translateY}) scale(${scale})`;
+function createOffscreenPath(d: string) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const path = document.createElementNS(ns, 'path');
+  path.setAttribute('d', d);
+  return path;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function centerViewBox(floorplan: FloorPlanData, cx: number, cy: number, width: number, height: number): ViewBoxRect {
+  return {
+    x: clamp(cx - width / 2, 0, Math.max(0, floorplan.viewBox.width - width)),
+    y: clamp(cy - height / 2, 0, Math.max(0, floorplan.viewBox.height - height)),
+    width,
+    height,
+  };
 }
 
 export default function SeatPlan({
@@ -108,11 +130,41 @@ export default function SeatPlan({
 }: SeatPlanProps) {
   const { t } = useSiteText();
   const [routeSettled, setRouteSettled] = useState(false);
+  const [routeVisible, setRouteVisible] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [viewBox, setViewBox] = useState(`0 0 ${floorplan.viewBox.width} ${floorplan.viewBox.height}`);
+  const [routeProgress, setRouteProgress] = useState(0);
+  const [marker, setMarker] = useState<{ x: number; y: number } | null>(null);
+  const viewX = useMotionValue(0);
+  const viewY = useMotionValue(0);
+  const viewW = useMotionValue(floorplan.viewBox.width);
+  const viewH = useMotionValue(floorplan.viewBox.height);
+  const progress = useMotionValue(0);
+  const rafRef = useRef<number>(0);
   const occupants = buildOccupants(assignments, roster);
   const assignmentCounts = new Map<string, number>();
   const route = useMemo(() => buildWayfindingRoute(floorplan, selectedSeat), [floorplan, selectedSeat]);
   const showRoute = wayfinding && Boolean(route);
+  const fullView = useMemo(() => ({
+    x: 0,
+    y: 0,
+    width: floorplan.viewBox.width,
+    height: floorplan.viewBox.height,
+  }), [floorplan.viewBox.height, floorplan.viewBox.width]);
+
+  const syncViewBox = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      setViewBox(`${viewX.get()} ${viewY.get()} ${viewW.get()} ${viewH.get()}`);
+    });
+  }, [viewH, viewW, viewX, viewY]);
+
+  const animateViewBox = useCallback((rect: ViewBoxRect, duration: number) => {
+    animate(viewX, rect.x, { duration, ease: EASE_ELEGANT as never });
+    animate(viewY, rect.y, { duration, ease: EASE_ELEGANT as never });
+    animate(viewW, rect.width, { duration, ease: EASE_ELEGANT as never });
+    animate(viewH, rect.height, { duration, ease: EASE_ELEGANT as never });
+  }, [viewH, viewW, viewX, viewY]);
 
   assignments.forEach((assignment) => {
     assignmentCounts.set(assignment.tableId, (assignmentCounts.get(assignment.tableId) || 0) + 1);
@@ -127,21 +179,105 @@ export default function SeatPlan({
   }, []);
 
   useEffect(() => {
+    const unsubs = [
+      viewX.on('change', syncViewBox),
+      viewY.on('change', syncViewBox),
+      viewW.on('change', syncViewBox),
+      viewH.on('change', syncViewBox),
+    ];
+
+    return () => {
+      unsubs.forEach((unsubscribe) => unsubscribe());
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [syncViewBox, viewH, viewW, viewX, viewY]);
+
+  useEffect(() => {
+    viewX.set(0);
+    viewY.set(0);
+    viewW.set(floorplan.viewBox.width);
+    viewH.set(floorplan.viewBox.height);
+    setViewBox(`0 0 ${floorplan.viewBox.width} ${floorplan.viewBox.height}`);
+  }, [floorplan.viewBox.height, floorplan.viewBox.width, viewH, viewW, viewX, viewY]);
+
+  useEffect(() => {
     setRouteSettled(false);
-    if (!showRoute) return;
-    if (reduceMotion) {
-      setRouteSettled(true);
+    setRouteVisible(false);
+    setRouteProgress(0);
+    progress.set(0);
+
+    if (!showRoute || !route) {
+      animateViewBox(fullView, reduceMotion ? 0.01 : 0.65);
+      setMarker(null);
       return;
     }
 
-    const timer = window.setTimeout(() => setRouteSettled(true), 2100);
-    return () => window.clearTimeout(timer);
-  }, [reduceMotion, selectedSeat?.seatNumber, selectedSeat?.tableId, showRoute]);
+    const offscreenPath = createOffscreenPath(route.path);
+    const totalLength = offscreenPath.getTotalLength();
+    const start = offscreenPath.getPointAtLength(0);
+    const end = offscreenPath.getPointAtLength(totalLength);
+    setMarker({ x: start.x, y: start.y });
+
+    if (reduceMotion) {
+      setRouteVisible(true);
+      setRouteProgress(1);
+      setMarker({ x: end.x, y: end.y });
+      setRouteSettled(true);
+      animateViewBox(fullView, 0.01);
+      return;
+    }
+
+    const followHeight = Math.round(FOLLOW_WIDTH * (floorplan.viewBox.height / floorplan.viewBox.width));
+    const entranceView = centerViewBox(floorplan, floorplan.entrance.cx, floorplan.entrance.cy, FOLLOW_WIDTH, followHeight);
+    animateViewBox(entranceView, 0.6);
+
+    let unsubscribeProgress: (() => void) | null = null;
+    const timers: number[] = [];
+
+    const drawTimer = window.setTimeout(() => {
+      setRouteVisible(true);
+      unsubscribeProgress = progress.on('change', (value) => {
+        setRouteProgress(value);
+        const point = offscreenPath.getPointAtLength(value * totalLength);
+        setMarker({ x: point.x, y: point.y });
+        if (value < 1) {
+          const nextView = centerViewBox(floorplan, point.x, point.y, FOLLOW_WIDTH, followHeight);
+          viewX.set(nextView.x);
+          viewY.set(nextView.y);
+          viewW.set(nextView.width);
+          viewH.set(nextView.height);
+        }
+      });
+
+      animate(progress, 1, {
+        duration: ROUTE_DRAW_DURATION,
+        ease: [0.4, 0, 0.2, 1],
+        onComplete: () => {
+          unsubscribeProgress?.();
+          unsubscribeProgress = null;
+          const focusView = centerViewBox(floorplan, route.focusX, route.focusY, 540, Math.round(540 * (floorplan.viewBox.height / floorplan.viewBox.width)));
+          animateViewBox(focusView, 0.82);
+
+          const settleTimer = window.setTimeout(() => {
+            animateViewBox(fullView, 0.9);
+            setRouteSettled(true);
+          }, 1250);
+          timers.push(settleTimer);
+        },
+      });
+    }, ROUTE_DRAW_DELAY);
+    timers.push(drawTimer);
+
+    return () => {
+      unsubscribeProgress?.();
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [animateViewBox, floorplan, fullView, progress, reduceMotion, route, selectedSeat?.seatNumber, selectedSeat?.tableId, showRoute, viewH, viewW, viewX, viewY]);
 
   return (
     <div className={`${styles.planFrame} ${showRoute ? styles.planFrameWayfinding : ''}`}>
       <svg
-        viewBox={`0 0 ${floorplan.viewBox.width} ${floorplan.viewBox.height}`}
+        viewBox={viewBox}
         className={styles.plan}
         role="img"
         aria-label={t('Wedding dinner seating plan')}
@@ -167,12 +303,7 @@ export default function SeatPlan({
           </filter>
         </defs>
 
-        <motion.g
-          animate={{
-            transform: showRoute && !routeSettled && !reduceMotion ? getZoomTransform(floorplan, route) : 'translate(0 0) scale(1)',
-          }}
-          transition={{ duration: reduceMotion ? 0 : 1.15, ease: [0.16, 1, 0.3, 1] }}
-        >
+        <g>
         <rect x="20" y="20" width="1760" height="610" rx="4" className={styles.ballroom} />
 
         {[380, 660, 940, 1220].map((x) => (
@@ -306,17 +437,34 @@ export default function SeatPlan({
             </g>
           );
         })}
-        {showRoute && route && (
+        {showRoute && route && routeVisible && (
           <g className={styles.routeLayer} aria-hidden="true">
             <motion.path
               key={route.path}
               d={route.path}
               className={styles.routePath}
               filter="url(#route-glow)"
-              initial={reduceMotion ? false : { pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              transition={{ duration: reduceMotion ? 0 : 1.85, ease: 'easeInOut' }}
+              initial={false}
+              animate={{ pathLength: reduceMotion ? 1 : routeProgress, opacity: 1 }}
+              transition={{ duration: 0 }}
             />
+            {marker && (
+              <motion.g
+                className={styles.routeMarker}
+                animate={{ x: marker.x, y: marker.y }}
+                transition={{ duration: 0.08, ease: 'linear' }}
+              >
+                <circle r={7} />
+                {!reduceMotion && !routeSettled && (
+                  <motion.circle
+                    r={10}
+                    className={styles.routeMarkerPulse}
+                    animate={{ r: [10, 18, 10], opacity: [0.6, 0, 0.6] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                )}
+              </motion.g>
+            )}
             <motion.g
               className={styles.routeArrow}
               transform={`translate(${route.arrowX} ${route.arrowY}) rotate(${route.arrowAngle})`}
@@ -335,7 +483,7 @@ export default function SeatPlan({
             </motion.g>
           </g>
         )}
-        </motion.g>
+        </g>
       </svg>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useReveal } from '@/hooks/useReveal';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
+import { useSiteText } from '@/lib/sitePreferences';
 import styles from './GalleryInterludeSection.module.css';
 
 interface CollageImage {
@@ -12,6 +13,7 @@ interface CollageImage {
 
 export default function GalleryInterludeSection({ config }: { config?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.2 });
+  const { t } = useSiteText();
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -31,7 +33,7 @@ export default function GalleryInterludeSection({ config }: { config?: any }) {
       >
         <Image
           src={img.url}
-          alt={duplicate ? '' : (img.alt || 'Wedding detail')}
+          alt={duplicate ? '' : t(img.alt || 'Wedding detail')}
           fill
           className={styles.image}
           sizes="(max-width: 768px) 92vw, 82vw"
@@ -75,7 +77,7 @@ export default function GalleryInterludeSection({ config }: { config?: any }) {
         <div
           className={styles.sliderTrack}
           tabIndex={0}
-          aria-label="Wedding photo gallery"
+          aria-label={t('Wedding photo gallery')}
           ref={trackRef}
           onScroll={handleScroll}
         >
@@ -85,14 +87,14 @@ export default function GalleryInterludeSection({ config }: { config?: any }) {
       </div>
 
       {images.length > 1 && (
-        <div className={styles.mobileDots} aria-label="Gallery slides">
+        <div className={styles.mobileDots} aria-label={t('Gallery slides')}>
           {images.map((_, index) => (
             <button
               key={index}
               type="button"
               className={index === activeIndex ? styles.activeDot : ''}
               onClick={() => scrollToSlide(index)}
-              aria-label={`Show gallery image ${index + 1}`}
+              aria-label={t('Show gallery image {number}', { number: index + 1 })}
               aria-current={index === activeIndex ? 'true' : undefined}
             />
           ))}
@@ -101,7 +103,7 @@ export default function GalleryInterludeSection({ config }: { config?: any }) {
       
       {config.bodyCopy && (
         <div className={`${styles.captionWrapper} ${isVisible ? styles.visible : ''}`}>
-          <p className={styles.caption}>{config.bodyCopy}</p>
+          <p className={styles.caption}>{t(config.bodyCopy)}</p>
         </div>
       )}
     </section>

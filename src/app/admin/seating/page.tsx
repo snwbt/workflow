@@ -23,6 +23,12 @@ function sourceLabel(source: SeatingPerson['source']) {
   return 'RSVP';
 }
 
+function tableSortValue(labelOrId?: string) {
+  const value = String(labelOrId || '');
+  const numeric = Number(value.replace(/[^\d.]/g, ''));
+  return Number.isFinite(numeric) && numeric > 0 ? numeric : Number.MAX_SAFE_INTEGER;
+}
+
 export default function AdminSeatingPage() {
   const [payload, setPayload] = useState<SeatingPayload | null>(null);
   const [assignments, setAssignments] = useState<SeatingAssignment[]>([]);
@@ -31,6 +37,7 @@ export default function AdminSeatingPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveState, setSaveState] = useState<'idle' | 'saved' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -54,9 +61,10 @@ export default function AdminSeatingPage() {
     void Promise.resolve().then(fetchSeating);
   }, []);
 
-  const roster = useMemo(() => (payload ? payload.roster : []), [payload]);
+  const fullRoster = useMemo(() => (payload ? payload.roster : []), [payload]);
+  const roster = useMemo(() => fullRoster.filter((person) => person.source !== 'guest'), [fullRoster]);
   const selectedPerson = roster.find((person) => person.id === selectedPersonId) || null;
-  const personById = useMemo(() => new Map(roster.map((person) => [person.id, person])), [roster]);
+  const personById = useMemo(() => new Map(fullRoster.map((person) => [person.id, person])), [fullRoster]);
   const assignmentByPerson = useMemo(
     () => new Map(assignments.map((assignment) => [assignment.personId, assignment])),
     [assignments]
@@ -69,15 +77,69 @@ export default function AdminSeatingPage() {
   const selectedAssignment = selectedPersonId ? assignmentByPerson.get(selectedPersonId) : null;
   const assignedCount = roster.filter((person) => assignmentByPerson.has(person.id)).length;
 
-  const visibleRoster = roster.filter((person) => {
-    const assigned = assignmentByPerson.has(person.id);
-    const matchesFilter =
-      filter === 'all' ||
-      (filter === 'assigned' && assigned) ||
-      (filter === 'unassigned' && !assigned);
-    const matchesSearch = person.displayName.toLowerCase().includes(search.toLowerCase().trim());
-    return matchesFilter && matchesSearch;
-  });
+  const tablesById = useMemo(() => new Map((payload?.floorplan.tables || []).map((table) => [table.id, table])), [payload]);
+
+  const visibleRoster = roster
+    .filter((person) => {
+      const assigned = assignmentByPerson.has(person.id);
+      const matchesFilter =
+        filter === 'all' ||
+        (filter === 'assigned' && assigned) ||
+        (filter === 'unassigned' && !assigned);
+      const searchText = [person.displayName, person.dietary, person.accessibility, sourceLabel(person.source)]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      const matchesSearch = searchText.includes(search.toLowerCase().trim());
+      return matchesFilter && matchesSearch;
+    })
+    .sort((a, b) => {
+      const assignmentA = assignmentByPerson.get(a.id);
+      const assignmentB = assignmentByPerson.get(b.id);
+
+      if (assignmentA && assignmentB) {
+        const tableA = tablesById.get(assignmentA.tableId);
+        const tableB = tablesById.get(assignmentB.tableId);
+        const tableDiff = tableSortValue(tableA?.label || assignmentA.tableId) - tableSortValue(tableB?.label || assignmentB.tableId);
+        if (tableDiff !== 0) return tableDiff;
+        return assignmentA.seatNumber - assignmentB.seatNumber;
+      }
+
+      if (assignmentA) return -1;
+      if (assignmentB) return 1;
+      return a.displayName.localeCompare(b.displayName);
+    });
+
+  const persistAssignments = async (nextAssignments: SeatingAssignment[], successMessage: string) => {
+    const previousAssignments = assignments;
+    setAssignments(nextAssignments);
+    setSaving(true);
+    setSaveState('idle');
+    setError('');
+    setMessage('Saving...');
+
+    try {
+      const res = await fetch('/api/admin/seating', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignments: nextAssignments }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to save seating assignments.');
+      }
+
+      setSaveState('saved');
+      setMessage(successMessage);
+    } catch (err) {
+      setAssignments(previousAssignments);
+      setSaveState('error');
+      setError(err instanceof Error ? err.message : 'Failed to save seating assignments.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSeatClick = (tableId: string, seatNumber: number) => {
     setMessage('');
@@ -86,7 +148,14 @@ export default function AdminSeatingPage() {
     const occupied = assignmentBySeat.get(seatKey);
 
     if (!selectedPersonId) {
-      if (occupied) setSelectedPersonId(occupied.personId);
+      if (occupied) {
+        if (roster.some((person) => person.id === occupied.personId)) {
+          setSelectedPersonId(occupied.personId);
+        } else {
+          const occupant = personById.get(occupied.personId);
+          setError(`This seat is already assigned to ${occupant?.displayName || 'another guest'}.`);
+        }
+      }
       return;
     }
 
@@ -96,47 +165,25 @@ export default function AdminSeatingPage() {
       return;
     }
 
-    setAssignments((current) => [
-      ...current.filter((assignment) => assignment.personId !== selectedPersonId),
+    const nextAssignments = [
+      ...assignments.filter((assignment) => assignment.personId !== selectedPersonId),
       {
         personId: selectedPersonId,
         tableId,
         seatNumber,
         updatedAt: new Date().toISOString(),
       },
-    ]);
+    ];
+
+    void persistAssignments(nextAssignments, 'Assignment saved.');
   };
 
-  const clearSelectedAssignment = () => {
-    if (!selectedPersonId) return;
-    setAssignments((current) => current.filter((assignment) => assignment.personId !== selectedPersonId));
-    setMessage('Assignment cleared locally. Save changes to persist it.');
-  };
-
-  const saveAssignments = async () => {
-    setSaving(true);
-    setError('');
-    setMessage('');
-
-    try {
-      const res = await fetch('/api/admin/seating', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assignments }),
-      });
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to save seating assignments.');
-      }
-
-      setMessage('Seating assignments saved.');
-      fetchSeating();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save seating assignments.');
-    } finally {
-      setSaving(false);
-    }
+  const clearAssignment = (personId: string) => {
+    const assignment = assignmentByPerson.get(personId);
+    if (!assignment) return;
+    const nextAssignments = assignments.filter((item) => item.personId !== personId);
+    if (selectedPersonId === personId) setSelectedPersonId(personId);
+    void persistAssignments(nextAssignments, 'Assignment cleared.');
   };
 
   if (loading && !payload) return <div className={styles.container}>Loading seating planner...</div>;
@@ -148,11 +195,11 @@ export default function AdminSeatingPage() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Seating Plan</h1>
-          <p className={styles.subtitle}>Assign dinner guests to the Westin Grand Ballroom floorplan.</p>
+          <p className={styles.subtitle}>Assign dinner RSVP guests to the Westin Grand Ballroom floorplan. Changes auto-save as you work.</p>
         </div>
-        <button className={styles.primaryButton} onClick={saveAssignments} disabled={saving}>
-          {saving ? 'Saving...' : 'Save assignments'}
-        </button>
+        <div className={`${styles.saveStatus} ${saveState === 'error' ? styles.saveStatusError : ''}`} aria-live="polite">
+          {saving ? 'Saving...' : saveState === 'saved' ? 'Saved' : saveState === 'error' ? 'Save failed' : 'Autosave ready'}
+        </div>
       </div>
 
       <div className={styles.statsGrid}>
@@ -162,7 +209,7 @@ export default function AdminSeatingPage() {
         </div>
         <div className={styles.statCard}>
           <span>Assignable guests</span>
-          <strong>{payload.summary.totalPeople}</strong>
+          <strong>{roster.length}</strong>
         </div>
         <div className={styles.statCard}>
           <span>Assigned</span>
@@ -185,7 +232,7 @@ export default function AdminSeatingPage() {
           <SeatPlan
             floorplan={payload.floorplan}
             assignments={assignments}
-            roster={roster}
+            roster={fullRoster}
             selectedPersonId={selectedPersonId}
             selectedSeat={selectedAssignment ? { tableId: selectedAssignment.tableId, seatNumber: selectedAssignment.seatNumber } : null}
             showOccupants
@@ -207,7 +254,7 @@ export default function AdminSeatingPage() {
                 {(selectedPerson.dietary || selectedPerson.accessibility) && (
                   <p>{[selectedPerson.dietary, selectedPerson.accessibility].filter(Boolean).join(' | ')}</p>
                 )}
-                <button className={styles.secondaryButton} onClick={clearSelectedAssignment} disabled={!selectedAssignment}>
+                <button className={styles.secondaryButton} onClick={() => clearAssignment(selectedPerson.id)} disabled={!selectedAssignment || saving}>
                   Clear assignment
                 </button>
               </>
@@ -237,25 +284,63 @@ export default function AdminSeatingPage() {
             </div>
           </div>
 
-          <div className={styles.rosterList}>
+          <div className={styles.assignmentTableWrap}>
+            <table className={styles.assignmentTable}>
+              <thead>
+                <tr>
+                  <th>Guest</th>
+                  <th>Table</th>
+                  <th>Seat</th>
+                  <th>Status</th>
+                  <th><span className="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
             {visibleRoster.map((person) => {
               const assignment = assignmentByPerson.get(person.id);
-              const table = assignment ? payload.floorplan.tables.find((item) => item.id === assignment.tableId) : null;
+              const table = assignment ? tablesById.get(assignment.tableId) : null;
               return (
-                <button
+                <tr
                   key={person.id}
-                  type="button"
-                  className={`${styles.rosterItem} ${selectedPersonId === person.id ? styles.rosterItemActive : ''}`}
+                  className={selectedPersonId === person.id ? styles.rowActive : ''}
                   onClick={() => setSelectedPersonId(person.id)}
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setSelectedPersonId(person.id);
+                    }
+                  }}
                 >
-                  <span>
+                  <td>
                     <strong>{person.displayName}</strong>
                     <small>{sourceLabel(person.source)}{person.dietary ? ` | ${person.dietary}` : ''}</small>
-                  </span>
-                  <em>{assignment ? `T${table?.label || assignment.tableId} S${assignment.seatNumber}` : 'Unassigned'}</em>
-                </button>
+                  </td>
+                  <td>{assignment ? table?.label || assignment.tableId : '-'}</td>
+                  <td>{assignment ? assignment.seatNumber : '-'}</td>
+                  <td>
+                    <span className={assignment ? styles.statusAssigned : styles.statusUnassigned}>
+                      {assignment ? 'Assigned' : 'Unassigned'}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className={styles.clearButton}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        clearAssignment(person.id);
+                      }}
+                      disabled={!assignment || saving}
+                    >
+                      Clear
+                    </button>
+                  </td>
+                </tr>
               );
             })}
+              </tbody>
+            </table>
           </div>
         </aside>
       </div>

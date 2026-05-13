@@ -23,6 +23,21 @@
   color: var(--color-text-secondary);
 }
 
+.saveStatus {
+  min-width: 132px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: #166534;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: var(--spacing-2) var(--spacing-4);
+  text-align: center;
+}
+
+.saveStatusError {
+  color: var(--color-error);
+}
+
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -133,65 +148,107 @@
   color: var(--color-surface);
 }
 
-.rosterList {
-  display: grid;
-  gap: var(--spacing-2);
+.assignmentTableWrap {
   max-height: 70vh;
   overflow: auto;
-  padding-right: 0.25rem;
-}
-
-.rosterItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-3);
-  width: 100%;
   border: 1px solid var(--color-border);
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  padding: var(--spacing-3);
+}
+
+.assignmentTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.assignmentTable th,
+.assignmentTable td {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.7rem 0.65rem;
   text-align: left;
+  vertical-align: middle;
 }
 
-.rosterItem span {
-  display: grid;
-  gap: 0.2rem;
-  min-width: 0;
+.assignmentTable th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.rosterItem strong,
-.rosterItem small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.assignmentTable tbody tr {
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 
-.rosterItem small,
-.rosterItem em {
+.assignmentTable tbody tr:hover {
+  background: rgba(212, 197, 169, 0.12);
+}
+
+.assignmentTable strong,
+.assignmentTable small {
+  display: block;
+}
+
+.assignmentTable small {
   color: var(--color-text-secondary);
   font-size: 0.75rem;
-  font-style: normal;
+  line-height: 1.35;
+  margin-top: 0.15rem;
 }
 
-.rosterItemActive {
-  border-color: var(--color-text-primary);
+.rowActive {
+  background: rgba(212, 197, 169, 0.18);
   box-shadow: inset 3px 0 0 var(--color-text-primary);
 }
 
-.primaryButton,
+.statusAssigned,
+.statusUnassigned {
+  display: inline-flex;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.statusAssigned {
+  background: rgba(22, 101, 52, 0.1);
+  color: #166534;
+}
+
+.statusUnassigned {
+  background: rgba(176, 0, 32, 0.08);
+  color: var(--color-error);
+}
+
+.clearButton {
+  min-height: 30px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0 var(--spacing-2);
+}
+
+.clearButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .secondaryButton {
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.875rem;
   padding: var(--spacing-2) var(--spacing-4);
-}
-
-.primaryButton {
-  border: 1px solid var(--color-text-primary);
-  background: var(--color-text-primary);
-  color: var(--color-surface);
 }
 
 .secondaryButton {
@@ -200,7 +257,6 @@
   color: var(--color-text-primary);
 }
 
-.primaryButton:disabled,
 .secondaryButton:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -228,7 +284,7 @@
     grid-template-columns: 1fr;
   }
 
-  .rosterList {
+  .assignmentTableWrap {
     max-height: 420px;
   }
 }

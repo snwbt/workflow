@@ -138,6 +138,22 @@
   stroke-width: 2.4;
 }
 
+.routeMarker {
+  pointer-events: none;
+}
+
+.routeMarker circle:first-child {
+  fill: var(--seatplan-route);
+  stroke: #fffaf0;
+  stroke-width: 2.5;
+}
+
+.routeMarkerPulse {
+  fill: none;
+  stroke: var(--seatplan-route);
+  stroke-width: 1.5;
+}
+
 @media (max-width: 760px) {
   .planFrameWayfinding .plan {
     min-width: 0;

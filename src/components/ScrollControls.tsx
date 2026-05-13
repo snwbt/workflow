@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { MAIN_SCROLL_CONTAINER_ID, scrollToPageSection } from '@/lib/scroll';
+import { useSiteText } from '@/lib/sitePreferences';
 import styles from './ScrollControls.module.css';
 
 interface ScrollSection {
@@ -10,6 +11,7 @@ interface ScrollSection {
 }
 
 export default function ScrollControls({ sections }: { sections: ScrollSection[] }) {
+  const { t } = useSiteText();
   const visibleSections = useMemo(() => sections.filter((section) => section.id), [sections]);
   const [activeId, setActiveId] = useState(visibleSections[0]?.id || '');
 
@@ -53,13 +55,13 @@ export default function ScrollControls({ sections }: { sections: ScrollSection[]
   const next = visibleSections[Math.min(visibleSections.length - 1, activeIndex + 1)];
 
   return (
-    <nav className={styles.controls} aria-label="Section navigation">
+    <nav className={styles.controls} aria-label={t('Section navigation')}>
       <button
         type="button"
         className={styles.arrow}
         onClick={() => scrollToPageSection(previous.id)}
         disabled={activeIndex === 0}
-        aria-label="Scroll to previous section"
+        aria-label={t('Scroll to previous section')}
       >
         ^
       </button>
@@ -70,7 +72,7 @@ export default function ScrollControls({ sections }: { sections: ScrollSection[]
             key={section.id}
             className={`${styles.dot} ${section.id === activeId ? styles.active : ''}`}
             onClick={() => scrollToPageSection(section.id)}
-            aria-label={`Scroll to ${section.label}`}
+            aria-label={t('Scroll to {section}', { section: t(section.label) })}
             aria-current={section.id === activeId ? 'true' : undefined}
           />
         ))}
@@ -80,7 +82,7 @@ export default function ScrollControls({ sections }: { sections: ScrollSection[]
         className={styles.arrow}
         onClick={() => scrollToPageSection(next.id)}
         disabled={activeIndex === visibleSections.length - 1}
-        aria-label="Scroll to next section"
+        aria-label={t('Scroll to next section')}
       >
         v
       </button>

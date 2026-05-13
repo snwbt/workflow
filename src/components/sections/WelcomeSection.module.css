@@ -65,8 +65,9 @@
 .imageWrapper {
   position: relative;
   width: 100%;
-  max-width: 520px;
-  aspect-ratio: 4 / 5;
+  max-width: 560px;
+  height: min(72vh, 680px);
+  min-height: 420px;
   opacity: 0;
   transform: translateY(40px);
   transition: opacity 1.2s var(--ease-luxury) 0.3s, transform 1.2s var(--ease-luxury) 0.3s;
@@ -84,6 +85,13 @@
 }
 
 .image {
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 0;
+}
+
+@media (max-width: 767px) {
+  .imageWrapper {
+    height: min(68vh, 560px);
+    min-height: 320px;
+  }
 }

@@ -32,7 +32,7 @@ export default function WelcomeSection({ config }: { config?: any }) {
               muted
               playsInline
               className={styles.image}
-              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+              style={{ objectFit: 'contain', width: '100%', height: '100%' }}
             />
           ) : (
             <Image
