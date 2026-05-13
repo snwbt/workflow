@@ -1,95 +1,102 @@
 'use client';
 
 import { useReveal } from '@/hooks/useReveal';
+import { getGoogleMapsUrl, getWeddingVenues, type WeddingVenue } from '@/lib/venues';
 import Image from 'next/image';
 import { useState } from 'react';
 import styles from './VenueRevealSection.module.css';
 
-export default function VenueRevealSection({ config, globalConfig }: { config?: any, globalConfig?: any }) {
-  const { ref, isVisible } = useReveal({ threshold: 0.3 });
-  const [failedImageUrl, setFailedImageUrl] = useState('');
-
-  const mediaUrl = config?.mediaUrl?.trim();
-  const displayMode = config?.displayMode || 'image';
-  const hasImage = !!(mediaUrl && displayMode !== 'fallback' && failedImageUrl !== mediaUrl);
-
-  if (!config) return null;
-
-  const mapsUrl = config?.ctaLink || (globalConfig?.VENUE_LAT && globalConfig?.VENUE_LNG
-    ? `https://www.google.com/maps/dir/?api=1&destination=${globalConfig.VENUE_LAT},${globalConfig.VENUE_LNG}`
-    : globalConfig?.VENUE_ADDRESS
-    ? `https://www.google.com/maps/search/${encodeURIComponent(globalConfig.VENUE_ADDRESS)}`
-    : null);
-
-  const address = globalConfig?.VENUE_ADDRESS || '';
-  const motif = globalConfig?.SIGNATURE_MOTIF || 'R & S';
-  const enableMotif = globalConfig?.ENABLE_MOTIF !== false;
+function VenueCard({
+  venue,
+  index,
+  isVisible,
+  failedImages,
+  onImageError,
+}: {
+  venue: WeddingVenue;
+  index: number;
+  isVisible: boolean;
+  failedImages: string[];
+  onImageError: (url: string) => void;
+}) {
+  const mapsUrl = getGoogleMapsUrl(venue);
+  const hasImage = !!(venue.imageUrl && !failedImages.includes(venue.imageUrl));
 
   return (
-    <section id="venue_reveal" className={styles.container} ref={ref as React.RefObject<HTMLElement>}>
-      {/* Left — image or elegant fallback card */}
-      <div className={styles.imageContainer}>
+    <article
+      className={`${styles.venueCard} ${isVisible ? styles.visible : ''}`}
+      style={{ transitionDelay: `${index * 90}ms` }}
+    >
+      <div className={styles.imageFrame}>
         {hasImage ? (
           <Image
-            src={mediaUrl || ''}
-            alt={config.imageAlt || config.heading || 'Venue'}
+            src={venue.imageUrl || ''}
+            alt={venue.imageAlt || venue.name}
             fill
             className={styles.image}
             sizes="(max-width: 768px) 100vw, 50vw"
-            onError={() => setFailedImageUrl(mediaUrl || '')}
+            onError={() => onImageError(venue.imageUrl || '')}
           />
         ) : (
           <div className={styles.fallbackCard}>
-            <div className={styles.fallbackInner}>
-              {enableMotif && (
-                <span className={styles.fallbackMotif} aria-hidden="true">{motif}</span>
-              )}
-              <div className={styles.fallbackRule} />
-              <h3 className={styles.fallbackName}>{config.heading || 'The Venue'}</h3>
-              <div className={styles.fallbackRule} />
-              {address && (
-                <address className={styles.fallbackAddress}>
-                  {address.split(',').map((line: string, i: number) => (
-                    <span key={i} className={styles.fallbackAddressLine}>{line.trim()}</span>
-                  ))}
-                </address>
-              )}
-              <div className={styles.fallbackPin} aria-hidden="true">
-                <svg width="16" height="22" viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 0C3.6 0 0 3.6 0 8C0 13.4 8 22 8 22C8 22 16 13.4 16 8C16 3.6 12.4 0 8 0ZM8 10.8C6.5 10.8 5.2 9.5 5.2 8C5.2 6.5 6.5 5.2 8 5.2C9.5 5.2 10.8 6.5 10.8 8C10.8 9.5 9.5 10.8 8 10.8Z" fill="currentColor"/>
-                </svg>
-              </div>
-              {mapsUrl && (
-                <a
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.fallbackDirections}
-                  aria-label={`Get directions to ${config.heading}`}
-                >
-                  {config.ctaLabel || 'Get Directions'}
-                </a>
-              )}
-            </div>
+            <span className={styles.fallbackDate}>{venue.dateLabel}</span>
+            <span className={styles.fallbackRule} />
+            <h3 className={styles.fallbackName}>{venue.name || 'Venue to be announced'}</h3>
+            {venue.address && (
+              <address className={styles.fallbackAddress}>
+                {venue.address.split(',').map((line, lineIndex) => (
+                  <span key={lineIndex}>{line.trim()}</span>
+                ))}
+              </address>
+            )}
           </div>
         )}
       </div>
 
-      {/* Right — text content */}
-      <div className={`${styles.content} ${isVisible ? styles.visible : ''}`}>
-        <h2 className={styles.heading}>{config.heading}</h2>
-        <div className={styles.divider} />
-        {config.bodyCopy && <p className={styles.bodyCopy}>{config.bodyCopy}</p>}
-        {hasImage && mapsUrl && (
-          <a
-            href={mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.directionsBtn}
-          >
-            {config.ctaLabel || 'Get Directions'}
+      <div className={styles.cardBody}>
+        <span className={styles.dateLabel}>{venue.dateLabel}</span>
+        <h3 className={styles.venueName}>{venue.name}</h3>
+        {venue.address && <p className={styles.address}>{venue.address}</p>}
+        {venue.arrivalNote && <p className={styles.arrivalNote}>{venue.arrivalNote}</p>}
+        {mapsUrl && (
+          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.directionsBtn}>
+            Get Directions
           </a>
         )}
+      </div>
+    </article>
+  );
+}
+
+export default function VenueRevealSection({ config, globalConfig }: { config?: any; globalConfig?: any }) {
+  const { ref, isVisible } = useReveal({ threshold: 0.2 });
+  const [failedImages, setFailedImages] = useState<string[]>([]);
+
+  if (!config) return null;
+
+  const venues = getWeddingVenues(globalConfig, config);
+
+  if (venues.length === 0) return null;
+
+  return (
+    <section id="venue_reveal" className={styles.container} ref={ref as React.RefObject<HTMLElement>}>
+      <div className={`${styles.header} ${isVisible ? styles.visible : ''}`}>
+        <span className={styles.eyebrow}>The Venues</span>
+        <h2 className={styles.heading}>{config.heading || 'Where We Gather'}</h2>
+        {config.bodyCopy && <p className={styles.bodyCopy}>{config.bodyCopy}</p>}
+      </div>
+
+      <div className={`${styles.venueGrid} ${venues.length === 1 ? styles.singleVenue : ''}`}>
+        {venues.map((venue, index) => (
+          <VenueCard
+            key={venue.key}
+            venue={venue}
+            index={index}
+            isVisible={isVisible}
+            failedImages={failedImages}
+            onImageError={(url) => setFailedImages((current) => [...current, url])}
+          />
+        ))}
       </div>
     </section>
   );

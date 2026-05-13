@@ -1,222 +1,218 @@
 .container {
+  min-height: 100vh;
+  padding: clamp(4rem, 7vh, 6rem) var(--spacing-4);
+  background: var(--color-bg);
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background-color: var(--color-bg);
-  padding: var(--spacing-8) var(--spacing-4);
-  align-items: center;
   justify-content: center;
   gap: var(--spacing-8);
 }
 
-@media (min-width: 768px) {
-  .container {
-    flex-direction: row;
-    padding: var(--spacing-16);
-    gap: var(--spacing-16);
-  }
-}
-
-/* ── Image / Fallback container (shared left column) ── */
-.imageContainer {
-  position: relative;
-  width: 100%;
-  max-width: 520px;
-  aspect-ratio: 4/5;
-  overflow: hidden;
-  border-radius: 2px;
-  box-shadow: 0 12px 40px rgba(44, 36, 32, 0.1);
-  border: 1px solid var(--color-border);
-  flex-shrink: 0;
-  transition:
-    border-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard),
-    transform var(--duration-fast) var(--ease-standard);
-}
-
-.imageContainer:hover {
-  border-color: var(--color-accent);
-  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.22);
-  transform: translateY(-3px);
-}
-
-@media (min-width: 768px) {
-  .imageContainer {
-    flex: 1;
-    max-height: 80vh;
-    max-width: none;
-  }
-}
-
-.image {
-  object-fit: cover;
-  transition: transform 1.6s var(--ease-luxury);
-}
-
-.imageContainer:hover .image {
-  transform: scale(1.03);
-}
-
-/* ── Elegant fallback location card ── */
-.fallbackCard {
-  width: 100%;
-  height: 100%;
-  background-color: var(--color-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-8);
-}
-
-.fallbackInner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-4);
-  text-align: center;
-  max-width: 320px;
-}
-
-.fallbackMotif {
-  font-family: var(--font-serif);
-  font-size: 2rem;
-  font-style: italic;
-  color: var(--color-accent);
-  letter-spacing: 0.12em;
-  opacity: 0.6;
-  margin-bottom: var(--spacing-2);
-}
-
-.fallbackRule {
-  width: 48px;
-  height: 1px;
-  background-color: var(--color-champagne);
-}
-
-.fallbackName {
-  font-family: var(--font-serif);
-  font-size: clamp(1.375rem, 3vw, 1.875rem);
-  color: var(--color-espresso);
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-}
-
-.fallbackAddress {
-  font-style: normal;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-  margin-top: var(--spacing-2);
-}
-
-.fallbackAddressLine {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
-  letter-spacing: 0.06em;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-}
-
-.fallbackPin {
-  color: var(--color-accent);
-  margin-top: var(--spacing-4);
-  opacity: 0.7;
-}
-
-.fallbackDirections {
-  display: inline-block;
-  padding: var(--spacing-3) var(--spacing-8);
-  border: 1px solid var(--color-espresso);
-  color: var(--color-espresso);
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  text-decoration: none;
-  margin-top: var(--spacing-2);
-  transition: background-color var(--duration-fast) var(--ease-standard),
-              color var(--duration-fast) var(--ease-standard);
-}
-
-.fallbackDirections:hover {
-  background-color: var(--color-espresso);
-  color: var(--color-surface);
-}
-
-/* ── Right column: text content ── */
-.content {
-  flex: 1;
-  max-width: 420px;
+.header {
+  max-width: 720px;
+  margin: 0 auto;
   text-align: center;
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 1s var(--ease-luxury), transform 1s var(--ease-luxury);
+  transform: translateY(18px);
+  transition: opacity 0.6s var(--ease-luxury), transform 0.6s var(--ease-luxury);
 }
 
-@media (min-width: 768px) {
-  .content {
-    text-align: left;
-  }
-}
-
-.content.visible {
+.header.visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-.heading {
+.eyebrow,
+.dateLabel,
+.fallbackDate {
+  color: var(--color-accent);
   font-family: var(--font-sans);
-  font-size: clamp(2.5rem, 5vw, 4rem);
-  font-weight: 800;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  letter-spacing: 0;
+}
+
+.heading {
+  margin: var(--spacing-2) 0 var(--spacing-3);
   color: var(--color-espresso);
-  margin-bottom: var(--spacing-6);
-  line-height: 1.1;
-}
-
-.divider {
-  width: 40px;
-  height: 1px;
-  background-color: var(--color-accent);
-  margin: 0 auto var(--spacing-6);
-}
-
-@media (min-width: 768px) {
-  .divider {
-    margin: 0 0 var(--spacing-6) 0;
-  }
+  font-family: var(--font-sans);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.05;
+  text-transform: uppercase;
 }
 
 .bodyCopy {
-  font-size: 1.125rem;
+  max-width: 620px;
+  margin: 0 auto;
   color: var(--color-text-secondary);
-  line-height: 1.7;
-  margin-bottom: var(--spacing-8);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.venueGrid {
+  width: min(100%, 1160px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2.5vw, 2rem);
+}
+
+.venueGrid.singleVenue {
+  grid-template-columns: minmax(0, 680px);
+  justify-content: center;
+}
+
+.venueCard {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.5s var(--ease-luxury),
+    transform 0.5s var(--ease-luxury),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.venueCard.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.venueCard:hover {
+  border-color: var(--color-accent);
+}
+
+.imageFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.image {
+  object-fit: cover;
+  transition: transform 900ms var(--ease-luxury);
+}
+
+.venueCard:hover .image {
+  transform: scale(1.025);
+}
+
+.fallbackCard {
+  width: 100%;
+  height: 100%;
+  padding: var(--spacing-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-4);
+  text-align: center;
+}
+
+.fallbackRule {
+  width: 44px;
+  height: 1px;
+  background: var(--color-accent);
+}
+
+.fallbackName {
+  max-width: 360px;
+  color: var(--color-espresso);
+  font-family: var(--font-serif);
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.fallbackAddress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-style: normal;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cardBody {
+  padding: clamp(1.25rem, 2vw, 2rem);
+}
+
+.venueName {
+  margin: var(--spacing-2) 0;
+  color: var(--color-espresso);
+  font-family: var(--font-serif);
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.address,
+.arrivalNote {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.arrivalNote {
+  font-family: var(--font-serif);
+  font-style: italic;
 }
 
 .directionsBtn {
-  display: inline-block;
-  padding: var(--spacing-3) var(--spacing-8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin-top: var(--spacing-3);
+  padding: 0 var(--spacing-8);
   border: 1px solid var(--color-espresso);
   color: var(--color-espresso);
   font-family: var(--font-sans);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  text-decoration: none;
   transition:
     background-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard),
     color var(--duration-fast) var(--ease-standard),
     transform var(--duration-fast) var(--ease-standard);
 }
 
 .directionsBtn:hover {
-  background-color: var(--color-espresso);
+  background: var(--color-espresso);
   color: var(--color-surface);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 767px) {
+  .container {
+    min-height: auto;
+    padding: var(--spacing-16) var(--spacing-4);
+  }
+
+  .venueGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .venueCard,
+  .image {
+    transition: none;
+  }
+
+  .header,
+  .venueCard {
+    opacity: 1;
+    transform: none;
+  }
 }

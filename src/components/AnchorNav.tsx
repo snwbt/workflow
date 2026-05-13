@@ -26,6 +26,7 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
     const scrollContainer = document.getElementById(MAIN_SCROLL_CONTAINER_ID);
 
     if (!hero || !scrollContainer) return;
+    const usesInternalScroll = window.getComputedStyle(scrollContainer).overflowY !== 'visible';
 
     const heroObserver = new IntersectionObserver(
       ([entry]) => {
@@ -33,7 +34,7 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
         setIsHeroVisible(entry.intersectionRatio > 0.3);
       },
       {
-        root: scrollContainer,
+        root: usesInternalScroll ? scrollContainer : null,
         threshold: [0, 0.3, 0.6, 1],
       }
     );
@@ -46,7 +47,7 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
             setIsRsvpVisible(entry.intersectionRatio > 0.35);
           },
           {
-            root: scrollContainer,
+            root: usesInternalScroll ? scrollContainer : null,
             threshold: [0, 0.35, 0.65, 1],
           }
         )
@@ -64,7 +65,7 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
         }
       },
       {
-        root: scrollContainer,
+        root: usesInternalScroll ? scrollContainer : null,
         rootMargin: '-20% 0px -20% 0px',
         threshold: [0, 0.25, 0.5, 0.75, 1],
       }

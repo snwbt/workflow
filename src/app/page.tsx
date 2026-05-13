@@ -11,6 +11,7 @@ import RsvpSection from '@/components/sections/RsvpSection';
 import SignatureMotif from '@/components/SignatureMotif';
 import ClosingSection from '@/components/sections/ClosingSection';
 import AnchorNav from '@/components/AnchorNav';
+import ScrollControls from '@/components/ScrollControls';
 import { getDb } from '@/lib/db';
 import { connection } from 'next/server';
 
@@ -31,11 +32,24 @@ export default async function Home() {
     acc[section.type] = section;
     return acc;
   }, {} as Record<string, any>);
+  const scrollSections = [
+    (!config.hero || config.hero.enabled) && { id: 'hero', label: 'Hero' },
+    (!config.at_a_glance || config.at_a_glance.enabled) && { id: 'at_a_glance', label: 'At a glance' },
+    (!config.welcome || config.welcome.enabled) && { id: 'welcome', label: 'Welcome' },
+    (!config.schedule || config.schedule.enabled) && { id: 'schedule', label: 'Schedule' },
+    (!config.venue_reveal || config.venue_reveal.enabled) && { id: 'venue_reveal', label: 'Venue' },
+    (!config.travel || config.travel.enabled) && { id: 'travel', label: 'Travel' },
+    (!config.gallery_interlude || config.gallery_interlude.enabled) && { id: 'gallery_interlude', label: 'Gallery' },
+    (!config.faq || config.faq.enabled) && { id: 'faq', label: 'FAQ' },
+    { id: 'rsvp', label: 'RSVP' },
+    (!config.closing || config.closing.enabled) && { id: 'closing', label: 'Closing' },
+  ].filter(Boolean) as { id: string; label: string }[];
 
   return (
     <>
       {/* Fixed nav — lives outside the scroll container so it persists across all snapped sections */}
       <AnchorNav globalConfig={globalConfig} />
+      <ScrollControls sections={scrollSections} />
 
       <main className={styles.main} id="main-scroll-container">
         {/* Hero — full-screen, no nav padding needed */}
@@ -53,7 +67,7 @@ export default async function Home() {
         )}
 
         {showMotif && (
-          <div className={`${styles.section} ${styles.motifSection} ${styles.themeLight}`}>
+          <div className={`${styles.motifDivider} ${styles.themeLight}`}>
             <SignatureMotif config={globalConfig} />
           </div>
         )}
@@ -66,7 +80,7 @@ export default async function Home() {
         )}
 
         {showMotif && (
-          <div className={`${styles.section} ${styles.motifSection} ${styles.themeNeutral}`}>
+          <div className={`${styles.motifDivider} ${styles.themeNeutral}`}>
             <SignatureMotif config={globalConfig} />
           </div>
         )}
@@ -79,7 +93,7 @@ export default async function Home() {
         )}
 
         {showMotif && (
-          <div className={`${styles.section} ${styles.motifSection} ${styles.themeDark}`}>
+          <div className={`${styles.motifDivider} ${styles.themeDark}`}>
             <SignatureMotif config={globalConfig} />
           </div>
         )}
@@ -99,7 +113,7 @@ export default async function Home() {
         )}
 
         {showMotif && (
-          <div className={`${styles.section} ${styles.motifSection} ${styles.themeNeutral}`}>
+          <div className={`${styles.motifDivider} ${styles.themeNeutral}`}>
             <SignatureMotif config={globalConfig} />
           </div>
         )}
@@ -119,7 +133,7 @@ export default async function Home() {
         )}
 
         {showMotif && (
-          <div className={`${styles.section} ${styles.motifSection} ${styles.themeLight}`}>
+          <div className={`${styles.motifDivider} ${styles.themeLight}`}>
             <SignatureMotif config={globalConfig} />
           </div>
         )}

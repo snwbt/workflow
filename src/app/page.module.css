@@ -41,11 +41,15 @@
   min-height: 100dvh;
 }
 
-.motifSection {
-  min-height: 42dvh;
+.motifDivider {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  padding: var(--spacing-8) var(--spacing-4);
+  scroll-snap-align: none;
+  scroll-snap-stop: normal;
 }
 
 .themeHero {
@@ -104,7 +108,8 @@
   .compactSection.withNav,
   .naturalSection,
   .naturalSection.withNav,
-  .motifSection {
+  .motifDivider {
     min-height: auto;
+    padding: var(--spacing-6) var(--spacing-4);
   }
 }

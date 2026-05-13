@@ -1,0 +1,12 @@
+
+> workflow@0.1.0 dev
+> next dev --port 3000
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://169.254.83.107:3000
+✓ Ready in 821ms
+
+ GET / 200 in 443ms (next.js: 178ms, application-code: 264ms)
+ GET / 200 in 75ms (next.js: 4ms, application-code: 70ms)
+ GET / 200 in 104ms (next.js: 5ms, application-code: 98ms)

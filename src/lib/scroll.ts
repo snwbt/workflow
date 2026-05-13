@@ -13,7 +13,11 @@ export function scrollToPageSection(hashOrId: string) {
 
   const scrollContainer = document.getElementById(MAIN_SCROLL_CONTAINER_ID);
 
-  if (scrollContainer && scrollContainer.contains(target)) {
+  const usesInternalScroll = scrollContainer
+    ? window.getComputedStyle(scrollContainer).overflowY !== 'visible'
+    : false;
+
+  if (scrollContainer && scrollContainer.contains(target) && usesInternalScroll) {
     const containerRect = scrollContainer.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
     const top = targetRect.top - containerRect.top + scrollContainer.scrollTop;

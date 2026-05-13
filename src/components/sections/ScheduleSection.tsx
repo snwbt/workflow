@@ -35,6 +35,41 @@ export default function ScheduleSection({ config }: { config?: any }) {
   const heading = config?.heading || 'The Weekend';
   const intro = config?.bodyCopy || '';
   const days: ScheduleDay[] = config?.days?.length > 0 ? config.days : defaultDays;
+  const displayedDays = days.slice(0, 2);
+  const maxEvents = Math.max(...displayedDays.map((day) => day.events.length), 0);
+  const rows = Array.from({ length: maxEvents });
+
+  const renderEvent = (
+    event: ScheduleEvent | undefined,
+    key: string,
+    transitionDelay: string,
+    isPlaceholder = false
+  ) => (
+    <div
+      key={key}
+      className={`${styles.event} ${isPlaceholder ? styles.placeholderEvent : ''} ${isVisible ? styles.visible : ''}`}
+      style={{ transitionDelay }}
+      aria-hidden={isPlaceholder}
+    >
+      {event && (
+        <>
+          <div className={styles.timeColumn}>
+            <span className={styles.time}>{event.time}</span>
+          </div>
+          <div className={styles.eventContent}>
+            <h3 className={styles.eventName}>{event.title}</h3>
+            <div className={styles.eventDetails}>
+              <span className={styles.location}>{event.location}</span>
+              {event.notes && <span>{event.notes}</span>}
+              {event.dressCode && (
+                <span className={styles.dressCode}>Dress Code: {event.dressCode}</span>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <section id="schedule" className={styles.schedule} ref={ref as React.RefObject<HTMLElement>}>
@@ -42,7 +77,26 @@ export default function ScheduleSection({ config }: { config?: any }) {
         <h2 className={`${styles.title} ${isVisible ? styles.visible : ''}`}>{heading}</h2>
         {intro && <p className={styles.intro}>{intro}</p>}
 
-        <div className={styles.daysGrid}>
+        <div className={`${styles.desktopSchedule} ${displayedDays.length === 1 ? styles.singleDay : ''} ${isVisible ? styles.visible : ''}`}>
+          {displayedDays.map((day, dayIndex) => (
+            <div key={dayIndex} className={styles.dayHeader}>
+              <span className={styles.dayLabel}>{day.label}</span>
+              <span className={styles.dayDate}>{day.date}</span>
+            </div>
+          ))}
+          {rows.map((_, rowIndex) => (
+            displayedDays.map((day, dayIndex) => (
+              renderEvent(
+                day.events[rowIndex],
+                `${dayIndex}-${rowIndex}`,
+                `${0.12 + rowIndex * 0.05}s`,
+                !day.events[rowIndex]
+              )
+            ))
+          ))}
+        </div>
+
+        <div className={styles.mobileDays}>
           {days.map((day, dayIndex) => (
             <div key={dayIndex} className={`${styles.dayGroup} ${isVisible ? styles.visible : ''}`} style={{ transitionDelay: `${dayIndex * 0.1}s` }}>
               <div className={styles.dayHeader}>
@@ -52,25 +106,7 @@ export default function ScheduleSection({ config }: { config?: any }) {
 
               <div className={styles.timeline}>
                 {day.events.map((event, eventIndex) => (
-                  <div
-                    key={eventIndex}
-                    className={`${styles.event} ${isVisible ? styles.visible : ''}`}
-                    style={{ transitionDelay: `${0.2 + dayIndex * 0.1 + eventIndex * 0.12}s` }}
-                  >
-                    <div className={styles.timeColumn}>
-                      <span className={styles.time}>{event.time}</span>
-                    </div>
-                    <div className={styles.eventContent}>
-                      <h3 className={styles.eventName}>{event.title}</h3>
-                      <div className={styles.eventDetails}>
-                        <span className={styles.location}>{event.location}</span>
-                        {event.notes && <span>{event.notes}</span>}
-                        {event.dressCode && (
-                          <span className={styles.dressCode}>Dress Code: {event.dressCode}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  renderEvent(event, `${dayIndex}-mobile-${eventIndex}`, `${0.12 + eventIndex * 0.05}s`)
                 ))}
               </div>
             </div>

@@ -180,7 +180,7 @@ export default function EditorPage() {
         <input className={styles.input} value={config.SIGNATURE_MOTIF || ''} onChange={(e) => updateConfig('SIGNATURE_MOTIF', e.target.value)} placeholder="R & S" disabled={config.ENABLE_MOTIF === false} />
       </div>
 
-      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>Venue Details (Google Maps)</h3>
+      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>23 October Venue Details (Google Maps)</h3>
       <div className={styles.formGroup}>
         <label className={styles.label}>Venue Name</label>
         <input className={styles.input} value={config.VENUE_NAME || ''} onChange={(e) => updateConfig('VENUE_NAME', e.target.value)} />
@@ -204,6 +204,44 @@ export default function EditorPage() {
         <input className={styles.input} value={config.VENUE_ARRIVAL_NOTE || ''} onChange={(e) => updateConfig('VENUE_ARRIVAL_NOTE', e.target.value)} />
       </div>
 
+      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>24 October Venue Details (Google Maps)</h3>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Name</label>
+        <input className={styles.input} value={config.VENUE_DAY_TWO_NAME || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_NAME', e.target.value)} placeholder="Church of the Holy Family" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Address</label>
+        <input className={styles.input} value={config.VENUE_DAY_TWO_ADDRESS || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_ADDRESS', e.target.value)} />
+      </div>
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Latitude</label>
+          <input type="number" step="any" className={styles.input} value={config.VENUE_DAY_TWO_LAT || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_LAT', parseFloat(e.target.value))} />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Longitude</label>
+          <input type="number" step="any" className={styles.input} value={config.VENUE_DAY_TWO_LNG || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_LNG', parseFloat(e.target.value))} />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Arrival / Parking Note</label>
+        <input className={styles.input} value={config.VENUE_DAY_TWO_ARRIVAL_NOTE || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_ARRIVAL_NOTE', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Image</label>
+        <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
+          <input className={styles.input} style={{flex: 1}} placeholder="/media/image.jpg" value={config.VENUE_DAY_TWO_IMAGE || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_IMAGE', e.target.value)} />
+          <label className={styles.secondaryButton} style={{padding: '0.5rem 1rem', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center'}}>
+            {uploading ? 'Uploading...' : 'Upload File'}
+            <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => handleFileUpload(e, (url) => updateConfig('VENUE_DAY_TWO_IMAGE', url))} disabled={uploading} />
+          </label>
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Venue Image Alt Text</label>
+        <input className={styles.input} value={config.VENUE_DAY_TWO_IMAGE_ALT || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_IMAGE_ALT', e.target.value)} />
+      </div>
+
       <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>WhatsApp Concierge</h3>
       <div className={styles.formGroup}>
         <label className={styles.label}>WhatsApp Phone Number (include country code, e.g. 1234567890)</label>
@@ -214,7 +252,7 @@ export default function EditorPage() {
         <input className={styles.input} value={config.WHATSAPP_LABEL || ''} onChange={(e) => updateConfig('WHATSAPP_LABEL', e.target.value)} placeholder="Wedding Concierge" />
       </div>
 
-      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>Travel & Directions</h3>
+      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>23 October Travel & Directions</h3>
       <div className={styles.formGroup}>
         <label className={styles.label}>MRT Station</label>
         <input className={styles.input} value={config.TRAVEL_MRT_STATION || ''} onChange={(e) => updateConfig('TRAVEL_MRT_STATION', e.target.value)} />
@@ -246,6 +284,40 @@ export default function EditorPage() {
       <div className={styles.formGroup}>
         <label className={styles.label}>Accessibility Notes</label>
         <textarea className={styles.textarea} value={config.TRAVEL_ACCESSIBILITY || ''} onChange={(e) => updateConfig('TRAVEL_ACCESSIBILITY', e.target.value)} />
+      </div>
+
+      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>24 October Travel & Directions</h3>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>MRT Station</label>
+        <input className={styles.input} value={config.TRAVEL_DAY_TWO_MRT_STATION || ''} onChange={(e) => updateConfig('TRAVEL_DAY_TWO_MRT_STATION', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>MRT Directions</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_DAY_TWO_MRT_DIRECTIONS || ''} onChange={(e) => updateConfig('TRAVEL_DAY_TWO_MRT_DIRECTIONS', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Bus Stop</label>
+        <input className={styles.input} value={config.TRAVEL_DAY_TWO_BUS_STOP || ''} onChange={(e) => updateConfig('TRAVEL_DAY_TWO_BUS_STOP', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Bus Directions</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_DAY_TWO_BUS_DIRECTIONS || ''} onChange={(e) => updateConfig('TRAVEL_DAY_TWO_BUS_DIRECTIONS', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Driving & Parking Info</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_DAY_TWO_PARKING || ''} onChange={(e) => updateConfig('TRAVEL_DAY_TWO_PARKING', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Drop-off Info</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_DAY_TWO_DROPOFF || ''} onChange={(e) => updateConfig('TRAVEL_DAY_TWO_DROPOFF', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Hotel-to-Venue Directions</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_DAY_TWO_HOTEL_DIRECTIONS || ''} onChange={(e) => updateConfig('TRAVEL_DAY_TWO_HOTEL_DIRECTIONS', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Accessibility Notes</label>
+        <textarea className={styles.textarea} value={config.TRAVEL_DAY_TWO_ACCESSIBILITY || ''} onChange={(e) => updateConfig('TRAVEL_DAY_TWO_ACCESSIBILITY', e.target.value)} />
       </div>
 
       <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>RSVP Configuration</h3>
