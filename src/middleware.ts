@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { isAdminRequestAuthorized } from '@/lib/adminAuth';
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   if (isAdminRequestAuthorized(request)) {
     return NextResponse.next();
   }
