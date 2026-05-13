@@ -6,6 +6,29 @@
   padding: clamp(1.25rem, 4vw, 3rem);
 }
 
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-height: 40px;
+  margin-bottom: clamp(1rem, 3vw, 2rem);
+  padding: 0 var(--spacing-4);
+  border: 1px solid rgba(44, 36, 32, 0.14);
+  background: rgba(255, 253, 248, 0.72);
+  color: var(--color-espresso);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  box-shadow: 0 14px 34px rgba(44, 36, 32, 0.06);
+}
+
+.backLink:hover {
+  border-color: rgba(44, 36, 32, 0.28);
+  background: rgba(255, 253, 248, 0.94);
+  transform: translateY(-1px);
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 440px);

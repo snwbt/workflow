@@ -6,6 +6,7 @@ import { useReveal } from '@/hooks/useReveal';
 import styles from './RsvpSection.module.css';
 import { trackEvent } from '@/lib/analytics';
 import { getRsvpDeadlineDisplay } from '@/lib/eventDisplay';
+import { useSiteText } from '@/lib/sitePreferences';
 
 type AttendanceStatus = 'attending' | 'declined';
 type InviteType = 'friday_saturday' | 'saturday_only';
@@ -34,6 +35,7 @@ function isValidEmail(value: string) {
 
 export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.18 });
+  const { t } = useSiteText();
   const [step, setStep] = useState<RsvpStep>('initial');
 
   const [inviteCode, setInviteCode] = useState('');
@@ -233,8 +235,8 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
       <section id="rsvp" className={styles.rsvp} ref={ref as React.RefObject<HTMLElement>}>
         <div className={`${styles.content} ${isVisible ? styles.visible : ''}`}>
           <div className={styles.fadeContainer}>
-            <h2 className={styles.title}>RSVP Closed</h2>
-            <p className={styles.subtitle}>The deadline to RSVP has passed. Please contact us directly if you have any questions.</p>
+            <h2 className={styles.title}>{t('RSVP Closed')}</h2>
+            <p className={styles.subtitle}>{t('The deadline to RSVP has passed. Please contact us directly if you have any questions.')}</p>
           </div>
         </div>
       </section>
@@ -246,42 +248,42 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
       <div id="rsvp-form" className={`${styles.content} ${isVisible ? styles.visible : ''}`}>
         {step === 'initial' && (
           <div className={styles.fadeContainer}>
-            <p className={styles.eyebrow}>The favour of your reply is requested</p>
-            <h2 className={styles.title}>Begin With Your Invite</h2>
-            <p className={styles.subtitle}>Kindly respond by {deadlineDisplay}.</p>
+            <p className={styles.eyebrow}>{t('The favour of your reply is requested')}</p>
+            <h2 className={styles.title}>{t('Begin With Your Invite')}</h2>
+            <p className={styles.subtitle}>{t('Kindly respond by {date}.', { date: deadlineDisplay })}</p>
 
-            {error && <p className={styles.error} role="alert">{error}</p>}
+            {error && <p className={styles.error} role="alert">{t(error)}</p>}
 
             <form className={styles.form} onSubmit={handleInitialSubmit} noValidate>
               <div className={styles.field}>
-                <label htmlFor="inviteCode" className={styles.label}>{labels.inviteCode}</label>
+                <label htmlFor="inviteCode" className={styles.label}>{t(labels.inviteCode)}</label>
                 <input
                   id="inviteCode"
                   type="text"
                   className={`${styles.input} ${fieldInvalid(resolveInviteType(inviteCode)) ? styles.invalid : ''}`}
                   value={inviteCode}
                   onChange={(e) => setInviteCode(e.target.value)}
-                  placeholder="Enter the code on your invitation"
+                  placeholder={t('Enter the code on your invitation')}
                   autoCapitalize="characters"
                   required
                 />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="guestName" className={styles.label}>Full Name</label>
+                <label htmlFor="guestName" className={styles.label}>{t('Full Name')}</label>
                 <input
                   id="guestName"
                   type="text"
                   className={`${styles.input} ${fieldInvalid(guestName.trim()) ? styles.invalid : ''}`}
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
-                  placeholder="Jane Austen"
+                  placeholder={t('Jane Austen')}
                   required
                 />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="email" className={styles.label}>Email Address</label>
+                <label htmlFor="email" className={styles.label}>{t('Email Address')}</label>
                 <input
                   id="email"
                   type="email"
@@ -300,7 +302,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
                   onClick={() => setAttendance('attending')}
                   aria-pressed={attendance === 'attending'}
                 >
-                  Joyfully Accepts
+                  {t('Joyfully Accepts')}
                 </button>
                 <button
                   type="button"
@@ -308,12 +310,12 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
                   onClick={() => setAttendance('declined')}
                   aria-pressed={attendance === 'declined'}
                 >
-                  Regretfully Declines
+                  {t('Regretfully Declines')}
                 </button>
               </div>
 
               <button type="submit" className={styles.submitButton}>
-                Continue
+                {t('Continue')}
               </button>
             </form>
           </div>
@@ -321,19 +323,19 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
 
         {step === 'details' && inviteType && (
           <div className={styles.fadeContainer}>
-            <p className={styles.eyebrow}>Invitation unlocked</p>
-            <h2 className={styles.title}>We Saved Your Place</h2>
-            <p className={styles.subtitle}>{INVITE_LABELS[inviteType]} invitation for {guestName}.</p>
+            <p className={styles.eyebrow}>{t('Invitation unlocked')}</p>
+            <h2 className={styles.title}>{t('We Saved Your Place')}</h2>
+            <p className={styles.subtitle}>{t('{label} invitation for {name}.', { label: t(INVITE_LABELS[inviteType]), name: guestName })}</p>
 
             <div className={styles.inviteCard}>
-              {inviteType === 'friday_saturday' ? 'Dinner reception and solemnisation Mass' : 'Solemnisation Mass'}
+              {inviteType === 'friday_saturday' ? t('Dinner reception and solemnisation Mass') : t('Solemnisation Mass')}
             </div>
 
-            {error && <p className={styles.error} role="alert">{error}</p>}
+            {error && <p className={styles.error} role="alert">{t(error)}</p>}
 
             <form className={styles.form} onSubmit={handleFinalSubmit} noValidate>
               <div className={styles.field}>
-                <label htmlFor="guestCount" className={styles.label}>{labels.guestCount}</label>
+                <label htmlFor="guestCount" className={styles.label}>{t(labels.guestCount)}</label>
                 <select
                   id="guestCount"
                   className={styles.select}
@@ -348,17 +350,17 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
 
               {guestCount > 1 && (
                 <fieldset className={styles.companionField}>
-                  <legend className={styles.label}>{labels.additionalGuests} *</legend>
+                  <legend className={styles.label}>{t(labels.additionalGuests)} *</legend>
                   <div className={styles.companionGrid}>
                     {Array.from({ length: requiredCompanionCount }, (_, index) => (
                       <label key={index} className={styles.companionLabel}>
-                        Guest {index + 2} name
+                        {t('Guest {number} name', { number: index + 2 })}
                         <input
                           type="text"
                           className={`${styles.input} ${hasSubmitted && !companionValues[index]?.trim() ? styles.invalid : ''}`}
                           value={companionValues[index] || ''}
                           onChange={(e) => updateCompanionName(index, e.target.value)}
-                          placeholder={`Guest ${index + 2}`}
+                          placeholder={t('Guest {number} name', { number: index + 2 })}
                           required
                         />
                       </label>
@@ -384,29 +386,29 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
               />
 
               <div className={styles.field}>
-                <label htmlFor="dietary" className={styles.label}>{labels.dietary}</label>
+                <label htmlFor="dietary" className={styles.label}>{t(labels.dietary)}</label>
                 <textarea
                   id="dietary"
                   className={styles.textarea}
                   value={dietary}
                   onChange={(e) => setDietary(e.target.value)}
-                  placeholder="Please write any dietary needs here"
+                  placeholder={t('Please write any dietary needs here')}
                 />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="accessibility" className={styles.label}>{labels.accessibility}</label>
+                <label htmlFor="accessibility" className={styles.label}>{t(labels.accessibility)}</label>
                 <textarea
                   id="accessibility"
                   className={styles.textarea}
                   value={accessibility}
                   onChange={(e) => setAccessibility(e.target.value)}
-                  placeholder="Let us know how we can support you"
+                  placeholder={t('Let us know how we can support you')}
                 />
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="message" className={styles.label}>{labels.message}</label>
+                <label htmlFor="message" className={styles.label}>{t(labels.message)}</label>
                 <textarea
                   id="message"
                   className={styles.textarea}
@@ -416,8 +418,8 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
               </div>
 
               <div className={styles.actionButtons}>
-                <button type="button" className={styles.secondaryButton} onClick={() => setStep('initial')}>Back</button>
-                <button type="submit" className={styles.submitButton}>Confirm RSVP</button>
+                <button type="button" className={styles.secondaryButton} onClick={() => setStep('initial')}>{t('Back')}</button>
+                <button type="submit" className={styles.submitButton}>{t('Confirm RSVP')}</button>
               </div>
             </form>
           </div>
@@ -425,16 +427,16 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
 
         {step === 'declined' && inviteType && (
           <div className={styles.fadeContainer}>
-            <p className={styles.eyebrow}>Invitation unlocked</p>
-            <h2 className={styles.title}>We'll Miss You</h2>
-            <p className={styles.subtitle}>Thank you for letting us know. You may leave us a note below.</p>
-            {error && <p className={styles.error} role="alert">{error}</p>}
+            <p className={styles.eyebrow}>{t('Invitation unlocked')}</p>
+            <h2 className={styles.title}>{t("We'll Miss You")}</h2>
+            <p className={styles.subtitle}>{t('Thank you for letting us know. You may leave us a note below.')}</p>
+            {error && <p className={styles.error} role="alert">{t(error)}</p>}
 
             <form className={styles.form} onSubmit={handleFinalSubmit}>
-              <div className={styles.inviteCard}>{INVITE_LABELS[inviteType]} invitation</div>
+              <div className={styles.inviteCard}>{t('{label} invitation', { label: t(INVITE_LABELS[inviteType]) })}</div>
 
               <div className={styles.field}>
-                <label htmlFor="declinedMessage" className={styles.label}>{labels.message}</label>
+                <label htmlFor="declinedMessage" className={styles.label}>{t(labels.message)}</label>
                 <textarea
                   id="declinedMessage"
                   className={styles.textarea}
@@ -444,8 +446,8 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
               </div>
 
               <div className={styles.actionButtons}>
-                <button type="button" className={styles.secondaryButton} onClick={() => setStep('initial')}>Back</button>
-                <button type="submit" className={styles.submitButton}>Confirm RSVP</button>
+                <button type="button" className={styles.secondaryButton} onClick={() => setStep('initial')}>{t('Back')}</button>
+                <button type="submit" className={styles.submitButton}>{t('Confirm RSVP')}</button>
               </div>
             </form>
           </div>
@@ -453,7 +455,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
 
         {step === 'submitting' && (
           <div className={styles.fadeContainer} style={{ textAlign: 'center', padding: '4rem 0' }}>
-            <p>Submitting your response...</p>
+            <p>{t('Submitting your response...')}</p>
           </div>
         )}
 
@@ -475,19 +477,19 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
             </span>
             {attendance === 'declined' ? (
               <>
-                <h2 className={styles.confTitle}>Thank You</h2>
-                <p className={styles.confText}>We are so sorry you won't be able to join us, but we truly appreciate you letting us know.</p>
+                <h2 className={styles.confTitle}>{t('Thank You')}</h2>
+                <p className={styles.confText}>{t("We are so sorry you won't be able to join us, but we truly appreciate you letting us know.")}</p>
               </>
             ) : (
               <>
-                <h2 className={styles.confTitle}>Thank You</h2>
-                <p className={styles.confText}>{confirmationMessage}</p>
-                <p className={styles.confEmail}>A confirmation has been sent to {email}.</p>
+                <h2 className={styles.confTitle}>{t('Thank You')}</h2>
+                <p className={styles.confText}>{t(confirmationMessage)}</p>
+                <p className={styles.confEmail}>{t('A confirmation has been sent to {email}.', { email })}</p>
               </>
             )}
 
             <button className={styles.resetButton} onClick={resetForm}>
-              Submit another RSVP
+              {t('Submit another RSVP')}
             </button>
           </div>
         )}
@@ -507,25 +509,27 @@ function EventToggle({
   onChange: (value: EventAnswer) => void;
   invalid: boolean;
 }) {
+  const { t } = useSiteText();
+
   return (
     <fieldset className={`${styles.eventField} ${invalid ? styles.invalidChoice : ''}`}>
-      <legend className={styles.label}>{label} *</legend>
+      <legend className={styles.label}>{t(label)} *</legend>
       <div className={styles.eventToggle}>
         <button
           type="button"
-          className={`${styles.eventButton} ${value === 'yes' ? styles.activeAttending : ''}`}
+          className={`${styles.eventButton} ${value === 'yes' ? styles.activeYes : ''}`}
           onClick={() => onChange('yes')}
           aria-pressed={value === 'yes'}
         >
-          Yes
+          {t('Yes')}
         </button>
         <button
           type="button"
-          className={`${styles.eventButton} ${value === 'no' ? styles.activeDeclined : ''}`}
+          className={`${styles.eventButton} ${value === 'no' ? styles.activeNo : ''}`}
           onClick={() => onChange('no')}
           aria-pressed={value === 'no'}
         >
-          No
+          {t('No')}
         </button>
       </div>
     </fieldset>

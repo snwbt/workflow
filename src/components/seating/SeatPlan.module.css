@@ -1,9 +1,14 @@
 .planFrame {
   --seatplan-accent: var(--color-accent, #b8a88a);
+  --seatplan-route: #9f7753;
   width: 100%;
   overflow: auto;
   border: 1px solid var(--color-border);
   background: var(--color-surface);
+}
+
+.planFrameWayfinding {
+  overflow: hidden;
 }
 
 .plan {
@@ -111,4 +116,36 @@
 
 .seatReadonly {
   cursor: default;
+}
+
+.routeLayer {
+  pointer-events: none;
+}
+
+.routePath {
+  fill: none;
+  stroke: var(--seatplan-route);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 18 14;
+  opacity: 0.94;
+}
+
+.routeArrow path {
+  fill: var(--seatplan-route);
+  stroke: #fffaf0;
+  stroke-width: 2.4;
+}
+
+@media (max-width: 760px) {
+  .planFrameWayfinding .plan {
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .routePath {
+    stroke-dasharray: none;
+  }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useReveal } from '@/hooks/useReveal';
+import { useSiteText } from '@/lib/sitePreferences';
 import styles from './ScheduleSection.module.css';
 
 interface ScheduleEvent {
@@ -31,6 +32,7 @@ const defaultDays: ScheduleDay[] = [
 
 export default function ScheduleSection({ config }: { config?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.1 });
+  const { t } = useSiteText();
 
   const heading = config?.heading || 'The Weekend';
   const intro = config?.bodyCopy || '';
@@ -61,12 +63,12 @@ export default function ScheduleSection({ config }: { config?: any }) {
             <span className={styles.time}>{event.time}</span>
           </div>
           <div className={styles.eventContent}>
-            <h3 className={styles.eventName}>{event.title}</h3>
+            <h3 className={styles.eventName}>{t(event.title)}</h3>
             <div className={styles.eventDetails}>
-              <span className={styles.location}>{event.location}</span>
-              {event.notes && <span>{event.notes}</span>}
+              <span className={styles.location}>{t(event.location)}</span>
+              {event.notes && <span>{t(event.notes)}</span>}
               {event.dressCode && (
-                <span className={styles.dressCode}>Dress Code: {event.dressCode}</span>
+                <span className={styles.dressCode}>{t('Dress Code: {dressCode}', { dressCode: t(event.dressCode) })}</span>
               )}
             </div>
           </div>
@@ -78,14 +80,14 @@ export default function ScheduleSection({ config }: { config?: any }) {
   return (
     <section id="schedule" className={styles.schedule} ref={ref as React.RefObject<HTMLElement>}>
       <div className={styles.content}>
-        <h2 className={`${styles.title} ${isVisible ? styles.visible : ''}`}>{heading}</h2>
-        {intro && <p className={styles.intro}>{intro}</p>}
+        <h2 className={`${styles.title} ${isVisible ? styles.visible : ''}`}>{t(heading)}</h2>
+        {intro && <p className={styles.intro}>{t(intro)}</p>}
 
         <div className={`${styles.desktopSchedule} ${displayedDays.length === 1 ? styles.singleDay : ''} ${isVisible ? styles.visible : ''}`}>
           {displayedDays.map((day, dayIndex) => (
             <div key={dayIndex} className={styles.dayHeader}>
-              <span className={styles.dayLabel}>{day.label}</span>
-              <span className={styles.dayDate}>{day.date}</span>
+              <span className={styles.dayLabel}>{t(day.label)}</span>
+              <span className={styles.dayDate}>{t(day.date)}</span>
             </div>
           ))}
           {rows.map((_, rowIndex) => (
@@ -104,8 +106,8 @@ export default function ScheduleSection({ config }: { config?: any }) {
           {days.map((day, dayIndex) => (
             <div key={dayIndex} className={`${styles.dayGroup} ${isVisible ? styles.visible : ''}`} style={{ transitionDelay: `${dayIndex * 0.1}s` }}>
               <div className={styles.dayHeader}>
-                <span className={styles.dayLabel}>{day.label}</span>
-                <span className={styles.dayDate}>{day.date}</span>
+                <span className={styles.dayLabel}>{t(day.label)}</span>
+                <span className={styles.dayDate}>{t(day.date)}</span>
               </div>
 
               <div className={styles.timeline}>
@@ -122,8 +124,8 @@ export default function ScheduleSection({ config }: { config?: any }) {
             className={`${styles.scheduleNote} ${isVisible ? styles.visible : ''}`}
             style={{ transitionDelay: '0.28s' }}
           >
-            {noteHeading && <h3 className={styles.noteHeading}>{noteHeading}</h3>}
-            {noteBody && <p className={styles.noteBody}>{noteBody}</p>}
+            {noteHeading && <h3 className={styles.noteHeading}>{t(noteHeading)}</h3>}
+            {noteBody && <p className={styles.noteBody}>{t(noteBody)}</p>}
           </aside>
         )}
       </div>

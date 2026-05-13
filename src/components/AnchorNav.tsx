@@ -1,16 +1,21 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import styles from './AnchorNav.module.css';
 import { useState, useEffect } from 'react';
 import { handleSectionLinkClick, MAIN_SCROLL_CONTAINER_ID } from '@/lib/scroll';
+import { useSiteText } from '@/lib/sitePreferences';
 
 export default function AnchorNav({ globalConfig }: { globalConfig?: Record<string, unknown> }) {
   const [activeSection, setActiveSection] = useState<string>('');
   const [isHeroVisible, setIsHeroVisible] = useState(true);
   const [isRsvpVisible, setIsRsvpVisible] = useState(false);
+  const { language, fontScale, cycleFontScale, toggleLanguage, t } = useSiteText();
   const motif = typeof globalConfig?.SIGNATURE_MOTIF === 'string' ? globalConfig.SIGNATURE_MOTIF : 'R & S';
   const showMotif = globalConfig?.ENABLE_MOTIF !== false;
+  const monogramImage = typeof globalConfig?.MONOGRAM_IMAGE === 'string' ? globalConfig.MONOGRAM_IMAGE : '';
+  const monogramAlt = typeof globalConfig?.MONOGRAM_ALT === 'string' ? globalConfig.MONOGRAM_ALT : motif;
 
   const navItems = [
     { id: 'welcome', label: 'Welcome' },
@@ -104,7 +109,18 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
             aria-label="Return to the top"
             onClick={(e) => handleClick(e, 'hero')}
           >
-            {motif}
+            {monogramImage ? (
+              <Image
+                src={monogramImage}
+                alt={monogramAlt}
+                width={72}
+                height={40}
+                unoptimized
+                className={styles.brandImage}
+              />
+            ) : (
+              motif
+            )}
           </a>
         )}
         <ul className={styles.list}>
@@ -112,7 +128,7 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
             <li key={'id' in item ? item.id : item.href}>
               {'href' in item ? (
                 <Link href={item.href} className={styles.link}>
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               ) : (
                 <a
@@ -120,19 +136,37 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
                   className={`${styles.link} ${activeSection === item.id ? styles.active : ''}`}
                   onClick={(e) => handleClick(e, item.id)}
                 >
-                  {item.label}
+                  {t(item.label)}
                 </a>
               )}
             </li>
           ))}
         </ul>
+        <div className={styles.controls} aria-label="Accessibility options">
+          <button
+            type="button"
+            className={styles.controlButton}
+            onClick={cycleFontScale}
+            aria-label={`${t('Text size')} ${fontScale}%`}
+          >
+            A<span>{fontScale}</span>
+          </button>
+          <button
+            type="button"
+            className={styles.controlButton}
+            onClick={toggleLanguage}
+            aria-label={language === 'zh' ? t('Show English') : t('Translate to Mandarin Chinese')}
+          >
+            {language === 'zh' ? 'EN' : '中'}
+          </button>
+        </div>
       </nav>
       <a
         href="#rsvp-form"
         className={`${styles.mobileCta} ${isHeroVisible || isRsvpVisible ? styles.mobileCtaHidden : ''}`}
         onClick={(e) => handleClick(e, 'rsvp-form')}
       >
-        RSVP
+        {t('RSVP')}
       </a>
     </>
   );

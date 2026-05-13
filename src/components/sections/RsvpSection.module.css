@@ -289,12 +289,35 @@
   transition:
     border-color var(--duration-fast) var(--ease-standard),
     box-shadow var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
     transform var(--duration-fast) var(--ease-standard);
 }
 
 .eventButton:hover {
   border-color: var(--color-espresso);
   transform: translateY(-1px);
+}
+
+.activeYes,
+.activeNo {
+  color: #FEFCF5;
+  border-color: var(--color-espresso);
+  background: var(--color-espresso);
+  box-shadow: 0 12px 26px rgba(44, 36, 32, 0.16);
+}
+
+.activeNo {
+  background: #7f7466;
+  border-color: #7f7466;
+}
+
+.activeYes:focus-visible,
+.activeNo:focus-visible {
+  outline-color: var(--color-champagne);
+  box-shadow:
+    0 12px 26px rgba(44, 36, 32, 0.16),
+    0 0 0 5px rgba(212, 197, 169, 0.34);
 }
 
 .companionField {

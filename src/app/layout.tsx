@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
+import { SitePreferencesProvider } from "@/lib/sitePreferences";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -25,7 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth" className={`${cormorant.variable} ${inter.variable}`}>
-      <body>{children}</body>
+      <body>
+        <SitePreferencesProvider>{children}</SitePreferencesProvider>
+      </body>
     </html>
   );
 }

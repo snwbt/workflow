@@ -4,10 +4,12 @@ import { useReveal } from '@/hooks/useReveal';
 import Image from 'next/image';
 import { trackEvent } from '@/lib/analytics';
 import { handleSectionLinkClick } from '@/lib/scroll';
+import { useSiteText } from '@/lib/sitePreferences';
 import styles from './ClosingSection.module.css';
 
 export default function ClosingSection({ config, globalConfig }: { config?: any, globalConfig?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.3 });
+  const { t } = useSiteText();
 
   const heading   = config?.heading  || 'We cannot wait to celebrate with you.';
   const signOff   = config?.signOff  || '';
@@ -42,14 +44,14 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
       </div>
       
       <div className={`${styles.content} ${isVisible ? styles.visible : ''}`}>
-        <h2 className={styles.message}>{heading}</h2>
+        <h2 className={styles.message}>{t(heading)}</h2>
 
         {signOff && (
-          <p className={styles.signOff}>{signOff}</p>
+          <p className={styles.signOff}>{t(signOff)}</p>
         )}
 
-        {date && <p className={styles.date}>{date}</p>}
-        {venueText && <p className={styles.venueText}>{venueText}</p>}
+        {date && <p className={styles.date}>{t(date)}</p>}
+        {venueText && <p className={styles.venueText}>{t(venueText)}</p>}
         
         <div className={styles.ctaGroup}>
           <a
@@ -60,7 +62,7 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
               if (!isExternalLink) handleSectionLinkClick(e, getCtaScrollTarget());
             }}
           >
-            {ctaLabel}
+            {t(ctaLabel)}
           </a>
           
           {globalConfig?.WHATSAPP_NUMBER && (
@@ -71,7 +73,7 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
               className={styles.whatsappButton}
               onClick={() => trackEvent('whatsapp_cta_clicked')}
             >
-              {globalConfig.WHATSAPP_LABEL || 'Wedding Concierge'}
+              {t(globalConfig.WHATSAPP_LABEL || 'Wedding Concierge')}
             </a>
           )}
         </div>

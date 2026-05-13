@@ -65,12 +65,11 @@
 .imageWrapper {
   position: relative;
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   aspect-ratio: 4 / 5;
   opacity: 0;
   transform: translateY(40px);
   transition: opacity 1.2s var(--ease-luxury) 0.3s, transform 1.2s var(--ease-luxury) 0.3s;
-  box-shadow: 0 12px 40px rgba(44, 36, 32, 0.08);
 }
 
 @media (min-width: 768px) {
@@ -86,5 +85,5 @@
 
 .image {
   object-fit: cover;
-  border-radius: 2px;
+  border-radius: 0;
 }

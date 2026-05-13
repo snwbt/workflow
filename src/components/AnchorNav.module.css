@@ -39,6 +39,9 @@
 
 .brand {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-serif);
   font-size: 0.9375rem;
   font-style: italic;
@@ -48,6 +51,15 @@
   opacity: 0.72;
   padding-left: var(--spacing-4);
   white-space: nowrap;
+}
+
+.brandImage {
+  display: block;
+  width: auto;
+  height: 34px;
+  max-width: 98px;
+  object-fit: contain;
+  opacity: 0.82;
 }
 
 .link {
@@ -87,6 +99,44 @@
 
 .link.active::after {
   transform: scaleX(1);
+}
+
+.controls {
+  position: absolute;
+  right: var(--spacing-4);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.controlButton {
+  min-width: 42px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  border: 1px solid rgba(44, 36, 32, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.74);
+  color: var(--color-espresso);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding: 0 var(--spacing-3);
+}
+
+.controlButton span {
+  font-size: 0.56rem;
+  font-weight: 700;
+  opacity: 0.72;
+}
+
+.controlButton:hover {
+  border-color: rgba(44, 36, 32, 0.28);
+  background: rgba(255, 253, 248, 0.96);
 }
 
 .mobileCta {
@@ -142,21 +192,53 @@
     left: var(--spacing-8);
     padding-left: 0;
   }
+
+  .controls {
+    right: var(--spacing-8);
+  }
+}
+
+@media (max-width: 920px) {
+  .nav {
+    justify-content: flex-start;
+    padding-right: 6.8rem;
+  }
+
+  .list {
+    gap: var(--spacing-4);
+  }
 }
 
 @media (max-width: 520px) {
   .nav {
     justify-content: flex-start;
     gap: var(--spacing-3);
+    padding-right: 6rem;
   }
 
   .brand {
     font-size: 0.8125rem;
   }
 
+  .brandImage {
+    height: 28px;
+    max-width: 72px;
+  }
+
   .list {
     gap: var(--spacing-4);
     padding-left: 0;
+  }
+
+  .controls {
+    right: var(--spacing-2);
+    gap: 0.35rem;
+  }
+
+  .controlButton {
+    min-width: 36px;
+    min-height: 31px;
+    padding: 0 var(--spacing-2);
   }
 
   .mobileCta {

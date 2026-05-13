@@ -1,7 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useEffect, useMemo, useState } from 'react';
 import type { FloorPlanData, SeatingAssignment, SeatingPerson, Table } from '@/lib/seatingTypes';
+import { useSiteText } from '@/lib/sitePreferences';
 import styles from './SeatPlan.module.css';
 
 interface SeatOccupant {
@@ -17,7 +19,17 @@ interface SeatPlanProps {
   selectedSeat?: { tableId: string; seatNumber: number } | null;
   showOccupants?: boolean;
   readonly?: boolean;
+  wayfinding?: boolean;
   onSeatClick?: (tableId: string, seatNumber: number) => void;
+}
+
+interface RouteData {
+  path: string;
+  arrowX: number;
+  arrowY: number;
+  arrowAngle: number;
+  focusX: number;
+  focusY: number;
 }
 
 function seatPosition(table: Table, angle: number, radius: number) {
@@ -42,6 +54,47 @@ function buildOccupants(assignments: SeatingAssignment[] = [], roster: SeatingPe
   return occupants;
 }
 
+function buildWayfindingRoute(floorplan: FloorPlanData, selectedSeat?: { tableId: string; seatNumber: number } | null): RouteData | null {
+  if (!selectedSeat) return null;
+
+  const table = floorplan.tables.find((item) => item.id === selectedSeat.tableId);
+  const seat = table?.seats.find((item) => item.seatNumber === selectedSeat.seatNumber);
+  if (!table || !seat) return null;
+
+  const seatPoint = seatPosition(table, seat.angle, seat.radius);
+  const entranceX = floorplan.entrance.cx;
+  const entranceY = floorplan.entrance.cy - floorplan.entrance.height / 2;
+  const aisleY = floorplan.walkway.labelPosition?.y ?? Math.min(Math.max(table.cy, 300), 370);
+  const approachX = Math.max(220, Math.min(table.cx, floorplan.viewBox.width - 160));
+  const approachY = table.cy > aisleY ? Math.min(table.cy - 70, aisleY + 120) : Math.max(table.cy + 70, aisleY - 120);
+
+  return {
+    path: [
+      `M ${entranceX} ${entranceY}`,
+      `L ${entranceX} ${aisleY + 42}`,
+      `Q ${entranceX} ${aisleY} ${approachX} ${aisleY}`,
+      `L ${approachX} ${approachY}`,
+      `Q ${approachX} ${table.cy} ${table.cx} ${table.cy}`,
+      `L ${seatPoint.cx} ${seatPoint.cy}`,
+    ].join(' '),
+    arrowX: seatPoint.cx,
+    arrowY: seatPoint.cy,
+    arrowAngle: Math.atan2(seatPoint.cy - table.cy, seatPoint.cx - table.cx) * 180 / Math.PI,
+    focusX: table.cx,
+    focusY: table.cy,
+  };
+}
+
+function getZoomTransform(floorplan: FloorPlanData, route: RouteData | null) {
+  if (!route) return 'translate(0 0) scale(1)';
+  const scale = 1.72;
+  const centerX = floorplan.viewBox.width / 2;
+  const centerY = floorplan.viewBox.height / 2;
+  const translateX = centerX - route.focusX * scale;
+  const translateY = centerY - route.focusY * scale;
+  return `translate(${translateX} ${translateY}) scale(${scale})`;
+}
+
 export default function SeatPlan({
   floorplan,
   assignments = [],
@@ -50,22 +103,48 @@ export default function SeatPlan({
   selectedSeat,
   showOccupants = false,
   readonly = false,
+  wayfinding = false,
   onSeatClick,
 }: SeatPlanProps) {
+  const { t } = useSiteText();
+  const [routeSettled, setRouteSettled] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
   const occupants = buildOccupants(assignments, roster);
   const assignmentCounts = new Map<string, number>();
+  const route = useMemo(() => buildWayfindingRoute(floorplan, selectedSeat), [floorplan, selectedSeat]);
+  const showRoute = wayfinding && Boolean(route);
 
   assignments.forEach((assignment) => {
     assignmentCounts.set(assignment.tableId, (assignmentCounts.get(assignment.tableId) || 0) + 1);
   });
 
+  useEffect(() => {
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReduceMotion(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    setRouteSettled(false);
+    if (!showRoute) return;
+    if (reduceMotion) {
+      setRouteSettled(true);
+      return;
+    }
+
+    const timer = window.setTimeout(() => setRouteSettled(true), 2100);
+    return () => window.clearTimeout(timer);
+  }, [reduceMotion, selectedSeat?.seatNumber, selectedSeat?.tableId, showRoute]);
+
   return (
-    <div className={styles.planFrame}>
+    <div className={`${styles.planFrame} ${showRoute ? styles.planFrameWayfinding : ''}`}>
       <svg
         viewBox={`0 0 ${floorplan.viewBox.width} ${floorplan.viewBox.height}`}
         className={styles.plan}
         role="img"
-        aria-label="Wedding dinner seating plan"
+        aria-label={t('Wedding dinner seating plan')}
       >
         <defs>
           <filter id="seat-glow" x="-60%" y="-60%" width="220%" height="220%">
@@ -77,8 +156,23 @@ export default function SeatPlan({
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="route-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feFlood floodColor="var(--seatplan-route)" floodOpacity="0.34" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
+        <motion.g
+          animate={{
+            transform: showRoute && !routeSettled && !reduceMotion ? getZoomTransform(floorplan, route) : 'translate(0 0) scale(1)',
+          }}
+          transition={{ duration: reduceMotion ? 0 : 1.15, ease: [0.16, 1, 0.3, 1] }}
+        >
         <rect x="20" y="20" width="1760" height="610" rx="4" className={styles.ballroom} />
 
         {[380, 660, 940, 1220].map((x) => (
@@ -104,7 +198,7 @@ export default function SeatPlan({
                   x={decoration.cx}
                   dy={lineIndex === 0 ? `${-(lines.length - 1) * 6}px` : '13'}
                 >
-                  {line}
+                  {t(line)}
                 </tspan>
               ))}
             </text>
@@ -121,7 +215,7 @@ export default function SeatPlan({
               dominantBaseline="central"
               className={styles.walkwayText}
             >
-              {floorplan.walkway.label}
+              {t(floorplan.walkway.label)}
             </text>
           </g>
         )}
@@ -136,10 +230,10 @@ export default function SeatPlan({
             className={styles.entrance}
           />
           <text x={floorplan.entrance.cx} y={floorplan.entrance.cy} textAnchor="middle" dominantBaseline="central" className={styles.entranceText}>
-            {floorplan.entrance.label}
+            {t(floorplan.entrance.label)}
           </text>
           <text x={floorplan.entrance.cx} y={floorplan.entrance.cy + 24} textAnchor="middle" className={styles.helperText}>
-            {floorplan.entrance.helperText}
+            {t(floorplan.entrance.helperText)}
           </text>
         </g>
 
@@ -212,6 +306,36 @@ export default function SeatPlan({
             </g>
           );
         })}
+        {showRoute && route && (
+          <g className={styles.routeLayer} aria-hidden="true">
+            <motion.path
+              key={route.path}
+              d={route.path}
+              className={styles.routePath}
+              filter="url(#route-glow)"
+              initial={reduceMotion ? false : { pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: reduceMotion ? 0 : 1.85, ease: 'easeInOut' }}
+            />
+            <motion.g
+              className={styles.routeArrow}
+              transform={`translate(${route.arrowX} ${route.arrowY}) rotate(${route.arrowAngle})`}
+              initial={reduceMotion ? false : { opacity: 0, scale: 0.82 }}
+              animate={{
+                opacity: routeSettled || reduceMotion ? [0.55, 1, 0.55] : 0,
+                scale: routeSettled || reduceMotion ? [0.92, 1.16, 0.92] : 0.82,
+              }}
+              transition={{
+                delay: reduceMotion ? 0 : 0.1,
+                duration: reduceMotion ? 0 : 1.05,
+                repeat: routeSettled || reduceMotion ? Infinity : 0,
+              }}
+            >
+              <path d="M -20,-12 L 22,0 L -20,12 L -11,0 Z" />
+            </motion.g>
+          </g>
+        )}
+        </motion.g>
       </svg>
     </div>
   );

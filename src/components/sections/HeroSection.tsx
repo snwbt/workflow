@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { trackEvent } from '@/lib/analytics';
 import { handleSectionLinkClick } from '@/lib/scroll';
 import { useScrollProgress } from '@/hooks/useScrollProgress';
+import { useSiteText } from '@/lib/sitePreferences';
 import styles from './HeroSection.module.css';
 import { useEffect, useState } from 'react';
 
@@ -14,6 +15,7 @@ interface CollageImage {
 
 export default function HeroSection({ config }: { config?: any }) {
   const { ref, progress } = useScrollProgress();
+  const { t } = useSiteText();
   const [activeMobileImage, setActiveMobileImage] = useState(0);
 
   useEffect(() => {
@@ -151,7 +153,7 @@ export default function HeroSection({ config }: { config?: any }) {
 
       <div className={styles.contentOverlay}>
         <div className={styles.content}>
-          {eyebrow && <span className={styles.eyebrow}>{eyebrow}</span>}
+          {eyebrow && <span className={styles.eyebrow}>{t(eyebrow)}</span>}
           <h1 className={styles.names}>
             {hasStyledAmpersand ? (
               <>
@@ -164,8 +166,8 @@ export default function HeroSection({ config }: { config?: any }) {
             )}
           </h1>
           <div className={styles.details}>
-            {date && <span>{date}</span>}
-            {venueText && <span>{venueText}</span>}
+            {date && <span>{t(date)}</span>}
+            {venueText && <span>{t(venueText)}</span>}
           </div>
 
           <a
@@ -176,7 +178,7 @@ export default function HeroSection({ config }: { config?: any }) {
               if (!isExternalLink) handleSectionLinkClick(e, getCtaScrollTarget());
             }}
           >
-            {ctaLabel}
+            {t(ctaLabel)}
           </a>
         </div>
       </div>

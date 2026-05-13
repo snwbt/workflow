@@ -2,6 +2,7 @@
 
 import { useReveal } from '@/hooks/useReveal';
 import { getGoogleMapsUrl, getWeddingVenues, type WeddingVenue } from '@/lib/venues';
+import { useSiteText } from '@/lib/sitePreferences';
 import styles from './TravelSection.module.css';
 
 interface TravelCard {
@@ -73,17 +74,18 @@ function getTravelCards(venue: WeddingVenue): TravelCard[] {
 }
 
 function VenueMap({ venue, mapsEnabled }: { venue: WeddingVenue; mapsEnabled: boolean }) {
+  const { t } = useSiteText();
   const mapsUrl = getGoogleMapsUrl(venue);
 
   if (!mapsEnabled) {
     return (
       <div className={styles.mapFallback}>
-        <span className={styles.mapKicker}>Map Preview</span>
-        <strong>{venue.name}</strong>
-        <span>{venue.address || 'Location details will be shared soon.'}</span>
+        <span className={styles.mapKicker}>{t('Map Preview')}</span>
+        <strong>{t(venue.name)}</strong>
+        <span>{t(venue.address || 'Location details will be shared soon.')}</span>
         {mapsUrl && (
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.directionsBtn}>
-            Open in Google Maps
+            {t('Open in Google Maps')}
           </a>
         )}
       </div>
@@ -121,6 +123,7 @@ function DestinationPanel({
   isVisible: boolean;
   mapsEnabled: boolean;
 }) {
+  const { t } = useSiteText();
   const cards = getTravelCards(venue);
   const mapsUrl = getGoogleMapsUrl(venue);
 
@@ -130,10 +133,10 @@ function DestinationPanel({
       style={{ transitionDelay: `${index * 80}ms` }}
     >
       <div className={styles.destinationHeader}>
-        <span className={styles.dateLabel}>{venue.dateLabel}</span>
-        <h3 className={styles.venueName}>{venue.name}</h3>
-        {venue.address && <p className={styles.venueAddress}>{venue.address}</p>}
-        {venue.arrivalNote && <p className={styles.arrivalNote}>{venue.arrivalNote}</p>}
+        <span className={styles.dateLabel}>{t(venue.dateLabel)}</span>
+        <h3 className={styles.venueName}>{t(venue.name)}</h3>
+        {venue.address && <p className={styles.venueAddress}>{t(venue.address)}</p>}
+        {venue.arrivalNote && <p className={styles.arrivalNote}>{t(venue.arrivalNote)}</p>}
       </div>
 
       <VenueMap venue={venue} mapsEnabled={mapsEnabled} />
@@ -146,9 +149,9 @@ function DestinationPanel({
                 <TravelIcon mode={card.mode} />
               </span>
               <div className={styles.cardBody}>
-                <span className={styles.cardMode}>{card.mode}</span>
-                <h4 className={styles.cardTitle}>{card.title}</h4>
-                <p className={styles.cardContent}>{card.content}</p>
+                <span className={styles.cardMode}>{t(card.mode)}</span>
+                <h4 className={styles.cardTitle}>{t(card.title)}</h4>
+                <p className={styles.cardContent}>{t(card.content)}</p>
               </div>
             </div>
           ))}
@@ -158,8 +161,8 @@ function DestinationPanel({
                 <TravelIcon mode="DIRECTIONS" />
               </span>
               <span className={styles.cardBody}>
-                <span className={styles.cardMode}>Directions</span>
-                <span className={styles.cardTitle}>Open route</span>
+                <span className={styles.cardMode}>{t('Directions')}</span>
+                <span className={styles.cardTitle}>{t('Open route')}</span>
               </span>
             </a>
           )}
@@ -169,8 +172,8 @@ function DestinationPanel({
                 <TravelIcon mode="HOTEL" />
               </span>
               <span className={styles.cardBody}>
-                <span className={styles.cardMode}>Reception</span>
-                <span className={styles.cardTitle}>Find your seat</span>
+                <span className={styles.cardMode}>{t('Reception')}</span>
+                <span className={styles.cardTitle}>{t('Find your seat')}</span>
               </span>
             </a>
           )}
@@ -182,6 +185,7 @@ function DestinationPanel({
 
 export default function TravelSection({ config, globalConfig }: { config?: any; globalConfig?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.1 });
+  const { t } = useSiteText();
 
   const heading = config?.heading || 'Getting Here';
   const subheading = config?.bodyCopy || '';
@@ -207,12 +211,12 @@ export default function TravelSection({ config, globalConfig }: { config?: any; 
     <section id="travel" className={styles.travel} ref={ref as React.RefObject<HTMLElement>}>
       <div className={styles.content}>
         <div className={`${styles.header} ${isVisible ? styles.visible : ''}`}>
-          <h2 className={styles.title}>{heading}</h2>
-          {subheading && <p className={styles.subtitle}>{subheading}</p>}
+          <h2 className={styles.title}>{t(heading)}</h2>
+          {subheading && <p className={styles.subtitle}>{t(subheading)}</p>}
         </div>
 
         {venues.length === 0 && (
-          <p className={styles.empty}>Travel information coming soon.</p>
+          <p className={styles.empty}>{t('Travel information coming soon.')}</p>
         )}
 
         {venues.length > 0 && destinationPanels}

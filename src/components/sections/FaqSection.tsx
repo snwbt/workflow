@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useReveal } from '@/hooks/useReveal';
+import { useSiteText } from '@/lib/sitePreferences';
 import styles from './FaqSection.module.css';
 
 interface FaqItem {
@@ -19,6 +20,7 @@ const defaultFaqs: FaqItem[] = [
 
 export default function FaqSection({ config }: { config?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.1 });
+  const { t } = useSiteText();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const heading = config?.heading || 'What to Know';
@@ -32,11 +34,11 @@ export default function FaqSection({ config }: { config?: any }) {
   return (
     <section id="faq" className={styles.faq} ref={ref as React.RefObject<HTMLElement>}>
       <div className={styles.content}>
-        <h2 className={`${styles.title} revealFadeUp ${isVisible ? 'revealFadeUpVisible' : ''}`}>{heading}</h2>
+        <h2 className={`${styles.title} revealFadeUp ${isVisible ? 'revealFadeUpVisible' : ''}`}>{t(heading)}</h2>
 
         {faqs.length === 0 && (
           <p className={styles.empty}>
-            Check back soon for frequently asked questions.
+            {t('Check back soon for frequently asked questions.')}
           </p>
         )}
 
@@ -54,12 +56,12 @@ export default function FaqSection({ config }: { config?: any }) {
                   onClick={() => toggleFaq(index)}
                   aria-expanded={isOpen}
                 >
-                  <span>{faq.question}</span>
+                  <span>{t(faq.question)}</span>
                   <span className={`${styles.icon} ${isOpen ? styles.open : ''}`} aria-hidden="true">+</span>
                 </button>
                 <div className={`${styles.answerWrapper} ${isOpen ? styles.open : ''}`}>
                   <div className={styles.answer}>
-                    <p>{faq.answer}</p>
+                    <p>{t(faq.answer)}</p>
                   </div>
                 </div>
               </div>

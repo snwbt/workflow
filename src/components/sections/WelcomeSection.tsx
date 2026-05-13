@@ -2,10 +2,12 @@
 
 import { useReveal } from '@/hooks/useReveal';
 import Image from 'next/image';
+import { useSiteText } from '@/lib/sitePreferences';
 import styles from './WelcomeSection.module.css';
 
 export default function WelcomeSection({ config }: { config?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.3 });
+  const { t } = useSiteText();
 
   const heading = config?.heading || 'Welcome';
   const note = config?.bodyCopy || 'We are so thrilled to share this special moment with the people we love most. Thank you for your endless support, laughter, and love.';
@@ -15,9 +17,9 @@ export default function WelcomeSection({ config }: { config?: any }) {
     <section id="welcome" ref={ref as React.RefObject<HTMLElement>} className={styles.welcome}>
       <div className={styles.content}>
         <div className={`${styles.textColumn} ${isVisible ? styles.visible : ''}`}>
-          {heading && <h2 className={styles.heading}>{heading}</h2>}
+          {heading && <h2 className={styles.heading}>{t(heading)}</h2>}
           <p className={styles.note}>
-            {note}
+            {t(note)}
           </p>
         </div>
         
@@ -30,7 +32,7 @@ export default function WelcomeSection({ config }: { config?: any }) {
               muted
               playsInline
               className={styles.image}
-              style={{ objectFit: 'cover', width: '100%', height: '100%', borderRadius: '2px' }}
+              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
             />
           ) : (
             <Image

@@ -95,11 +95,11 @@
 
 .ctaGroup {
   display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 1fr));
-  align-items: center;
+  grid-template-columns: repeat(2, minmax(230px, 1fr));
+  align-items: stretch;
   gap: var(--spacing-4);
   margin-top: var(--spacing-8);
-  width: min(100%, 520px);
+  width: min(100%, 560px);
 }
 
 @media (min-width: 480px) {
@@ -110,14 +110,19 @@
 
 .rsvpButton,
 .whatsappButton {
-  min-height: 52px;
+  min-height: 56px;
+  height: 100%;
   width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-3) var(--spacing-6);
+  padding: var(--spacing-3) var(--spacing-5);
   border-radius: 2px;
   font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
@@ -131,8 +136,6 @@
 .rsvpButton {
   background-color: var(--color-surface);
   color: var(--color-espresso);
-  font-size: 0.875rem;
-  letter-spacing: 0.12em;
 }
 
 .rsvpButton:hover {
@@ -144,8 +147,6 @@
   background-color: transparent;
   color: var(--color-champagne);
   border: 1px solid rgba(212, 197, 169, 0.5);
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
 }
 
 .whatsappButton:hover {

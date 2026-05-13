@@ -4,6 +4,7 @@ import { useReveal } from '@/hooks/useReveal';
 import { getGoogleMapsUrl, getWeddingVenues, type WeddingVenue } from '@/lib/venues';
 import Image from 'next/image';
 import { useState } from 'react';
+import { useSiteText } from '@/lib/sitePreferences';
 import styles from './VenueRevealSection.module.css';
 
 function VenuePanel({
@@ -23,6 +24,7 @@ function VenuePanel({
   failedImages: string[];
   onImageError: (url: string) => void;
 }) {
+  const { t } = useSiteText();
   const mapsUrl = getGoogleMapsUrl(venue);
   const directionsUrl = ctaOverride || mapsUrl;
   const hasImage = !!(venue.imageUrl && !failedImages.includes(venue.imageUrl));
@@ -46,13 +48,13 @@ function VenuePanel({
       <div className={styles.panelOverlay} />
 
       <div className={styles.panelContent}>
-        <span className={styles.dateLabel}>{venue.dateLabel}</span>
-        <h3 className={styles.venueName}>{venue.name}</h3>
-        {venue.address && <p className={styles.address}>{venue.address}</p>}
-        {venue.arrivalNote && <p className={styles.arrivalNote}>{venue.arrivalNote}</p>}
+        <span className={styles.dateLabel}>{t(venue.dateLabel)}</span>
+        <h3 className={styles.venueName}>{t(venue.name)}</h3>
+        {venue.address && <p className={styles.address}>{t(venue.address)}</p>}
+        {venue.arrivalNote && <p className={styles.arrivalNote}>{t(venue.arrivalNote)}</p>}
         {directionsUrl && (
           <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className={styles.directionsBtn}>
-            {ctaLabel || 'Get Directions'}
+            {t(ctaLabel || 'Get Directions')}
           </a>
         )}
       </div>
@@ -62,6 +64,7 @@ function VenuePanel({
 
 export default function VenueRevealSection({ config, globalConfig }: { config?: any; globalConfig?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.2 });
+  const { t } = useSiteText();
   const [failedImages, setFailedImages] = useState<string[]>([]);
 
   if (!config) return null;
@@ -73,9 +76,9 @@ export default function VenueRevealSection({ config, globalConfig }: { config?: 
   return (
     <section id="venue_reveal" className={styles.container} ref={ref as React.RefObject<HTMLElement>}>
       <div className={`${styles.header} ${isVisible ? styles.visible : ''}`}>
-        <span className={styles.eyebrow}>The Venues</span>
-        <h2 className={styles.heading}>{config.heading || 'Where We Gather'}</h2>
-        {config.bodyCopy && <p className={styles.bodyCopy}>{config.bodyCopy}</p>}
+        <span className={styles.eyebrow}>{t('The Venues')}</span>
+        <h2 className={styles.heading}>{t(config.heading || 'Where We Gather')}</h2>
+        {config.bodyCopy && <p className={styles.bodyCopy}>{t(config.bodyCopy)}</p>}
       </div>
 
       <div className={`${styles.venuePanels} ${venues.length === 1 ? styles.singleVenue : ''}`}>
