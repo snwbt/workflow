@@ -1,0 +1,245 @@
+.container {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-6);
+  margin-bottom: var(--spacing-6);
+}
+
+.title {
+  margin: 0 0 var(--spacing-2);
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+}
+
+.statCard {
+  display: grid;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.statCard span {
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.statCard strong {
+  font-size: 1.7rem;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: var(--spacing-6);
+  align-items: start;
+}
+
+.planPanel,
+.rosterPanel,
+.selectedCard,
+.notice {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.rosterPanel {
+  display: grid;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+}
+
+.selectedCard {
+  display: grid;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+}
+
+.selectedCard strong {
+  font-size: 1rem;
+}
+
+.selectedCard small,
+.selectedCard p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+}
+
+.kicker {
+  color: var(--color-text-secondary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.controls {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.searchInput {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  padding: 0.65rem 0.75rem;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--color-border);
+}
+
+.segmented button {
+  border: 0;
+  border-right: 1px solid var(--color-border);
+  background: transparent;
+  cursor: pointer;
+  padding: 0.55rem 0.35rem;
+  text-transform: capitalize;
+}
+
+.segmented button:last-child {
+  border-right: 0;
+}
+
+.segmentActive {
+  background: var(--color-text-primary) !important;
+  color: var(--color-surface);
+}
+
+.rosterList {
+  display: grid;
+  gap: var(--spacing-2);
+  max-height: 70vh;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.rosterItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: var(--spacing-3);
+  text-align: left;
+}
+
+.rosterItem span {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.rosterItem strong,
+.rosterItem small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rosterItem small,
+.rosterItem em {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-style: normal;
+}
+
+.rosterItemActive {
+  border-color: var(--color-text-primary);
+  box-shadow: inset 3px 0 0 var(--color-text-primary);
+}
+
+.primaryButton,
+.secondaryButton {
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: var(--spacing-2) var(--spacing-4);
+}
+
+.primaryButton {
+  border: 1px solid var(--color-text-primary);
+  background: var(--color-text-primary);
+  color: var(--color-surface);
+}
+
+.secondaryButton {
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.notice {
+  margin-bottom: var(--spacing-6);
+  padding: var(--spacing-4);
+}
+
+.notice p {
+  margin: 0;
+}
+
+.noticeSuccess {
+  color: #166534;
+}
+
+.noticeError {
+  color: var(--color-error);
+}
+
+@media (max-width: 1100px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .rosterList {
+    max-height: 420px;
+  }
+}
+
+@media (max-width: 760px) {
+  .header,
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    display: grid;
+  }
+}

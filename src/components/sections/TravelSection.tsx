@@ -163,6 +163,17 @@ function DestinationPanel({
               </span>
             </a>
           )}
+          {venue.key === 'dayOne' && (
+            <a href="/seating" className={`${styles.card} ${styles.actionCard}`}>
+              <span className={styles.iconMark}>
+                <TravelIcon mode="HOTEL" />
+              </span>
+              <span className={styles.cardBody}>
+                <span className={styles.cardMode}>Reception</span>
+                <span className={styles.cardTitle}>Find your seat</span>
+              </span>
+            </a>
+          )}
         </div>
       )}
     </article>

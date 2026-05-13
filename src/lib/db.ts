@@ -3,6 +3,8 @@ import 'server-only';
 import fs from 'fs';
 import path from 'path';
 import { neon } from '@neondatabase/serverless';
+import { defaultSeatingState } from './seatingDefaults';
+import { normalizeSeatingState } from './seating';
 
 const dbPath = path.join(process.cwd(), 'src/data/db.json');
 
@@ -87,6 +89,7 @@ function normalizeDb(data: any) {
     rsvps: data?.rsvps || [],
     guests: data?.guests || [],
     events: data?.events || [],
+    seating: normalizeSeatingState(data?.seating || defaultSeatingState),
   };
 }
 
@@ -246,6 +249,7 @@ async function seedFromJson(sql: SqlClient) {
     await upsertSiteState(sql, 'homepage_sections', seed.homepage_sections || []);
     await upsertSiteState(sql, 'guests', seed.guests || []);
     await upsertSiteState(sql, 'events', seed.events || []);
+    await upsertSiteState(sql, 'seating', normalizeSeatingState(seed.seating || defaultSeatingState));
   }
 
   if (rsvpCount === 0) {
@@ -364,6 +368,7 @@ export async function getDb() {
     homepage_sections: state.homepage_sections || [],
     guests: state.guests || [],
     events: state.events || [],
+    seating: normalizeSeatingState(state.seating || defaultSeatingState),
     rsvps: rsvps.map((rsvp: any) => ({
       ...rsvp,
       submitted_at: rsvp.submitted_at instanceof Date ? rsvp.submitted_at.toISOString() : rsvp.submitted_at,
@@ -383,6 +388,7 @@ export async function saveDb(data: any) {
   await upsertSiteState(sql, 'homepage_sections', data.homepage_sections || []);
   await upsertSiteState(sql, 'guests', data.guests || []);
   await upsertSiteState(sql, 'events', data.events || []);
+  await upsertSiteState(sql, 'seating', normalizeSeatingState(data.seating || defaultSeatingState));
 
   await sql`DELETE FROM rsvps`;
   for (const rsvp of data.rsvps || []) {
@@ -435,6 +441,19 @@ export async function saveGuests(guests: unknown[]) {
 
   await upsertSiteState(sql, 'guests', guests || []);
   return guests || [];
+}
+
+export async function saveSeating(seating: unknown) {
+  const nextSeating = normalizeSeatingState(seating);
+  const sql = await ensureDatabase();
+
+  if (!sql) {
+    saveJsonDbKey('seating', nextSeating);
+    return nextSeating;
+  }
+
+  await upsertSiteState(sql, 'seating', nextSeating);
+  return nextSeating;
 }
 
 export async function saveRsvps(rsvps: RsvpRecord[]) {

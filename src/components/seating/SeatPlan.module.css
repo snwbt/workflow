@@ -1,0 +1,114 @@
+.planFrame {
+  --seatplan-accent: var(--color-accent, #b8a88a);
+  width: 100%;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.plan {
+  display: block;
+  min-width: 920px;
+  width: 100%;
+  height: auto;
+  background: #fcf9f5;
+}
+
+.ballroom,
+.leftPanel {
+  fill: none;
+  stroke: rgba(184, 168, 138, 0.58);
+  stroke-dasharray: 8 4;
+  stroke-width: 1.2;
+}
+
+.door {
+  fill: #fcf9f5;
+  stroke: rgba(184, 168, 138, 0.5);
+}
+
+.decoration {
+  fill: rgba(212, 197, 169, 0.15);
+  stroke: rgba(184, 168, 138, 0.55);
+  stroke-width: 0.9;
+}
+
+.decorText,
+.walkwayText,
+.helperText {
+  fill: #8c8172;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+
+.walkway {
+  fill: rgba(212, 197, 169, 0.16);
+  stroke: rgba(184, 168, 138, 0.5);
+  stroke-width: 1.5;
+}
+
+.walkwayText {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.entrance {
+  fill: rgba(184, 168, 138, 0.18);
+  stroke: var(--seatplan-accent);
+}
+
+.entranceText {
+  fill: var(--color-espresso, #2c2420);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.table {
+  fill: #fffdf8;
+  stroke: rgba(184, 168, 138, 0.75);
+  stroke-width: 1.4;
+}
+
+.tableHighlighted {
+  stroke: var(--seatplan-accent);
+  stroke-width: 3;
+}
+
+.tableLabel {
+  fill: var(--color-espresso, #2c2420);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.tableCount {
+  fill: var(--color-text-secondary, #5a5a5a);
+  font-family: var(--font-sans);
+  font-size: 10px;
+}
+
+.seat {
+  stroke-width: 2;
+  cursor: pointer;
+}
+
+.seatEmpty {
+  fill: #d8cfc0;
+  stroke: transparent;
+}
+
+.seatOccupied {
+  fill: var(--color-espresso, #2c2420);
+  stroke: rgba(255, 253, 248, 0.92);
+}
+
+.seatHighlighted {
+  fill: var(--seatplan-accent);
+  stroke: var(--color-espresso, #2c2420);
+}
+
+.seatReadonly {
+  cursor: default;
+}

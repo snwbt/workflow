@@ -1,0 +1,189 @@
+.page {
+  min-height: 100dvh;
+  background:
+    linear-gradient(180deg, rgba(250, 248, 244, 0.92), rgba(255, 253, 248, 0.98)),
+    var(--color-bg);
+  padding: clamp(1.25rem, 4vw, 3rem);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 440px);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: end;
+  max-width: 1180px;
+  margin: 0 auto clamp(1.5rem, 4vw, 3rem);
+  min-height: 34vh;
+}
+
+.copy h1 {
+  max-width: 680px;
+  margin: 0 0 var(--spacing-4);
+  color: var(--color-espresso);
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  letter-spacing: 0;
+  line-height: 0.9;
+}
+
+.copy p,
+.planHeader p,
+.noResults,
+.loading,
+.error {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: var(--spacing-2);
+  color: var(--color-accent);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.searchPanel {
+  position: relative;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  background: rgba(255, 253, 248, 0.88);
+  box-shadow: 0 18px 70px rgba(44, 36, 32, 0.08);
+}
+
+.searchPanel label {
+  display: block;
+  margin-bottom: var(--spacing-2);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.searchBox {
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.searchBox input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 1.05rem;
+  padding: 0.9rem 1rem;
+}
+
+.searchBox span {
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}
+
+.results {
+  position: absolute;
+  left: var(--spacing-6);
+  right: var(--spacing-6);
+  top: calc(100% - var(--spacing-4));
+  z-index: 10;
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 18px 60px rgba(44, 36, 32, 0.12);
+}
+
+.results button {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: var(--spacing-4);
+  text-align: left;
+}
+
+.results button:last-child {
+  border-bottom: 0;
+}
+
+.results span {
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+
+.noResults {
+  margin: var(--spacing-4) 0 0;
+}
+
+.planSection {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.planHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--spacing-6);
+  margin-bottom: var(--spacing-4);
+}
+
+.planHeader h2 {
+  margin: 0 0 var(--spacing-2);
+  color: var(--color-espresso);
+  font-size: clamp(1.9rem, 4vw, 3.2rem);
+}
+
+.planHeader p {
+  max-width: 680px;
+  margin: 0;
+}
+
+.secondaryButton {
+  min-height: 42px;
+  border: 1px solid var(--color-espresso);
+  background: transparent;
+  color: var(--color-espresso);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0 var(--spacing-4);
+  text-transform: uppercase;
+}
+
+.loading,
+.error {
+  max-width: 1180px;
+  margin: var(--spacing-6) auto;
+}
+
+.error {
+  color: var(--color-error);
+}
+
+@media (max-width: 860px) {
+  .hero,
+  .planHeader {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .hero {
+    min-height: auto;
+  }
+
+  .results {
+    position: static;
+    margin-top: var(--spacing-3);
+  }
+}
