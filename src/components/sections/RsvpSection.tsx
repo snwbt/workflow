@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useReveal } from '@/hooks/useReveal';
 import styles from './RsvpSection.module.css';
 import { trackEvent } from '@/lib/analytics';
 import { getRsvpDeadlineDisplay } from '@/lib/eventDisplay';
 
 export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
+  const { ref, isVisible } = useReveal({ threshold: 0.18 });
   const [step, setStep] = useState<'initial' | 'attending_details' | 'declined_details' | 'submitting' | 'confirmation'>('initial');
   
   // Form state
@@ -98,8 +100,8 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
 
   if (deadlinePassed && step !== 'confirmation') {
     return (
-      <section id="rsvp" className={styles.rsvp}>
-        <div className={styles.content}>
+      <section id="rsvp" className={styles.rsvp} ref={ref as React.RefObject<HTMLElement>}>
+        <div className={`${styles.content} ${isVisible ? styles.visible : ''}`}>
           <div className={styles.fadeContainer}>
             <h2 className={styles.title}>RSVP Closed</h2>
             <p className={styles.subtitle}>The deadline to RSVP has passed. Please contact us directly if you have any questions.</p>
@@ -110,8 +112,8 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
   }
 
   return (
-    <section id="rsvp" className={styles.rsvp}>
-      <div className={styles.content}>
+    <section id="rsvp" className={styles.rsvp} ref={ref as React.RefObject<HTMLElement>}>
+      <div className={`${styles.content} ${isVisible ? styles.visible : ''}`}>
         
         {step === 'initial' && (
           <div className={styles.fadeContainer}>

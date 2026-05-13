@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDb, saveDb } from '@/lib/db';
+import { getDb, saveGuests } from '@/lib/db';
 import { randomUUID } from 'crypto';
 
 export async function POST(request: Request) {
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       }
     }
 
-    await saveDb(db);
+    await saveGuests(db.guests);
 
     return NextResponse.json({
       success: true,
@@ -73,6 +73,7 @@ export async function POST(request: Request) {
       errors,
     });
   } catch (error) {
+    console.error('Error importing guests:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

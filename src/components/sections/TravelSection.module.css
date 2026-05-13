@@ -25,8 +25,11 @@
 }
 
 .title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
   color: var(--color-espresso);
   margin-bottom: var(--spacing-4);
 }
@@ -56,12 +59,22 @@
   margin-bottom: var(--spacing-8);
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.8s var(--ease-luxury), transform 0.8s var(--ease-luxury);
+  transition:
+    opacity 0.8s var(--ease-luxury),
+    transform 0.8s var(--ease-luxury),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .venueCard.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.venueCard.visible:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 16px 40px rgba(44, 36, 32, 0.1);
+  transform: translateY(-3px);
 }
 
 @media (min-width: 640px) {
@@ -113,7 +126,8 @@
 
 .directionsBtn:hover {
   background-color: var(--color-accent-hover);
-  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(44, 36, 32, 0.14);
+  transform: translateY(-2px) scale(1.03);
 }
 
 .cardsGrid {
@@ -140,12 +154,22 @@
   padding: var(--spacing-6);
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.8s var(--ease-luxury), transform 0.8s var(--ease-luxury);
+  transition:
+    opacity 0.8s var(--ease-luxury),
+    transform 0.8s var(--ease-luxury),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .card.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.card.visible:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 14px 34px rgba(44, 36, 32, 0.1);
+  transform: translateY(-3px);
 }
 
 .cardMode {

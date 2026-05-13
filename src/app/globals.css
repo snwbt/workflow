@@ -94,6 +94,33 @@ p {
 
 button {
   font-family: var(--font-sans);
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.revealFadeUp {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity var(--duration-slow) var(--ease-luxury),
+    transform var(--duration-slow) var(--ease-luxury);
+}
+
+.revealFadeUpVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.staggerChildren > * {
+  transition-delay: calc(var(--stagger-index, 0) * 90ms);
 }
 
 /* Global focus ring — visible on both light and dark backgrounds */

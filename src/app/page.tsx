@@ -23,6 +23,7 @@ export default async function Home() {
   await connection();
   const db = await getDb();
   const globalConfig = db.config || {};
+  const showMotif = globalConfig.ENABLE_MOTIF !== false && Boolean(globalConfig.SIGNATURE_MOTIF);
 
   // Build a dictionary of section config keyed by type
   const sections = db.homepage_sections || [];
@@ -39,78 +40,98 @@ export default async function Home() {
       <main className={styles.main} id="main-scroll-container">
         {/* Hero — full-screen, no nav padding needed */}
         {(!config.hero || config.hero.enabled) && (
-          <div className={styles.section}>
+          <div className={`${styles.section} ${styles.themeHero}`}>
             <HeroSection config={config.hero} />
           </div>
         )}
 
         {/* At A Glance */}
         {(!config.at_a_glance || config.at_a_glance.enabled) && (
-          <div className={`${styles.section} ${styles.withNav} ${styles.compactSection}`}>
+          <div className={`${styles.section} ${styles.withNav} ${styles.compactSection} ${styles.themeNeutral}`}>
             <AtAGlanceSection config={config.at_a_glance} globalConfig={globalConfig} />
           </div>
         )}
 
-        <SignatureMotif config={globalConfig} />
+        {showMotif && (
+          <div className={`${styles.section} ${styles.motifSection} ${styles.themeLight}`}>
+            <SignatureMotif config={globalConfig} />
+          </div>
+        )}
 
         {/* Welcome */}
         {(!config.welcome || config.welcome.enabled) && (
-          <div className={`${styles.section} ${styles.withNav}`}>
+          <div className={`${styles.section} ${styles.withNav} ${styles.themeLight}`}>
             <WelcomeSection config={config.welcome} />
           </div>
         )}
 
-        <SignatureMotif config={globalConfig} />
+        {showMotif && (
+          <div className={`${styles.section} ${styles.motifSection} ${styles.themeNeutral}`}>
+            <SignatureMotif config={globalConfig} />
+          </div>
+        )}
 
         {/* Schedule */}
         {(!config.schedule || config.schedule.enabled) && (
-          <div className={`${styles.section} ${styles.withNav} ${styles.naturalSection}`}>
+          <div className={`${styles.section} ${styles.withNav} ${styles.naturalSection} ${styles.themeDark}`}>
             <ScheduleSection config={config.schedule} />
           </div>
         )}
 
-        <SignatureMotif config={globalConfig} />
+        {showMotif && (
+          <div className={`${styles.section} ${styles.motifSection} ${styles.themeDark}`}>
+            <SignatureMotif config={globalConfig} />
+          </div>
+        )}
 
         {/* Venue Reveal */}
         {(!config.venue_reveal || config.venue_reveal.enabled) && (
-          <div className={styles.section}>
+          <div className={`${styles.section} ${styles.themeDark}`}>
             <VenueRevealSection config={config.venue_reveal} globalConfig={globalConfig} />
           </div>
         )}
 
         {/* Travel */}
         {(!config.travel || config.travel.enabled) && (
-          <div className={`${styles.section} ${styles.withNav}`}>
+          <div className={`${styles.section} ${styles.withNav} ${styles.themeNeutral}`}>
             <TravelSection config={config.travel} globalConfig={globalConfig} />
           </div>
         )}
 
-        <SignatureMotif config={globalConfig} />
+        {showMotif && (
+          <div className={`${styles.section} ${styles.motifSection} ${styles.themeNeutral}`}>
+            <SignatureMotif config={globalConfig} />
+          </div>
+        )}
 
         {/* Gallery Interlude */}
         {(!config.gallery_interlude || config.gallery_interlude.enabled) && (
-          <div className={styles.section}>
+          <div className={`${styles.section} ${styles.themeDark}`}>
             <GalleryInterludeSection config={config.gallery_interlude} />
           </div>
         )}
 
         {/* FAQ */}
         {(!config.faq || config.faq.enabled) && (
-          <div className={`${styles.section} ${styles.withNav} ${styles.naturalSection}`}>
+          <div className={`${styles.section} ${styles.withNav} ${styles.naturalSection} ${styles.themeLight}`}>
             <FaqSection config={config.faq} />
           </div>
         )}
 
-        <SignatureMotif config={globalConfig} />
+        {showMotif && (
+          <div className={`${styles.section} ${styles.motifSection} ${styles.themeLight}`}>
+            <SignatureMotif config={globalConfig} />
+          </div>
+        )}
 
         {/* RSVP */}
-        <div className={`${styles.section} ${styles.withNav}`}>
+        <div className={`${styles.section} ${styles.withNav} ${styles.themeRsvp}`}>
           <RsvpSection globalConfig={globalConfig} />
         </div>
 
         {/* Closing */}
         {(!config.closing || config.closing.enabled) && (
-          <div className={styles.section}>
+          <div className={`${styles.section} ${styles.themeHero}`}>
             <ClosingSection config={config.closing} globalConfig={globalConfig} />
           </div>
         )}

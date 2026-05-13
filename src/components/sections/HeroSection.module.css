@@ -154,10 +154,12 @@
 }
 
 .names {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: clamp(3rem, 8vw, 5.5rem);
   line-height: 1;
-  font-weight: 400;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
   color: var(--color-espresso);
   margin-bottom: var(--spacing-2);
 }
@@ -185,13 +187,16 @@
   text-transform: uppercase;
   text-decoration: none;
   border-radius: 2px;
-  transition: background-color var(--duration-fast) var(--ease-standard),
-              transform var(--duration-fast) var(--ease-standard);
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
 }
 
 .rsvpButton:hover {
   background-color: var(--color-accent-hover);
-  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(44, 36, 32, 0.16);
+  transform: translateY(-2px) scale(1.03);
 }
 
 @keyframes fadeUp {

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getDb, saveDb } from '@/lib/db';
+import { getDb, saveHomepageSections } from '@/lib/db';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const db = await getDb();
     return NextResponse.json({ sections: db.homepage_sections || [] });
   } catch (error) {
+    console.error('Error reading homepage sections:', error);
     return NextResponse.json({ error: 'Failed to read database' }, { status: 500 });
   }
 }
@@ -18,12 +19,12 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Sections must be an array' }, { status: 400 });
     }
 
-    const db = await getDb();
-    db.homepage_sections = sections;
-    await saveDb(db);
+    const savedSections = await saveHomepageSections(sections);
 
-    return NextResponse.json({ success: true, sections: db.homepage_sections });
+    return NextResponse.json({ success: true, sections: savedSections });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update database' }, { status: 500 });
+    console.error('Error updating homepage sections:', error);
+    const message = error instanceof Error ? error.message : 'Failed to update database';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

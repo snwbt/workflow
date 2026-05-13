@@ -18,7 +18,7 @@ export interface AdminAuthRecord {
   updatedAt?: string;
 }
 
-interface RsvpRecord {
+export interface RsvpRecord {
   rsvp_id: string;
   guest_name: string;
   email: string;
@@ -38,6 +38,18 @@ interface RsvpRecord {
 let sqlClient: SqlClient | null = null;
 let schemaReady = false;
 let seedReady = false;
+
+function isVercelRuntime() {
+  return process.env.VERCEL === '1' || Boolean(process.env.VERCEL_ENV);
+}
+
+function assertWritableJsonFallback() {
+  if (isVercelRuntime()) {
+    throw new Error(
+      'Persistent database is not configured. Set DATABASE_URL in Vercel to save admin changes.'
+    );
+  }
+}
 
 function getSql() {
   const connectionString = process.env.DATABASE_URL;
@@ -231,6 +243,8 @@ async function ensureDatabase() {
 }
 
 function saveJsonDb(data: any) {
+  assertWritableJsonFallback();
+
   const existing = readJsonDbRaw();
   const merged = {
     ...existing,
@@ -239,6 +253,32 @@ function saveJsonDb(data: any) {
       ...(existing.config || {}),
       ...(data.config || {}),
       ADMIN_AUTH: data.config?.ADMIN_AUTH || existing.config?.ADMIN_AUTH,
+    },
+  };
+  fs.writeFileSync(dbPath, JSON.stringify(merged, null, 2), 'utf8');
+}
+
+function saveJsonDbKey(key: string, value: unknown) {
+  assertWritableJsonFallback();
+
+  const existing = readJsonDbRaw();
+  const merged = {
+    ...existing,
+    [key]: value,
+  };
+  fs.writeFileSync(dbPath, JSON.stringify(merged, null, 2), 'utf8');
+}
+
+function saveJsonConfig(config: Record<string, unknown>) {
+  assertWritableJsonFallback();
+
+  const existing = readJsonDbRaw();
+  const merged = {
+    ...existing,
+    config: {
+      ...(existing.config || {}),
+      ...config,
+      ADMIN_AUTH: existing.config?.ADMIN_AUTH,
     },
   };
   fs.writeFileSync(dbPath, JSON.stringify(merged, null, 2), 'utf8');
@@ -307,6 +347,112 @@ export async function saveDb(data: any) {
   }
 }
 
+export async function saveConfig(config: Record<string, unknown>) {
+  const sql = await ensureDatabase();
+  const publicConfig = stripPrivateConfig(config || {});
+
+  if (!sql) {
+    saveJsonConfig(publicConfig);
+    return publicConfig;
+  }
+
+  await upsertSiteState(sql, 'config', publicConfig);
+  return publicConfig;
+}
+
+export async function mergeConfig(config: Record<string, unknown>) {
+  const db = await getDb();
+  const nextConfig = {
+    ...(db.config || {}),
+    ...stripPrivateConfig(config || {}),
+  };
+
+  return saveConfig(nextConfig);
+}
+
+export async function saveHomepageSections(sections: unknown[]) {
+  const sql = await ensureDatabase();
+
+  if (!sql) {
+    saveJsonDbKey('homepage_sections', sections);
+    return sections;
+  }
+
+  await upsertSiteState(sql, 'homepage_sections', sections || []);
+  return sections || [];
+}
+
+export async function saveGuests(guests: unknown[]) {
+  const sql = await ensureDatabase();
+
+  if (!sql) {
+    saveJsonDbKey('guests', guests);
+    return guests;
+  }
+
+  await upsertSiteState(sql, 'guests', guests || []);
+  return guests || [];
+}
+
+export async function saveRsvps(rsvps: RsvpRecord[]) {
+  const sql = await ensureDatabase();
+
+  if (!sql) {
+    saveJsonDbKey('rsvps', rsvps);
+    return rsvps;
+  }
+
+  await sql`DELETE FROM rsvps`;
+  for (const rsvp of rsvps || []) {
+    await insertRsvp(sql, rsvp);
+  }
+  return rsvps || [];
+}
+
+export async function saveRsvp(rsvp: RsvpRecord) {
+  const sql = await ensureDatabase();
+
+  if (!sql) {
+    const db = readJsonDbRaw();
+    const rsvps = db.rsvps || [];
+    const index = rsvps.findIndex((item: RsvpRecord) => item.rsvp_id === rsvp.rsvp_id);
+
+    if (index >= 0) {
+      rsvps[index] = rsvp;
+    } else {
+      rsvps.push(rsvp);
+    }
+
+    saveJsonDbKey('rsvps', rsvps);
+    return rsvp;
+  }
+
+  await insertRsvp(sql, rsvp);
+  return rsvp;
+}
+
+export async function deleteRsvp(rsvpId: string) {
+  const sql = await ensureDatabase();
+
+  if (!sql) {
+    const db = readJsonDbRaw();
+    const rsvps = db.rsvps || [];
+    const nextRsvps = rsvps.filter((rsvp: RsvpRecord) => rsvp.rsvp_id !== rsvpId);
+
+    if (nextRsvps.length === rsvps.length) return false;
+
+    saveJsonDbKey('rsvps', nextRsvps);
+    return true;
+  }
+
+  const deleted = await sql`
+    DELETE FROM rsvps
+    WHERE rsvp_id = ${rsvpId}
+    RETURNING rsvp_id
+  ` as Array<{ rsvp_id: string }>;
+  return deleted.length > 0;
+}
+
 export async function getAdminAuth() {
   const sql = await ensureDatabase();
   if (!sql) {
@@ -350,6 +496,7 @@ export async function getAdminAuth() {
 export async function saveAdminAuth(auth: AdminAuthRecord) {
   const sql = getSql();
   if (!sql) {
+    assertWritableJsonFallback();
     const db = readJsonDbRaw();
     db.config = {
       ...(db.config || {}),

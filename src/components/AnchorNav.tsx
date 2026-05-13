@@ -7,6 +7,7 @@ import { handleSectionLinkClick, MAIN_SCROLL_CONTAINER_ID } from '@/lib/scroll';
 export default function AnchorNav({ globalConfig }: { globalConfig?: Record<string, unknown> }) {
   const [activeSection, setActiveSection] = useState<string>('');
   const [isHeroVisible, setIsHeroVisible] = useState(true);
+  const [isRsvpVisible, setIsRsvpVisible] = useState(false);
   const motif = typeof globalConfig?.SIGNATURE_MOTIF === 'string' ? globalConfig.SIGNATURE_MOTIF : 'R & S';
   const showMotif = globalConfig?.ENABLE_MOTIF !== false;
 
@@ -38,6 +39,20 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
     );
     heroObserver.observe(hero);
 
+    const rsvp = document.getElementById('rsvp');
+    const rsvpObserver = rsvp
+      ? new IntersectionObserver(
+          ([entry]) => {
+            setIsRsvpVisible(entry.intersectionRatio > 0.35);
+          },
+          {
+            root: scrollContainer,
+            threshold: [0, 0.35, 0.65, 1],
+          }
+        )
+      : null;
+    if (rsvp && rsvpObserver) rsvpObserver.observe(rsvp);
+
     // Observe all nav sections for active highlighting
     const sectionIds = navItems.map(n => n.id);
     const sectionObserver = new IntersectionObserver(
@@ -62,6 +77,7 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
 
     return () => {
       heroObserver.disconnect();
+      rsvpObserver?.disconnect();
       sectionObserver.disconnect();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,33 +89,42 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
   };
 
   return (
-    <nav
-      className={`${styles.nav} ${isHeroVisible ? styles.hidden : ''}`}
-      aria-label="Main navigation"
-    >
-      {showMotif && (
-        <a
-          href="#hero"
-          className={styles.brand}
-          aria-label="Return to the top"
-          onClick={(e) => handleClick(e, 'hero')}
-        >
-          {motif}
-        </a>
-      )}
-      <ul className={styles.list}>
-        {navItems.map((item) => (
-          <li key={item.id}>
-            <a
-              href={`#${item.id}`}
-              className={`${styles.link} ${activeSection === item.id ? styles.active : ''}`}
-              onClick={(e) => handleClick(e, item.id)}
-            >
-              {item.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <>
+      <nav
+        className={`${styles.nav} ${isHeroVisible ? styles.hidden : ''}`}
+        aria-label="Main navigation"
+      >
+        {showMotif && (
+          <a
+            href="#hero"
+            className={styles.brand}
+            aria-label="Return to the top"
+            onClick={(e) => handleClick(e, 'hero')}
+          >
+            {motif}
+          </a>
+        )}
+        <ul className={styles.list}>
+          {navItems.map((item) => (
+            <li key={item.id}>
+              <a
+                href={`#${item.id}`}
+                className={`${styles.link} ${activeSection === item.id ? styles.active : ''}`}
+                onClick={(e) => handleClick(e, item.id)}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <a
+        href="#rsvp"
+        className={`${styles.mobileCta} ${isHeroVisible || isRsvpVisible ? styles.mobileCtaHidden : ''}`}
+        onClick={(e) => handleClick(e, 'rsvp')}
+      >
+        RSVP
+      </a>
+    </>
   );
 }

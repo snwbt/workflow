@@ -60,12 +60,14 @@
 }
 
 .message {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: clamp(2.25rem, 5.5vw, 4rem);
   line-height: 1.15;
   color: var(--color-surface);
   margin-bottom: var(--spacing-2);
-  font-weight: 400;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
   max-width: 760px;
 }
 
@@ -128,7 +130,8 @@
 
 .rsvpButton:hover {
   background-color: var(--color-champagne);
-  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px) scale(1.03);
 }
 
 .whatsappButton {

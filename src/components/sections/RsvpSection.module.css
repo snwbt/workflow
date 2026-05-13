@@ -19,8 +19,27 @@
   box-shadow:
     inset 0 0 0 6px rgba(212, 197, 169, 0.08),
     0 8px 40px rgba(44, 36, 32, 0.07);
-  transition: height 0.8s var(--ease-luxury);
   position: relative;
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    height 0.8s var(--ease-luxury),
+    opacity var(--duration-slow) var(--ease-luxury),
+    transform var(--duration-slow) var(--ease-luxury),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.content.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.content:hover {
+  border-color: rgba(196, 169, 119, 0.72);
+  box-shadow:
+    inset 0 0 0 6px rgba(212, 197, 169, 0.1),
+    0 16px 52px rgba(44, 36, 32, 0.12);
 }
 
 /* Ornamental top rule */
@@ -40,12 +59,14 @@
 }
 
 .title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  text-transform: uppercase;
   text-align: center;
   margin-bottom: var(--spacing-2);
   color: var(--color-espresso);
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .subtitle {
@@ -132,12 +153,17 @@
   letter-spacing: 0.15em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--ease-standard);
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
   margin-top: var(--spacing-4);
 }
 
 .submitButton:hover:not(:disabled) {
   background-color: var(--color-accent-hover);
+  box-shadow: 0 12px 28px rgba(44, 36, 32, 0.16);
+  transform: translateY(-2px) scale(1.03);
 }
 
 .submitButton:disabled {
@@ -175,6 +201,8 @@
 
 .attendanceBtn:hover {
   border-color: var(--color-espresso);
+  box-shadow: 0 10px 24px rgba(44, 36, 32, 0.08);
+  transform: translateY(-2px);
 }
 
 .activeAttending {
@@ -209,11 +237,16 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: border-color var(--duration-fast);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
 }
 
 .secondaryButton:hover {
   border-color: var(--color-espresso);
+  box-shadow: 0 8px 20px rgba(44, 36, 32, 0.08);
+  transform: translateY(-2px);
 }
 
 .radioGroup {

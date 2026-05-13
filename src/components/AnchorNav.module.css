@@ -89,6 +89,44 @@
   transform: scaleX(1);
 }
 
+.mobileCta {
+  position: fixed;
+  left: var(--spacing-4);
+  right: var(--spacing-4);
+  bottom: calc(var(--spacing-4) + env(safe-area-inset-bottom));
+  z-index: 210;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  background: var(--color-espresso);
+  color: var(--color-surface);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 18px 40px rgba(26, 26, 26, 0.22);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transform: translateY(0);
+  opacity: 1;
+  transition:
+    opacity var(--duration-normal) var(--ease-standard),
+    transform var(--duration-normal) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.mobileCta:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 22px 52px rgba(26, 26, 26, 0.28);
+}
+
+.mobileCtaHidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(110%);
+}
+
 @keyframes slideIn {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
@@ -119,5 +157,9 @@
   .list {
     gap: var(--spacing-4);
     padding-left: 0;
+  }
+
+  .mobileCta {
+    display: flex;
   }
 }

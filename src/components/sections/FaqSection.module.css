@@ -16,6 +16,10 @@
   text-align: center;
   margin-bottom: var(--spacing-12);
   font-size: clamp(2.25rem, 5vw, 3.25rem);
+  font-family: var(--font-sans);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
   color: var(--color-espresso);
 }
 
@@ -42,6 +46,16 @@
   align-items: center;
   text-align: center;
   gap: var(--spacing-2);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.detailCard:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 14px 32px rgba(44, 36, 32, 0.08);
+  transform: translateY(-3px);
 }
 
 .detailIcon {
@@ -81,6 +95,14 @@
 
 .item {
   border-bottom: 1px solid var(--color-border);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.item:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
 }
 
 .question {

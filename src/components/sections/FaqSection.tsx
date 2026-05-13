@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useReveal } from '@/hooks/useReveal';
 import styles from './FaqSection.module.css';
 
 interface FaqItem {
@@ -33,6 +34,7 @@ const detailCards: DetailCard[] = [
 ];
 
 export default function FaqSection({ config }: { config?: any }) {
+  const { ref, isVisible } = useReveal({ threshold: 0.1 });
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const heading = config?.heading || 'What to Know';
@@ -46,14 +48,18 @@ export default function FaqSection({ config }: { config?: any }) {
   };
 
   return (
-    <section id="faq" className={styles.faq}>
+    <section id="faq" className={styles.faq} ref={ref as React.RefObject<HTMLElement>}>
       <div className={styles.content}>
-        <h2 className={styles.title}>{heading}</h2>
+        <h2 className={`${styles.title} revealFadeUp ${isVisible ? 'revealFadeUpVisible' : ''}`}>{heading}</h2>
 
         {/* Detail summary cards */}
         <div className={styles.detailCards}>
           {detailCards.map((card, i) => (
-            <div key={i} className={styles.detailCard}>
+            <div
+              key={i}
+              className={`${styles.detailCard} revealFadeUp ${isVisible ? 'revealFadeUpVisible' : ''}`}
+              style={{ transitionDelay: `${i * 90}ms` }}
+            >
               <span className={styles.detailIcon} aria-hidden="true">{card.icon}</span>
               <span className={styles.detailLabel}>{card.label}</span>
               <span className={styles.detailValue}>{card.value}</span>
@@ -73,7 +79,11 @@ export default function FaqSection({ config }: { config?: any }) {
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
             return (
-              <div key={index} className={styles.item}>
+              <div
+                key={index}
+                className={`${styles.item} revealFadeUp ${isVisible ? 'revealFadeUpVisible' : ''}`}
+                style={{ transitionDelay: `${220 + index * 55}ms` }}
+              >
                 <button
                   className={styles.question}
                   onClick={() => toggleFaq(index)}

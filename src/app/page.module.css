@@ -21,6 +21,7 @@
   min-height: 100dvh;
   scroll-snap-align: start;
   scroll-snap-stop: always;
+  scroll-margin-top: var(--nav-height, 60px);
 }
 
 /* Sections that sit below the fixed nav need top padding to not clip */
@@ -32,13 +33,54 @@
 
 .compactSection,
 .naturalSection {
-  min-height: auto;
-  scroll-snap-align: none;
+  min-height: 100dvh;
 }
 
 .compactSection.withNav,
 .naturalSection.withNav {
-  min-height: auto;
+  min-height: 100dvh;
+}
+
+.motifSection {
+  min-height: 42dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.themeHero {
+  background: var(--color-espresso);
+}
+
+.themeLight {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  background: #ffffff;
+}
+
+.themeNeutral {
+  --color-bg: #f2f0ea;
+  --color-surface: #fffdf8;
+  background: #f2f0ea;
+}
+
+.themeDark {
+  --color-bg: #211d1a;
+  --color-surface: #2c2621;
+  --color-espresso: #fff9ee;
+  --color-text-primary: #fff9ee;
+  --color-text-secondary: rgba(255, 249, 238, 0.76);
+  --color-text-tertiary: rgba(255, 249, 238, 0.54);
+  --color-border: rgba(255, 249, 238, 0.18);
+  --color-champagne: #d8c7a6;
+  --color-accent: #d8c7a6;
+  --color-accent-hover: #f0dfbf;
+  background: #211d1a;
+  color: var(--color-text-primary);
+}
+
+.themeRsvp {
+  background: #ffffff;
 }
 
 @media (max-width: 767px) {
@@ -55,6 +97,14 @@
   }
 
   .withNav {
+    min-height: auto;
+  }
+
+  .compactSection,
+  .compactSection.withNav,
+  .naturalSection,
+  .naturalSection.withNav,
+  .motifSection {
     min-height: auto;
   }
 }

@@ -36,12 +36,22 @@
   text-align: center;
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 1s var(--ease-luxury), transform 1s var(--ease-luxury);
+  transition:
+    opacity 1s var(--ease-luxury),
+    transform 1s var(--ease-luxury),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .card.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.card.visible:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 16px 42px rgba(44, 36, 32, 0.1);
+  transform: translateY(-3px);
 }
 
 /* Top and bottom fine rules on the card */
@@ -64,11 +74,13 @@
 }
 
 .heading {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 1.875rem;
+  font-weight: 800;
+  text-transform: uppercase;
   color: var(--color-espresso);
   margin-bottom: var(--spacing-6);
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
 }
 
 .divider {

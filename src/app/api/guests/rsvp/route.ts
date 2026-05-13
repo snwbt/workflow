@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDb, saveDb } from '@/lib/db';
+import { getDb, saveRsvp } from '@/lib/db';
 import { randomUUID } from 'crypto';
 import { sendRsvpConfirmation, sendAdminNotification } from '@/lib/email';
 
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       db.rsvps.push(newRsvp);
     }
 
-    await saveDb(db);
+    await saveRsvp(newRsvp);
 
     // Format details for email
     let detailsStr = '';

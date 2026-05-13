@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDb, saveDb } from '@/lib/db';
+import { deleteRsvp, getDb, saveRsvp } from '@/lib/db';
 
 // GET: Return all RSVP submissions (open model — no guests array)
 export async function GET() {
@@ -47,8 +47,7 @@ export async function PUT(request: Request) {
       updated_at: new Date().toISOString(),
     };
 
-    db.rsvps = rsvps;
-    await saveDb(db);
+    await saveRsvp(rsvps[idx]);
 
     return NextResponse.json({ success: true, rsvp: rsvps[idx] });
   } catch (error) {
@@ -70,15 +69,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'rsvp_id is required' }, { status: 400 });
     }
 
-    const db = await getDb();
-    const before = (db.rsvps || []).length;
-    db.rsvps = (db.rsvps || []).filter((r: any) => r.rsvp_id !== rsvp_id);
+    const deleted = await deleteRsvp(rsvp_id);
 
-    if (db.rsvps.length === before) {
+    if (!deleted) {
       return NextResponse.json({ error: 'RSVP not found' }, { status: 404 });
     }
 
-    await saveDb(db);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting RSVP:', error);
