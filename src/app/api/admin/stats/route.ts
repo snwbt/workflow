@@ -9,19 +9,23 @@ export async function GET() {
     let totalAttending = 0;
     let totalDeclined = 0;
     
-    const mealCounts: Record<string, number> = {};
+    const inviteCounts: Record<string, number> = {};
     let dietaryRestrictionsCount = 0;
+    let accessibilityRequirementsCount = 0;
     
     rsvps.forEach((rsvp: any) => {
       if (rsvp.attendance_status === 'attending') {
         totalAttending += rsvp.guest_count || 1;
-        
-        if (rsvp.meal_preference) {
-          mealCounts[rsvp.meal_preference] = (mealCounts[rsvp.meal_preference] || 0) + 1;
-        }
+
+        const inviteType = rsvp.invite_type || 'unassigned';
+        inviteCounts[inviteType] = (inviteCounts[inviteType] || 0) + 1;
         
         if (rsvp.dietary_restrictions && rsvp.dietary_restrictions.trim() !== '') {
           dietaryRestrictionsCount++;
+        }
+
+        if (rsvp.accessibility_requirements && rsvp.accessibility_requirements.trim() !== '') {
+          accessibilityRequirementsCount++;
         }
       } else if (rsvp.attendance_status === 'declined') {
         totalDeclined += rsvp.guest_count || 1;
@@ -32,8 +36,9 @@ export async function GET() {
       totalResponses,
       totalAttending,
       totalDeclined,
-      mealCounts,
+      inviteCounts,
       dietaryRestrictionsCount,
+      accessibilityRequirementsCount,
       rsvps // Include raw rsvps for the dashboard table
     });
   } catch (error) {

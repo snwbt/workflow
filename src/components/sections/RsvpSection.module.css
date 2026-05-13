@@ -13,7 +13,7 @@
 
 .content {
   width: 100%;
-  max-width: 720px;
+  max-width: 760px;
   background-color: #FEFCF5;
   padding: var(--spacing-8) var(--spacing-4);
   border: 1px solid rgba(196, 169, 119, 0.45);
@@ -63,14 +63,15 @@
 }
 
 .title {
-  font-family: var(--font-sans);
-  font-size: clamp(2rem, 4vw, 2.75rem);
-  font-weight: 800;
-  text-transform: uppercase;
+  font-family: var(--font-serif);
+  font-size: clamp(2.6rem, 6vw, 4.75rem);
+  font-weight: 400;
+  text-transform: none;
   text-align: center;
   margin-bottom: var(--spacing-2);
   color: var(--color-espresso);
   letter-spacing: 0;
+  line-height: 0.94;
 }
 
 .subtitle {
@@ -130,7 +131,10 @@
   font-family: var(--font-sans);
   font-size: 1rem;
   color: var(--color-text-primary);
-  transition: border-color var(--duration-fast) var(--ease-standard);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
   border-radius: 0;
   -webkit-appearance: none;
 }
@@ -138,11 +142,31 @@
 .input:focus, .select:focus, .textarea:focus {
   outline: none;
   border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(196, 169, 119, 0.18);
+}
+
+.invalid {
+  border-color: var(--color-error);
+  background-color: rgba(176, 0, 32, 0.035);
+  box-shadow: 0 0 0 3px rgba(176, 0, 32, 0.12);
 }
 
 .textarea {
   min-height: 100px;
   resize: vertical;
+}
+
+.inviteCard {
+  padding: var(--spacing-4) var(--spacing-5);
+  margin-bottom: var(--spacing-6);
+  background:
+    linear-gradient(135deg, rgba(216, 199, 166, 0.2), rgba(255, 253, 248, 0.7)),
+    var(--color-surface);
+  border-left: 3px solid var(--color-accent);
+  color: var(--color-espresso);
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  line-height: 1.35;
 }
 
 .submitButton {
@@ -209,6 +233,10 @@
   transform: translateY(-2px);
 }
 
+.invalidChoice {
+  box-shadow: 0 0 0 3px rgba(176, 0, 32, 0.12);
+}
+
 .activeAttending {
   background-color: var(--color-espresso);
   color: #FEFCF5;
@@ -227,6 +255,44 @@
   display: flex;
   gap: var(--spacing-4);
   margin-top: var(--spacing-6);
+}
+
+.eventField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.eventToggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-3);
+}
+
+.eventButton {
+  min-height: 46px;
+  padding: var(--spacing-3);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-espresso);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.eventButton:hover {
+  border-color: var(--color-espresso);
+  transform: translateY(-1px);
 }
 
 .secondaryButton {
@@ -433,6 +499,47 @@
 .confText {
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-8);
+}
+
+.confEmail {
+  margin-top: -1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.resetButton {
+  margin-top: var(--spacing-6);
+  padding: 0 0 var(--spacing-1);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-espresso);
+  color: var(--color-espresso);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+@media (max-width: 599px) {
+  .rsvp {
+    min-height: auto;
+    padding: var(--spacing-10) var(--spacing-3);
+  }
+
+  .content {
+    padding: var(--spacing-8) var(--spacing-4);
+  }
+
+  .actionButtons {
+    flex-direction: column;
+  }
+
+  .submitButton,
+  .secondaryButton {
+    min-height: 48px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

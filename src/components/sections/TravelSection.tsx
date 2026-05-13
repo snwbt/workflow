@@ -1,9 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { useReveal } from '@/hooks/useReveal';
 import { getGoogleMapsUrl, getWeddingVenues, type WeddingVenue } from '@/lib/venues';
-import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
 import styles from './TravelSection.module.css';
 
 interface TravelCard {
@@ -62,32 +60,6 @@ function TravelIcon({ mode }: { mode: string }) {
   }
 }
 
-const mapStyles = [
-  {
-    featureType: 'all',
-    elementType: 'geometry',
-    stylers: [{ color: '#f2f0ea' }],
-  },
-  {
-    featureType: 'water',
-    elementType: 'geometry.fill',
-    stylers: [{ color: '#d8c7a6' }],
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry.fill',
-    stylers: [{ color: '#fffdf8' }],
-  },
-  {
-    featureType: 'poi',
-    stylers: [{ visibility: 'off' }],
-  },
-  {
-    featureType: 'transit',
-    stylers: [{ visibility: 'off' }],
-  },
-];
-
 function getTravelCards(venue: WeddingVenue): TravelCard[] {
   return [
     venue.mrtStation ? { mode: 'MRT', title: venue.mrtStation, content: venue.mrtDirections || venue.mrtStation } : null,
@@ -101,10 +73,9 @@ function getTravelCards(venue: WeddingVenue): TravelCard[] {
 }
 
 function VenueMap({ venue, mapsEnabled }: { venue: WeddingVenue; mapsEnabled: boolean }) {
-  const hasCoordinates = venue.lat !== undefined && venue.lng !== undefined;
   const mapsUrl = getGoogleMapsUrl(venue);
 
-  if (!hasCoordinates || !mapsEnabled) {
+  if (!mapsEnabled) {
     return (
       <div className={styles.mapFallback}>
         <span className={styles.mapKicker}>Map Preview</span>
@@ -119,20 +90,22 @@ function VenueMap({ venue, mapsEnabled }: { venue: WeddingVenue; mapsEnabled: bo
     );
   }
 
-  const center = { lat: venue.lat!, lng: venue.lng! };
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+  const query = venue.lat !== undefined && venue.lng !== undefined
+    ? `${venue.lat},${venue.lng}`
+    : venue.address || venue.name;
+  const mapSrc = `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(apiKey)}&q=${encodeURIComponent(query)}`;
 
   return (
     <div className={styles.mapFrame}>
-      <Map
-        defaultCenter={center}
-        defaultZoom={16}
-        gestureHandling="cooperative"
-        disableDefaultUI
-        styles={mapStyles}
-        style={{ width: '100%', height: '100%' }}
-      >
-        <Marker position={center} />
-      </Map>
+      <iframe
+        title={`${venue.name} map`}
+        src={mapSrc}
+        className={styles.mapEmbed}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        allowFullScreen
+      />
     </div>
   );
 }
@@ -198,14 +171,13 @@ function DestinationPanel({
 
 export default function TravelSection({ config, globalConfig }: { config?: any; globalConfig?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.1 });
-  const [mapsUnavailable, setMapsUnavailable] = useState(false);
 
   const heading = config?.heading || 'Getting Here';
   const subheading = config?.bodyCopy || '';
   const venues = getWeddingVenues(globalConfig);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const hasMappableVenue = venues.some((venue) => venue.lat !== undefined && venue.lng !== undefined);
-  const mapsEnabled = Boolean(apiKey) && hasMappableVenue && !mapsUnavailable;
+  const hasMappableVenue = venues.some((venue) => venue.lat !== undefined || venue.lng !== undefined || Boolean(venue.address || venue.name));
+  const mapsEnabled = Boolean(apiKey) && hasMappableVenue;
   const destinationPanels = (
     <div className={`${styles.destinationsGrid} ${venues.length === 1 ? styles.singleDestination : ''}`}>
       {venues.map((venue, index) => (
@@ -232,19 +204,7 @@ export default function TravelSection({ config, globalConfig }: { config?: any; 
           <p className={styles.empty}>Travel information coming soon.</p>
         )}
 
-        {venues.length > 0 && (
-          mapsEnabled ? (
-            <APIProvider
-              apiKey={apiKey || ''}
-              onError={(error) => {
-                console.warn('Google Maps failed to load, showing fallback travel cards.', error);
-                setMapsUnavailable(true);
-              }}
-            >
-              {destinationPanels}
-            </APIProvider>
-          ) : destinationPanels
-        )}
+        {venues.length > 0 && destinationPanels}
       </div>
     </section>
   );

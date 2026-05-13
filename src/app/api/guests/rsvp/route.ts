@@ -10,17 +10,23 @@ export async function POST(request: Request) {
       guest_name, 
       email, 
       attendance_status, 
+      invite_code,
+      invite_type,
       guest_count, 
       plus_one_name, 
+      additional_guest_names,
+      dinner_attendance,
+      mass_attendance,
       meal_preference, 
       dietary_restrictions, 
+      accessibility_requirements,
       transport_needed, 
       message, 
       custom_answers,
       source 
     } = payload;
 
-    if (!guest_name || !email || !attendance_status) {
+    if (!guest_name || !email || !attendance_status || !invite_code || !invite_type) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -29,6 +35,35 @@ export async function POST(request: Request) {
     // Check deadline
     if (db.config?.RSVP_DEADLINE && new Date(db.config.RSVP_DEADLINE) < new Date()) {
       return NextResponse.json({ error: 'RSVP deadline has passed.' }, { status: 400 });
+    }
+
+    const normalizeCode = (value: unknown) => String(value || '').trim().toLowerCase();
+    const fridaySaturdayCode = normalizeCode(db.config?.RSVP_INVITE_CODE_FRIDAY_SATURDAY || 'FRISAT');
+    const saturdayOnlyCode = normalizeCode(db.config?.RSVP_INVITE_CODE_SATURDAY || 'SATURDAY');
+    const submittedCode = normalizeCode(invite_code);
+    const resolvedInviteType = submittedCode === fridaySaturdayCode
+      ? 'friday_saturday'
+      : submittedCode === saturdayOnlyCode
+        ? 'saturday_only'
+        : '';
+
+    if (!resolvedInviteType || resolvedInviteType !== invite_type) {
+      return NextResponse.json({ error: 'Please enter a valid invite code.' }, { status: 400 });
+    }
+
+    if (attendance_status === 'attending') {
+      const attendingCount = Number(guest_count || 0);
+      if (!Number.isInteger(attendingCount) || attendingCount < 1 || attendingCount > 4) {
+        return NextResponse.json({ error: 'Please select the number of guests attending.' }, { status: 400 });
+      }
+
+      if (resolvedInviteType === 'friday_saturday' && !dinner_attendance) {
+        return NextResponse.json({ error: 'Please confirm dinner reception attendance.' }, { status: 400 });
+      }
+
+      if (!mass_attendance) {
+        return NextResponse.json({ error: 'Please confirm solemnisation Mass attendance.' }, { status: 400 });
+      }
     }
 
     // Initialize rsvps array if missing
@@ -44,10 +79,16 @@ export async function POST(request: Request) {
       guest_name,
       email,
       attendance_status,
-      guest_count,
+      invite_code,
+      invite_type: resolvedInviteType,
+      guest_count: attendance_status === 'attending' ? Number(guest_count || 1) : 0,
       plus_one_name,
+      additional_guest_names,
+      dinner_attendance: resolvedInviteType === 'friday_saturday' ? dinner_attendance : '',
+      mass_attendance,
       meal_preference,
       dietary_restrictions,
+      accessibility_requirements,
       transport_needed,
       message,
       custom_answers: custom_answers || {},
@@ -67,11 +108,14 @@ export async function POST(request: Request) {
     // Format details for email
     let detailsStr = '';
     if (attendance_status === 'attending') {
+      detailsStr += `Invite Type: ${resolvedInviteType === 'friday_saturday' ? 'Friday + Saturday' : 'Saturday only'}\n`;
       detailsStr += `Guest Count: ${guest_count}\n`;
       if (plus_one_name) detailsStr += `Plus One: ${plus_one_name}\n`;
-      if (meal_preference) detailsStr += `Meal Preference: ${meal_preference}\n`;
+      if (additional_guest_names) detailsStr += `Additional Guests: ${additional_guest_names}\n`;
+      if (resolvedInviteType === 'friday_saturday') detailsStr += `Dinner Reception: ${dinner_attendance || 'No response'}\n`;
+      detailsStr += `Solemnisation Mass: ${mass_attendance || 'No response'}\n`;
       if (dietary_restrictions) detailsStr += `Dietary Restrictions: ${dietary_restrictions}\n`;
-      if (transport_needed) detailsStr += `Transport Needed: Yes\n`;
+      if (accessibility_requirements) detailsStr += `Accessibility Requirements: ${accessibility_requirements}\n`;
       if (custom_answers && Object.keys(custom_answers).length > 0) {
         detailsStr += '\nAdditional Details:\n';
         Object.entries(custom_answers).forEach(([q, a]) => {

@@ -23,10 +23,16 @@ export interface RsvpRecord {
   guest_name: string;
   email: string;
   attendance_status: string;
+  invite_code?: string;
+  invite_type?: string;
   guest_count?: number;
   plus_one_name?: string;
+  additional_guest_names?: string;
+  dinner_attendance?: string;
+  mass_attendance?: string;
   meal_preference?: string;
   dietary_restrictions?: string;
+  accessibility_requirements?: string;
   transport_needed?: boolean;
   message?: string;
   custom_answers?: Record<string, unknown>;
@@ -113,10 +119,16 @@ async function ensureSchema(sql: SqlClient) {
       guest_name TEXT NOT NULL,
       email TEXT NOT NULL,
       attendance_status TEXT NOT NULL,
+      invite_code TEXT,
+      invite_type TEXT,
       guest_count INTEGER NOT NULL DEFAULT 0,
       plus_one_name TEXT,
+      additional_guest_names TEXT,
+      dinner_attendance TEXT,
+      mass_attendance TEXT,
       meal_preference TEXT,
       dietary_restrictions TEXT,
+      accessibility_requirements TEXT,
       transport_needed BOOLEAN NOT NULL DEFAULT FALSE,
       message TEXT,
       custom_answers JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -125,6 +137,13 @@ async function ensureSchema(sql: SqlClient) {
       source TEXT
     )
   `;
+
+  await sql`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS invite_code TEXT`;
+  await sql`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS invite_type TEXT`;
+  await sql`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS additional_guest_names TEXT`;
+  await sql`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS dinner_attendance TEXT`;
+  await sql`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS mass_attendance TEXT`;
+  await sql`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS accessibility_requirements TEXT`;
 
   await sql`CREATE UNIQUE INDEX IF NOT EXISTS rsvps_email_lower_idx ON rsvps (LOWER(email))`;
 
@@ -148,10 +167,16 @@ async function insertRsvp(sql: SqlClient, rsvp: RsvpRecord) {
       guest_name,
       email,
       attendance_status,
+      invite_code,
+      invite_type,
       guest_count,
       plus_one_name,
+      additional_guest_names,
+      dinner_attendance,
+      mass_attendance,
       meal_preference,
       dietary_restrictions,
+      accessibility_requirements,
       transport_needed,
       message,
       custom_answers,
@@ -164,10 +189,16 @@ async function insertRsvp(sql: SqlClient, rsvp: RsvpRecord) {
       ${rsvp.guest_name},
       ${rsvp.email},
       ${rsvp.attendance_status},
+      ${rsvp.invite_code || null},
+      ${rsvp.invite_type || null},
       ${Number(rsvp.guest_count || 0)},
       ${rsvp.plus_one_name || null},
+      ${rsvp.additional_guest_names || null},
+      ${rsvp.dinner_attendance || null},
+      ${rsvp.mass_attendance || null},
       ${rsvp.meal_preference || null},
       ${rsvp.dietary_restrictions || null},
+      ${rsvp.accessibility_requirements || null},
       ${Boolean(rsvp.transport_needed)},
       ${rsvp.message || null},
       ${JSON.stringify(rsvp.custom_answers || {})}::jsonb,
@@ -179,10 +210,16 @@ async function insertRsvp(sql: SqlClient, rsvp: RsvpRecord) {
       guest_name = EXCLUDED.guest_name,
       email = EXCLUDED.email,
       attendance_status = EXCLUDED.attendance_status,
+      invite_code = EXCLUDED.invite_code,
+      invite_type = EXCLUDED.invite_type,
       guest_count = EXCLUDED.guest_count,
       plus_one_name = EXCLUDED.plus_one_name,
+      additional_guest_names = EXCLUDED.additional_guest_names,
+      dinner_attendance = EXCLUDED.dinner_attendance,
+      mass_attendance = EXCLUDED.mass_attendance,
       meal_preference = EXCLUDED.meal_preference,
       dietary_restrictions = EXCLUDED.dietary_restrictions,
+      accessibility_requirements = EXCLUDED.accessibility_requirements,
       transport_needed = EXCLUDED.transport_needed,
       message = EXCLUDED.message,
       custom_answers = EXCLUDED.custom_answers,
@@ -302,10 +339,16 @@ export async function getDb() {
       guest_name,
       email,
       attendance_status,
+      invite_code,
+      invite_type,
       guest_count,
       plus_one_name,
+      additional_guest_names,
+      dinner_attendance,
+      mass_attendance,
       meal_preference,
       dietary_restrictions,
+      accessibility_requirements,
       transport_needed,
       message,
       custom_answers,

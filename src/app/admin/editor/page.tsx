@@ -409,13 +409,63 @@ export default function EditorPage() {
       </div>
       <div className={styles.formGroup}>
         <label className={styles.label}>RSVP Deadline Display Text</label>
-        <input className={styles.input} value={config.RSVP_DEADLINE_DISPLAY || ''} onChange={(e) => updateConfig('RSVP_DEADLINE_DISPLAY', e.target.value)} placeholder="1 October 2026" />
+        <input className={styles.input} value={config.RSVP_DEADLINE_DISPLAY || ''} onChange={(e) => updateConfig('RSVP_DEADLINE_DISPLAY', e.target.value)} placeholder="June 25, 2026" />
       </div>
       {invalidRsvpDeadline && (
         <p role="alert" style={{color: '#8a3b2d', background: '#fff4ef', border: '1px solid #e3b5a9', padding: '0.75rem 1rem', marginBottom: '1rem'}}>
           RSVP deadline should be before the wedding date.
         </p>
       )}
+
+      <h4 style={{marginTop: '1.5rem', marginBottom: '1rem'}}>Invite Code Flow</h4>
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Friday + Saturday Invite Code</label>
+          <input className={styles.input} value={config.RSVP_INVITE_CODE_FRIDAY_SATURDAY || ''} onChange={(e) => updateConfig('RSVP_INVITE_CODE_FRIDAY_SATURDAY', e.target.value)} placeholder="FRISAT" />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Saturday-only Invite Code</label>
+          <input className={styles.input} value={config.RSVP_INVITE_CODE_SATURDAY || ''} onChange={(e) => updateConfig('RSVP_INVITE_CODE_SATURDAY', e.target.value)} placeholder="SATURDAY" />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>RSVP Confirmation Message</label>
+        <input className={styles.input} value={config.RSVP_CONFIRMATION_MESSAGE || ''} onChange={(e) => updateConfig('RSVP_CONFIRMATION_MESSAGE', e.target.value)} placeholder="Thank you! We'll see you in October." />
+      </div>
+
+      <h4 style={{marginTop: '1.5rem', marginBottom: '1rem'}}>RSVP Field Labels</h4>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Invite Code Label</label>
+        <input className={styles.input} value={config.RSVP_LABEL_INVITE_CODE || ''} onChange={(e) => updateConfig('RSVP_LABEL_INVITE_CODE', e.target.value)} placeholder="Invite code" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Guest Count Label</label>
+        <input className={styles.input} value={config.RSVP_LABEL_GUEST_COUNT || ''} onChange={(e) => updateConfig('RSVP_LABEL_GUEST_COUNT', e.target.value)} placeholder="Number of guests attending (including yourself)" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Plus-One Names Label</label>
+        <input className={styles.input} value={config.RSVP_LABEL_ADDITIONAL_GUESTS || ''} onChange={(e) => updateConfig('RSVP_LABEL_ADDITIONAL_GUESTS', e.target.value)} placeholder="Spouse / plus-one names" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Dietary Restrictions Label</label>
+        <input className={styles.input} value={config.RSVP_LABEL_DIETARY || ''} onChange={(e) => updateConfig('RSVP_LABEL_DIETARY', e.target.value)} placeholder="Dietary restrictions" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Accessibility Requirements Label</label>
+        <input className={styles.input} value={config.RSVP_LABEL_ACCESSIBILITY || ''} onChange={(e) => updateConfig('RSVP_LABEL_ACCESSIBILITY', e.target.value)} placeholder="Accessibility requirements" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Dinner Attendance Label</label>
+        <input className={styles.input} value={config.RSVP_LABEL_DINNER_ATTENDANCE || ''} onChange={(e) => updateConfig('RSVP_LABEL_DINNER_ATTENDANCE', e.target.value)} placeholder="Will you attend the dinner reception on 23 October?" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Mass Attendance Label</label>
+        <input className={styles.input} value={config.RSVP_LABEL_MASS_ATTENDANCE || ''} onChange={(e) => updateConfig('RSVP_LABEL_MASS_ATTENDANCE', e.target.value)} placeholder="Will you attend the solemnisation Mass on 24 October?" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Message Label</label>
+        <input className={styles.input} value={config.RSVP_LABEL_MESSAGE || ''} onChange={(e) => updateConfig('RSVP_LABEL_MESSAGE', e.target.value)} placeholder="Note to the couple" />
+      </div>
 
       <div className={styles.formGroup}>
         <label className={styles.label}>Custom RSVP Questions</label>

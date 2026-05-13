@@ -129,6 +129,14 @@
   overflow: hidden;
 }
 
+.mapEmbed {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  filter: saturate(0.72) contrast(0.96);
+}
+
 .mapFallback {
   min-height: clamp(130px, 19vh, 180px);
   display: flex;
@@ -174,8 +182,8 @@
   padding: clamp(0.8rem, 1.4vw, 1rem);
   border: 0;
   background:
-    linear-gradient(135deg, rgba(255, 253, 248, 0.72), rgba(255, 253, 248, 0.34)),
-    rgba(255, 255, 255, 0.04);
+    linear-gradient(135deg, rgba(255, 253, 248, 0.86), rgba(255, 253, 248, 0.42)),
+    rgba(255, 255, 255, 0.08);
   color: inherit;
   text-decoration: none;
   transition:

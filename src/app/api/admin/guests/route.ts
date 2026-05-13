@@ -20,7 +20,20 @@ export async function GET() {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { rsvp_id, attendance_status, meal_preference, dietary_restrictions, guest_count, plus_one_name, transport_needed, message } = body;
+    const {
+      rsvp_id,
+      attendance_status,
+      invite_code,
+      invite_type,
+      dietary_restrictions,
+      guest_count,
+      plus_one_name,
+      additional_guest_names,
+      dinner_attendance,
+      mass_attendance,
+      accessibility_requirements,
+      message,
+    } = body;
 
     if (!rsvp_id) {
       return NextResponse.json({ error: 'rsvp_id is required' }, { status: 400 });
@@ -38,11 +51,15 @@ export async function PUT(request: Request) {
     rsvps[idx] = {
       ...rsvps[idx],
       ...(attendance_status !== undefined && { attendance_status }),
-      ...(meal_preference !== undefined && { meal_preference }),
+      ...(invite_code !== undefined && { invite_code }),
+      ...(invite_type !== undefined && { invite_type }),
       ...(dietary_restrictions !== undefined && { dietary_restrictions }),
       ...(guest_count !== undefined && { guest_count }),
       ...(plus_one_name !== undefined && { plus_one_name }),
-      ...(transport_needed !== undefined && { transport_needed }),
+      ...(additional_guest_names !== undefined && { additional_guest_names }),
+      ...(dinner_attendance !== undefined && { dinner_attendance }),
+      ...(mass_attendance !== undefined && { mass_attendance }),
+      ...(accessibility_requirements !== undefined && { accessibility_requirements }),
       ...(message !== undefined && { message }),
       updated_at: new Date().toISOString(),
     };

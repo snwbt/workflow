@@ -5,7 +5,7 @@ import { trackEvent } from '@/lib/analytics';
 import { handleSectionLinkClick } from '@/lib/scroll';
 import { useScrollProgress } from '@/hooks/useScrollProgress';
 import styles from './HeroSection.module.css';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface CollageImage {
   url: string;
@@ -14,6 +14,7 @@ interface CollageImage {
 
 export default function HeroSection({ config }: { config?: any }) {
   const { ref, progress } = useScrollProgress();
+  const [activeMobileImage, setActiveMobileImage] = useState(0);
 
   useEffect(() => {
     trackEvent('hero_media_loaded');
@@ -40,6 +41,18 @@ export default function HeroSection({ config }: { config?: any }) {
   const img2 = collageImages[2] || null;
 
   const isExternalLink = ctaLink.startsWith('http');
+
+  useEffect(() => {
+    if (collageImages.length <= 1) return;
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mediaQuery.matches) return;
+
+    const interval = window.setInterval(() => {
+      setActiveMobileImage((current) => (current + 1) % collageImages.length);
+    }, 4200);
+
+    return () => window.clearInterval(interval);
+  }, [collageImages.length]);
 
   return (
     <section id="hero" className={styles.hero} ref={ref as React.RefObject<HTMLElement>}>
@@ -101,6 +114,30 @@ export default function HeroSection({ config }: { config?: any }) {
             />
           </div>
         )}
+
+        <div className={styles.mobileCarousel} aria-label="Wedding photo carousel">
+          {collageImages.map((img, index) => (
+            <div
+              key={`${img.url}-${index}`}
+              className={`${styles.mobileSlide} ${index === activeMobileImage ? styles.mobileSlideActive : ''}`}
+              aria-hidden={index !== activeMobileImage}
+            >
+              <Image
+                src={img.url}
+                alt={img.alt || 'The couple'}
+                fill
+                priority={index === 0}
+                className={styles.image}
+                sizes="100vw"
+              />
+            </div>
+          ))}
+          <div className={styles.mobileDots} aria-hidden="true">
+            {collageImages.map((_, index) => (
+              <span key={index} className={index === activeMobileImage ? styles.mobileDotActive : ''} />
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className={styles.contentOverlay}>

@@ -9,11 +9,15 @@ interface Rsvp {
   guest_name: string;
   email: string;
   attendance_status: string;
+  invite_code?: string;
+  invite_type?: string;
   guest_count: number;
   plus_one_name?: string;
-  meal_preference?: string;
+  additional_guest_names?: string;
+  dinner_attendance?: string;
+  mass_attendance?: string;
   dietary_restrictions?: string;
-  transport_needed?: boolean;
+  accessibility_requirements?: string;
   message?: string;
   custom_answers?: Record<string, unknown>;
   submitted_at: string;
@@ -23,8 +27,9 @@ interface Stats {
   totalResponses: number;
   totalAttending: number;
   totalDeclined: number;
-  mealCounts: Record<string, number>;
+  inviteCounts: Record<string, number>;
   dietaryRestrictionsCount: number;
+  accessibilityRequirementsCount: number;
   rsvps: Rsvp[];
 }
 
@@ -70,8 +75,8 @@ export default function AdminDashboard() {
     if (!stats || !stats.rsvps) return;
     
     const headers = [
-      'Name', 'Email', 'Status', 'Guest Count', 'Plus One Name', 
-      'Meal', 'Dietary', 'Transport Needed', 'Message', 'Custom Answers', 'Submitted At'
+      'Name', 'Email', 'Invite Type', 'Invite Code', 'Status', 'Guest Count', 'Guest Names',
+      'Dinner', 'Mass', 'Dietary', 'Accessibility', 'Message', 'Custom Answers', 'Submitted At'
     ];
     
     const rows = stats.rsvps.map(r => {
@@ -83,12 +88,15 @@ export default function AdminDashboard() {
       return [
         `"${r.guest_name || ''}"`,
         `"${r.email || ''}"`,
+        `"${r.invite_type || ''}"`,
+        `"${r.invite_code || ''}"`,
         `"${r.attendance_status || ''}"`,
         r.guest_count || 1,
-        `"${r.plus_one_name || ''}"`,
-        `"${r.meal_preference || ''}"`,
+        `"${r.additional_guest_names || r.plus_one_name || ''}"`,
+        `"${r.dinner_attendance || ''}"`,
+        `"${r.mass_attendance || ''}"`,
         `"${r.dietary_restrictions || ''}"`,
-        r.transport_needed ? 'Yes' : 'No',
+        `"${r.accessibility_requirements || ''}"`,
         `"${r.message || ''}"`,
         `"${customAns}"`,
         `"${r.submitted_at || ''}"`
@@ -193,12 +201,12 @@ export default function AdminDashboard() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--spacing-6)', marginBottom: '2rem' }}>
         <div className={styles.statCard}>
-          <div className={styles.statLabel}>Meals</div>
+          <div className={styles.statLabel}>Invite Types</div>
           <div style={{ marginTop: 'var(--spacing-4)', fontSize: '0.875rem' }}>
-            {Object.entries(stats.mealCounts).length === 0 ? <p>No meal selections yet.</p> : null}
-            {Object.entries(stats.mealCounts).map(([meal, count]) => (
-              <div key={meal} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--spacing-2)' }}>
-                <span style={{textTransform: 'capitalize'}}>{meal}:</span> <strong>{count}</strong>
+            {Object.entries(stats.inviteCounts).length === 0 ? <p>No invite responses yet.</p> : null}
+            {Object.entries(stats.inviteCounts).map(([inviteType, count]) => (
+              <div key={inviteType} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--spacing-2)' }}>
+                <span>{inviteType === 'friday_saturday' ? 'Friday + Saturday' : inviteType === 'saturday_only' ? 'Saturday only' : 'Unassigned'}:</span> <strong>{count}</strong>
               </div>
             ))}
           </div>
@@ -210,7 +218,7 @@ export default function AdminDashboard() {
               <span>Dietary Restrictions Noted:</span> <strong>{stats.dietaryRestrictionsCount}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--spacing-2)' }}>
-              <span>Transport Needed:</span> <strong>{stats.rsvps.filter(r => r.transport_needed).length}</strong>
+              <span>Accessibility Requirements:</span> <strong>{stats.accessibilityRequirementsCount}</strong>
             </div>
           </div>
         </div>
@@ -269,26 +277,28 @@ export default function AdminDashboard() {
             <tr style={{borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)'}}>
               <th style={{padding: '0.75rem'}}>Name</th>
               <th style={{padding: '0.75rem'}}>Email</th>
+              <th style={{padding: '0.75rem'}}>Invite</th>
               <th style={{padding: '0.75rem'}}>Status</th>
               <th style={{padding: '0.75rem'}}>Guests</th>
-              <th style={{padding: '0.75rem'}}>Plus One</th>
+              <th style={{padding: '0.75rem'}}>Mass</th>
               <th style={{padding: '0.75rem'}}>Date</th>
               <th style={{padding: '0.75rem'}}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {stats.rsvps.length === 0 && (
-              <tr><td colSpan={7} style={{padding: '1rem', textAlign: 'center'}}>No RSVPs yet.</td></tr>
+              <tr><td colSpan={8} style={{padding: '1rem', textAlign: 'center'}}>No RSVPs yet.</td></tr>
             )}
             {stats.rsvps.map(rsvp => (
               <tr key={rsvp.rsvp_id} style={{borderBottom: '1px solid var(--color-border)'}}>
                 <td style={{padding: '0.75rem', fontWeight: 500}}>{rsvp.guest_name}</td>
                 <td style={{padding: '0.75rem'}}>{rsvp.email}</td>
+                <td style={{padding: '0.75rem'}}>{rsvp.invite_type === 'friday_saturday' ? 'Fri + Sat' : rsvp.invite_type === 'saturday_only' ? 'Sat only' : '-'}</td>
                 <td style={{padding: '0.75rem', color: rsvp.attendance_status === 'attending' ? 'green' : 'red'}}>
                   {rsvp.attendance_status}
                 </td>
                 <td style={{padding: '0.75rem'}}>{rsvp.guest_count}</td>
-                <td style={{padding: '0.75rem'}}>{rsvp.plus_one_name || '-'}</td>
+                <td style={{padding: '0.75rem'}}>{rsvp.mass_attendance || '-'}</td>
                 <td style={{padding: '0.75rem'}}>{new Date(rsvp.submitted_at).toLocaleDateString()}</td>
                 <td style={{padding: '0.75rem'}}>
                   <button

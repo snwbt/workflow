@@ -2,6 +2,7 @@
 
 import { useReveal } from '@/hooks/useReveal';
 import Image from 'next/image';
+import { useRef, useState } from 'react';
 import styles from './GalleryInterludeSection.module.css';
 
 interface CollageImage {
@@ -11,6 +12,8 @@ interface CollageImage {
 
 export default function GalleryInterludeSection({ config }: { config?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.2 });
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   if (!config || !config.collageImages || config.collageImages.length === 0) return null;
 
@@ -23,7 +26,7 @@ export default function GalleryInterludeSection({ config }: { config?: any }) {
     items.map((img, i) => (
       <figure
         key={`${duplicate ? 'duplicate' : 'primary'}-${img.url}-${i}`}
-        className={styles.slide}
+        className={`${styles.slide} ${duplicate ? styles.duplicateSlide : ''}`}
         aria-hidden={duplicate}
       >
         <Image
@@ -37,6 +40,29 @@ export default function GalleryInterludeSection({ config }: { config?: any }) {
     ))
   );
 
+  const handleScroll = () => {
+    const track = trackRef.current;
+    if (!track || images.length === 0) return;
+
+    const firstSlide = track.querySelector<HTMLElement>(`.${styles.slide}`);
+    if (!firstSlide) return;
+
+    const trackStyles = window.getComputedStyle(track);
+    const gap = parseFloat(trackStyles.columnGap || trackStyles.gap || '0') || 0;
+    const slideSpan = firstSlide.offsetWidth + gap;
+    if (!slideSpan) return;
+
+    setActiveIndex(Math.round(track.scrollLeft / slideSpan) % images.length);
+  };
+
+  const scrollToSlide = (index: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const slides = track.querySelectorAll<HTMLElement>(`.${styles.slide}:not(.${styles.duplicateSlide})`);
+    slides[index]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  };
+
   return (
     <section id="gallery_interlude" className={styles.container} ref={ref as React.RefObject<HTMLElement>}>
       <div
@@ -46,11 +72,32 @@ export default function GalleryInterludeSection({ config }: { config?: any }) {
           '--gallery-image-scale': imageScale,
         } as React.CSSProperties}
       >
-        <div className={styles.sliderTrack} tabIndex={0} aria-label="Wedding photo gallery">
+        <div
+          className={styles.sliderTrack}
+          tabIndex={0}
+          aria-label="Wedding photo gallery"
+          ref={trackRef}
+          onScroll={handleScroll}
+        >
           {renderSlides(images)}
           {motionEnabled && renderSlides(images, true)}
         </div>
       </div>
+
+      {images.length > 1 && (
+        <div className={styles.mobileDots} aria-label="Gallery slides">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              className={index === activeIndex ? styles.activeDot : ''}
+              onClick={() => scrollToSlide(index)}
+              aria-label={`Show gallery image ${index + 1}`}
+              aria-current={index === activeIndex ? 'true' : undefined}
+            />
+          ))}
+        </div>
+      )}
       
       {config.bodyCopy && (
         <div className={`${styles.captionWrapper} ${isVisible ? styles.visible : ''}`}>

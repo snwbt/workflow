@@ -100,7 +100,7 @@ export default async function Home() {
 
         {/* Venue Reveal */}
         {(!config.venue_reveal || config.venue_reveal.enabled) && (
-          <div className={`${styles.section} ${styles.themeDark}`}>
+          <div className={`${styles.section} ${styles.themeIllustration}`}>
             <VenueRevealSection config={config.venue_reveal} globalConfig={globalConfig} />
           </div>
         )}
