@@ -29,7 +29,7 @@ function VenuePanel({
 
   return (
     <article
-      className={`${styles.venuePanel} ${!hasImage ? styles.fallbackPanel : ''} ${isVisible ? styles.visible : ''}`}
+      className={`${styles.venuePanel} ${venue.key === 'dayTwo' ? styles.rightPanel : styles.leftPanel} ${!hasImage ? styles.fallbackPanel : ''} ${isVisible ? styles.visible : ''}`}
       style={{ transitionDelay: `${index * 120}ms` }}
     >
       {hasImage && (

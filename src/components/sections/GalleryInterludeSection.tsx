@@ -15,22 +15,40 @@ export default function GalleryInterludeSection({ config }: { config?: any }) {
   if (!config || !config.collageImages || config.collageImages.length === 0) return null;
 
   const images: CollageImage[] = config.collageImages;
+  const motionEnabled = config.motionEnabled !== false && images.length > 1;
+  const motionSpeed = Number(config.motionSpeed || 1);
+  const imageScale = Number(config.imageScale || 1);
+  const duration = `${Math.max(28, 54 / Math.max(motionSpeed, 0.5))}s`;
+  const renderSlides = (items: CollageImage[], duplicate = false) => (
+    items.map((img, i) => (
+      <figure
+        key={`${duplicate ? 'duplicate' : 'primary'}-${img.url}-${i}`}
+        className={styles.slide}
+        aria-hidden={duplicate}
+      >
+        <Image
+          src={img.url}
+          alt={duplicate ? '' : (img.alt || 'Wedding detail')}
+          fill
+          className={styles.image}
+          sizes="(max-width: 768px) 92vw, 82vw"
+        />
+      </figure>
+    ))
+  );
 
   return (
     <section id="gallery_interlude" className={styles.container} ref={ref as React.RefObject<HTMLElement>}>
-      <div className={`${styles.sliderShell} ${isVisible ? styles.visible : ''}`}>
-        <div className={styles.sliderTrack}>
-          {images.map((img, i) => (
-            <figure key={`${img.url}-${i}`} className={styles.slide}>
-              <Image
-                src={img.url}
-                alt={img.alt || 'Wedding detail'}
-                fill
-                className={styles.image}
-                sizes="(max-width: 768px) 90vw, 78vw"
-              />
-            </figure>
-          ))}
+      <div
+        className={`${styles.sliderShell} ${motionEnabled ? styles.motionEnabled : ''} ${isVisible ? styles.visible : ''}`}
+        style={{
+          '--gallery-duration': duration,
+          '--gallery-image-scale': imageScale,
+        } as React.CSSProperties}
+      >
+        <div className={styles.sliderTrack} tabIndex={0} aria-label="Wedding photo gallery">
+          {renderSlides(images)}
+          {motionEnabled && renderSlides(images, true)}
         </div>
       </div>
       

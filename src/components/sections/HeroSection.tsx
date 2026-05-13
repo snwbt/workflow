@@ -47,7 +47,10 @@ export default function HeroSection({ config }: { config?: any }) {
         {/* Main image */}
         <div
           className={`${styles.collageItem} ${styles.imageMain}`}
-          style={{ transform: `scale(${1 + progress * 0.05}) translateY(${progress * 20}px)` }}
+          style={{
+            opacity: 1 - progress * 0.16,
+            transform: `scale(${1 + progress * 0.05}) translateY(${progress * 20}px)`,
+          }}
         >
           <Image
             src={img0.url}
@@ -63,7 +66,10 @@ export default function HeroSection({ config }: { config?: any }) {
         {img1 && (
           <div
             className={`${styles.collageItem} ${styles.imageSmall1}`}
-            style={{ transform: `scale(${1 + progress * 0.03}) translateY(${progress * -30}px)` }}
+            style={{
+              opacity: 1 - progress * 0.22,
+              transform: `scale(${1 + progress * 0.03}) translateY(${progress * -30}px)`,
+            }}
           >
             <Image
               src={img1.url}
@@ -80,7 +86,10 @@ export default function HeroSection({ config }: { config?: any }) {
         {img2 && (
           <div
             className={`${styles.collageItem} ${styles.imageSmall2}`}
-            style={{ transform: `scale(${1 + progress * 0.04}) translateY(${progress * -15}px)` }}
+            style={{
+              opacity: 1 - progress * 0.18,
+              transform: `scale(${1 + progress * 0.04}) translateY(${progress * -15}px)`,
+            }}
           >
             <Image
               src={img2.url}

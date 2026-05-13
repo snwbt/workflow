@@ -22,3 +22,11 @@
   color: var(--color-accent);
   letter-spacing: 0.1em;
 }
+
+.monogram {
+  width: clamp(56px, 8vw, 84px);
+  height: clamp(56px, 8vw, 84px);
+  object-fit: contain;
+  opacity: 0.78;
+  filter: saturate(0.9);
+}

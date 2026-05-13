@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useReveal } from '@/hooks/useReveal';
 import { getRsvpReminderText } from '@/lib/eventDisplay';
 import styles from './AtAGlanceSection.module.css';
@@ -11,6 +12,7 @@ export default function AtAGlanceSection({ config, globalConfig }: { config?: an
 
   const motif = globalConfig?.SIGNATURE_MOTIF || config?.motif || 'R & S';
   const enableMotif = globalConfig?.ENABLE_MOTIF !== false;
+  const showMonogramWatermark = Boolean(globalConfig?.MONOGRAM_IMAGE) && globalConfig?.ENABLE_MONOGRAM_WATERMARK !== false;
   const rsvpText = getRsvpReminderText(globalConfig) || config.rsvpText;
 
   return (
@@ -18,8 +20,19 @@ export default function AtAGlanceSection({ config, globalConfig }: { config?: an
       id="at_a_glance"
       className={styles.container}
       ref={ref as React.RefObject<HTMLElement>}
-      data-motif={enableMotif ? motif : ''}
+      data-motif={enableMotif && !showMonogramWatermark ? motif : ''}
     >
+      {showMonogramWatermark && (
+        <Image
+          src={globalConfig.MONOGRAM_IMAGE}
+          alt=""
+          width={420}
+          height={420}
+          unoptimized
+          className={styles.monogramWatermark}
+          aria-hidden="true"
+        />
+      )}
       <div className={`${styles.card} ${isVisible ? styles.visible : ''}`}>
         <h2 className={styles.heading}>{config.heading || 'A Weekend in Singapore'}</h2>
         <div className={styles.divider} />

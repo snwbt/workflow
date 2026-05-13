@@ -161,6 +161,7 @@
   letter-spacing: 0;
   color: var(--color-espresso);
   margin-bottom: var(--spacing-2);
+  animation: nameSwell 900ms var(--ease-luxury) 0.9s both;
 }
 
 .details {
@@ -206,5 +207,24 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes nameSwell {
+  from {
+    opacity: 0.82;
+    transform: scale(0.965);
+    letter-spacing: 0.018em;
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    letter-spacing: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .names {
+    animation: none;
   }
 }

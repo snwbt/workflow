@@ -65,15 +65,14 @@
 
 .destination {
   min-width: 0;
-  padding: clamp(0.75rem, 1.4vw, 1.05rem);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  padding: 0;
+  border: 0;
+  background: transparent;
   opacity: 0;
   transform: translateY(18px);
   transition:
     opacity 0.5s var(--ease-luxury),
-    transform 0.5s var(--ease-luxury),
-    border-color var(--duration-fast) var(--ease-standard);
+    transform 0.5s var(--ease-luxury);
 }
 
 .destination.visible {
@@ -81,16 +80,11 @@
   transform: translateY(0);
 }
 
-.destination:hover {
-  border-color: var(--color-accent);
-}
-
 .destinationHeader {
   margin-bottom: clamp(0.5rem, 1vh, 0.75rem);
 }
 
-.dateLabel,
-.cardMode {
+.dateLabel {
   display: block;
   color: var(--color-accent);
   font-family: var(--font-sans);
@@ -166,30 +160,68 @@
 
 .cardsGrid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
-  border-top: 1px solid var(--color-border);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.5rem, 1vw, 0.8rem);
 }
 
 .card {
   min-width: 0;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--spacing-2);
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: var(--spacing-3);
   align-items: start;
-  padding: 0.55rem 0;
+  min-height: 118px;
+  padding: clamp(0.8rem, 1.4vw, 1rem);
   border: 0;
-  border-bottom: 1px solid var(--color-border);
-  background: transparent;
-  transition: border-color var(--duration-fast) var(--ease-standard);
+  background:
+    linear-gradient(135deg, rgba(255, 253, 248, 0.72), rgba(255, 253, 248, 0.34)),
+    rgba(255, 255, 255, 0.04);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
 }
 
 .card:hover {
-  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+  transform: translateY(-2px);
+}
+
+.iconMark {
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  color: var(--color-espresso);
+  background: rgba(216, 199, 166, 0.14);
+  border-radius: 999px;
+}
+
+.travelIcon {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .cardBody {
   min-width: 0;
+}
+
+.cardMode {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--color-accent);
+  font-family: var(--font-sans);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .cardTitle {
@@ -210,16 +242,7 @@
   overflow-wrap: anywhere;
 }
 
-.cardMode {
-  min-width: 3.1rem;
-  padding: 0.28rem 0.35rem;
-  border: 1px solid var(--color-accent);
-  background: rgba(196, 169, 119, 0.12);
-  text-align: center;
-}
-
-.directionsBtn,
-.panelDirectionsBtn {
+.directionsBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -238,15 +261,15 @@
     transform var(--duration-fast) var(--ease-standard);
 }
 
-.panelDirectionsBtn {
-  margin-top: clamp(0.6rem, 1.2vh, 0.9rem);
-}
-
-.directionsBtn:hover,
-.panelDirectionsBtn:hover {
+.directionsBtn:hover {
   background: var(--color-espresso);
   color: var(--color-surface);
   transform: translateY(-1px);
+}
+
+.actionCard {
+  align-items: center;
+  min-height: 84px;
 }
 
 @media (max-width: 959px) {

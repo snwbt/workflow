@@ -24,6 +24,17 @@
   z-index: 0;
 }
 
+.monogramWatermark {
+  position: absolute;
+  width: clamp(180px, 28vw, 360px);
+  height: auto;
+  opacity: 0.055;
+  filter: saturate(0.8);
+  user-select: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .card {
   position: relative;
   z-index: 1;

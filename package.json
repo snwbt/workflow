@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "optimize:media": "node scripts/optimize-media.mjs",
     "lint": "eslint"
   },
   "dependencies": {

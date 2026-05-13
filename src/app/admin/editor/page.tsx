@@ -26,6 +26,9 @@ interface SectionConfig {
   ctaLabel?: string;
   ctaLink?: string;
   collageImages?: { url: string; alt?: string }[];
+  motionEnabled?: boolean;
+  motionSpeed?: number;
+  imageScale?: number;
   // Schedule specific
   days?: { label: string; date: string; events: { time: string; title: string; location: string; notes?: string; dressCode?: string; }[] }[];
   noteEnabled?: boolean;
@@ -222,6 +225,27 @@ export default function EditorPage() {
       <div className={styles.formGroup}>
         <label className={styles.label}>Signature Motif Text (e.g. R & S or ·)</label>
         <input className={styles.input} value={config.SIGNATURE_MOTIF || ''} onChange={(e) => updateConfig('SIGNATURE_MOTIF', e.target.value)} placeholder="R & S" disabled={config.ENABLE_MOTIF === false} />
+      </div>
+
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Monogram Image</label>
+        <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
+          <input className={styles.input} style={{flex: 1}} placeholder="/media/monogram.svg" value={config.MONOGRAM_IMAGE || ''} onChange={(e) => updateConfig('MONOGRAM_IMAGE', e.target.value)} />
+          <label className={styles.secondaryButton} style={{padding: '0.5rem 1rem', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center'}}>
+            {uploading ? 'Uploading...' : 'Upload File'}
+            <input type="file" accept="image/*,.svg" style={{display: 'none'}} onChange={(e) => handleFileUpload(e, (url) => updateConfig('MONOGRAM_IMAGE', url))} disabled={uploading} />
+          </label>
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Monogram Alt Text</label>
+        <input className={styles.input} value={config.MONOGRAM_ALT || ''} onChange={(e) => updateConfig('MONOGRAM_ALT', e.target.value)} placeholder="Russell and Siaw Min monogram" />
+      </div>
+      <div className={styles.formGroup} style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+        <label className={styles.label} style={{margin: 0}}>
+          <input type="checkbox" checked={config.ENABLE_MONOGRAM_WATERMARK !== false} onChange={(e) => updateConfig('ENABLE_MONOGRAM_WATERMARK', e.target.checked)} style={{marginRight: '0.5rem'}} />
+          Enable Monogram Watermarks
+        </label>
       </div>
 
       <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>23 October Venue Details (Google Maps)</h3>
@@ -819,6 +843,22 @@ export default function EditorPage() {
       <div className={styles.formGroup}>
         <label className={styles.label}>Caption / Short Copy</label>
         <input className={styles.input} value={activeSection?.bodyCopy || ''} onChange={(e) => updateActiveSection('bodyCopy', e.target.value)} />
+      </div>
+      <div className={styles.formGroup} style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+        <label className={styles.label} style={{margin: 0}}>
+          <input type="checkbox" checked={activeSection?.motionEnabled !== false} onChange={(e) => updateActiveSection('motionEnabled', e.target.checked)} style={{marginRight: '0.5rem'}} />
+          Enable slow gallery movement
+        </label>
+      </div>
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Motion Speed</label>
+          <input type="number" min="0.5" max="2" step="0.1" className={styles.input} value={activeSection?.motionSpeed || 1} onChange={(e) => updateActiveSection('motionSpeed', Number(e.target.value))} />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Image Scale</label>
+          <input type="number" min="1" max="1.2" step="0.01" className={styles.input} value={activeSection?.imageScale || 1} onChange={(e) => updateActiveSection('imageScale', Number(e.target.value))} />
+        </div>
       </div>
       <div className={styles.formGroup}>
         <label className={styles.label}>Detail Images</label>

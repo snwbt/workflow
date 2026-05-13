@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { useReveal } from '@/hooks/useReveal';
 import styles from './RsvpSection.module.css';
@@ -367,6 +368,20 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
 
         {step === 'confirmation' && (
           <div className={styles.confirmation}>
+            <span className={styles.confFlourish} aria-hidden="true">
+              {globalConfig?.MONOGRAM_IMAGE ? (
+                <Image
+                  src={globalConfig.MONOGRAM_IMAGE}
+                  alt=""
+                  width={72}
+                  height={72}
+                  unoptimized
+                  className={styles.confMonogram}
+                />
+              ) : (
+                <span className={styles.flowerMark} />
+              )}
+            </span>
             {attendance === 'declined' ? (
               <>
                 <h2 className={styles.confTitle}>Thank You</h2>

@@ -81,7 +81,10 @@
       "updatedAt": "2026-05-13T04:31:47.756Z"
     },
     "SIGNATURE_MOTIF": "ROP & TSM",
-    "ENABLE_MOTIF": true
+    "ENABLE_MOTIF": true,
+    "MONOGRAM_IMAGE": "",
+    "MONOGRAM_ALT": "Russell and Siaw Min monogram",
+    "ENABLE_MONOGRAM_WATERMARK": true
   },
   "rsvps": [
     {
@@ -261,17 +264,20 @@
       "enabled": true,
       "heading": "",
       "bodyCopy": "A weekend of family, friends, and the city we love.",
+      "motionEnabled": true,
+      "motionSpeed": 1,
+      "imageScale": 1.02,
       "collageImages": [
         {
-          "url": "/media/1778500315797-r7b4t.jpeg",
+          "url": "/media/1778500315797-r7b4t.webp",
           "alt": "Detail 1"
         },
         {
-          "url": "/media/1778500330755-douskk.jpeg",
+          "url": "/media/1778500330755-douskk.webp",
           "alt": "Detail 2"
         },
         {
-          "url": "/media/1778500340498-hvw3r.jpeg",
+          "url": "/media/1778500340498-hvw3r.webp",
           "alt": "Detail 3"
         }
       ]

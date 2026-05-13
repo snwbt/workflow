@@ -1,14 +1,16 @@
 .container {
   min-height: 100dvh;
-  padding: clamp(3rem, 5vh, 4.5rem) 0;
+  padding: clamp(2rem, 4vh, 3.5rem) 0;
   box-sizing: border-box;
   background-color: var(--color-surface);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  --slide-gap: clamp(1rem, 2vw, 1.5rem);
-  --slide-size: clamp(560px, 76vw, 1180px);
+  --slide-gap: clamp(0.75rem, 1.4vw, 1.25rem);
+  --slide-size: clamp(680px, 82vw, 1380px);
+  --gallery-duration: 48s;
+  --gallery-image-scale: 1;
 }
 
 .sliderShell {
@@ -16,8 +18,8 @@
   opacity: 0;
   transform: translateY(18px);
   transition: opacity 0.6s var(--ease-luxury), transform 0.6s var(--ease-luxury);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
 }
 
 .sliderShell.visible {
@@ -38,6 +40,17 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.motionEnabled .sliderTrack {
+  width: max-content;
+  overflow: visible;
+  animation: galleryDrift var(--gallery-duration) linear infinite;
+}
+
+.motionEnabled:hover .sliderTrack,
+.motionEnabled:focus-within .sliderTrack {
+  animation-play-state: paused;
+}
+
 .sliderTrack::-webkit-scrollbar {
   display: none;
 }
@@ -45,7 +58,7 @@
 .slide {
   position: relative;
   flex: 0 0 var(--slide-size);
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.08);
   scroll-snap-align: center;
@@ -53,12 +66,12 @@
 
 .image {
   object-fit: cover;
-  transform: scale(1);
+  transform: scale(var(--gallery-image-scale));
   transition: transform 700ms var(--ease-luxury);
 }
 
 .slide:hover .image {
-  transform: scale(1.025);
+  transform: scale(calc(var(--gallery-image-scale) + 0.025));
 }
 
 .captionWrapper {
@@ -88,7 +101,7 @@
   .container {
     min-height: auto;
     padding: var(--spacing-12) 0;
-    --slide-size: 90vw;
+    --slide-size: 92vw;
   }
 
   .sliderShell {
@@ -97,7 +110,13 @@
   }
 
   .slide {
-    aspect-ratio: 16 / 11;
+    aspect-ratio: 4 / 5;
+  }
+
+  .motionEnabled .sliderTrack {
+    width: auto;
+    overflow-x: auto;
+    animation: none;
   }
 }
 
@@ -109,11 +128,24 @@
     transition: none;
   }
 
-  .sliderTrack {
+  .sliderTrack,
+  .motionEnabled .sliderTrack {
+    width: auto;
+    overflow-x: auto;
     scroll-behavior: auto;
+    animation: none;
   }
 
   .image {
     transition: none;
+  }
+}
+
+@keyframes galleryDrift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - (var(--slide-gap) / 2)));
   }
 }
