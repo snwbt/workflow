@@ -15,20 +15,19 @@ export default function GalleryInterludeSection({ config }: { config?: any }) {
   if (!config || !config.collageImages || config.collageImages.length === 0) return null;
 
   const images: CollageImage[] = config.collageImages;
-  const sliderImages = [...images, ...images];
 
   return (
     <section id="gallery_interlude" className={styles.container} ref={ref as React.RefObject<HTMLElement>}>
       <div className={`${styles.sliderShell} ${isVisible ? styles.visible : ''}`}>
         <div className={styles.sliderTrack}>
-          {sliderImages.map((img, i) => (
+          {images.map((img, i) => (
             <figure key={`${img.url}-${i}`} className={styles.slide}>
               <Image
                 src={img.url}
                 alt={img.alt || 'Wedding detail'}
                 fill
                 className={styles.image}
-                sizes="(max-width: 768px) 86vw, 48vw"
+                sizes="(max-width: 768px) 90vw, 78vw"
               />
             </figure>
           ))}

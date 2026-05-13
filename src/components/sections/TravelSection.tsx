@@ -52,6 +52,7 @@ function VenueMap({ venue, mapsEnabled }: { venue: WeddingVenue; mapsEnabled: bo
         defaultZoom={16}
         gestureHandling="cooperative"
         disableDefaultUI
+        style={{ width: '100%', height: '100%' }}
       >
         <Marker position={center} />
       </Map>
@@ -118,7 +119,8 @@ export default function TravelSection({ config, globalConfig }: { config?: any; 
   const subheading = config?.bodyCopy || '';
   const venues = getWeddingVenues(globalConfig);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const mapsEnabled = Boolean(apiKey) && !mapsUnavailable;
+  const hasMappableVenue = venues.some((venue) => venue.lat !== undefined && venue.lng !== undefined);
+  const mapsEnabled = Boolean(apiKey) && hasMappableVenue && !mapsUnavailable;
   const destinationPanels = (
     <div className={`${styles.destinationsGrid} ${venues.length === 1 ? styles.singleDestination : ''}`}>
       {venues.map((venue, index) => (

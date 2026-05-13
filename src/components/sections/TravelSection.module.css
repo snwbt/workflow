@@ -1,6 +1,6 @@
 .travel {
   min-height: calc(100dvh - var(--nav-height, 60px));
-  padding: clamp(2rem, 4vh, 4rem) var(--spacing-4);
+  padding: clamp(1rem, 2vh, 1.75rem) var(--spacing-4);
   box-sizing: border-box;
   background-color: var(--color-bg);
   display: flex;
@@ -15,7 +15,7 @@
 
 .header {
   max-width: 720px;
-  margin: 0 auto var(--spacing-8);
+  margin: 0 auto clamp(0.75rem, 1.8vh, 1.5rem);
   text-align: center;
   opacity: 0;
   transform: translateY(18px);
@@ -28,10 +28,10 @@
 }
 
 .title {
-  margin-bottom: var(--spacing-3);
+  margin-bottom: var(--spacing-2);
   color: var(--color-espresso);
   font-family: var(--font-sans);
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(1.7rem, 3vw, 2.45rem);
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.05;
@@ -43,8 +43,8 @@
   max-width: 600px;
   margin: 0 auto;
   color: var(--color-text-secondary);
-  font-size: 1rem;
-  line-height: 1.65;
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 .empty {
@@ -55,7 +55,8 @@
 .destinationsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(1rem, 2vw, 1.5rem);
+  gap: clamp(0.75rem, 1.5vw, 1.1rem);
+  align-items: start;
 }
 
 .destinationsGrid.singleDestination {
@@ -65,7 +66,7 @@
 
 .destination {
   min-width: 0;
-  padding: clamp(1rem, 2vw, 1.5rem);
+  padding: clamp(0.75rem, 1.4vw, 1.05rem);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   opacity: 0;
@@ -86,7 +87,7 @@
 }
 
 .destinationHeader {
-  margin-bottom: var(--spacing-4);
+  margin-bottom: clamp(0.5rem, 1vh, 0.75rem);
 }
 
 .dateLabel,
@@ -101,10 +102,10 @@
 }
 
 .venueName {
-  margin: var(--spacing-2) 0;
+  margin: 0.25rem 0;
   color: var(--color-espresso);
   font-family: var(--font-serif);
-  font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+  font-size: clamp(1.15rem, 1.7vw, 1.45rem);
   font-weight: 400;
   line-height: 1.1;
 }
@@ -112,8 +113,9 @@
 .venueAddress,
 .arrivalNote {
   color: var(--color-text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .arrivalNote {
@@ -124,20 +126,24 @@
 .mapFrame,
 .mapFallback {
   width: 100%;
-  min-height: clamp(190px, 27vh, 260px);
-  margin-bottom: var(--spacing-4);
-  overflow: hidden;
+  margin-bottom: clamp(0.6rem, 1.2vh, 0.9rem);
   border: 1px solid var(--color-border);
   background: var(--color-bg);
 }
 
+.mapFrame {
+  height: clamp(130px, 19vh, 180px);
+  overflow: hidden;
+}
+
 .mapFallback {
+  min-height: clamp(130px, 19vh, 180px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-6);
+  gap: 0.35rem;
+  padding: var(--spacing-4);
   color: var(--color-text-secondary);
   text-align: center;
   overflow-wrap: anywhere;
@@ -146,14 +152,14 @@
 .mapFallback strong {
   color: var(--color-espresso);
   font-family: var(--font-serif);
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 400;
 }
 
 .mapKicker {
   color: var(--color-accent);
   font-family: var(--font-sans);
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -161,19 +167,21 @@
 
 .cardsGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--spacing-3);
+  grid-template-columns: 1fr;
+  gap: 0;
+  border-top: 1px solid var(--color-border);
 }
 
 .card {
   min-width: 0;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--spacing-3);
+  gap: var(--spacing-2);
   align-items: start;
-  padding: var(--spacing-4);
-  border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.42);
+  padding: 0.55rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
   transition: border-color var(--duration-fast) var(--ease-standard);
 }
 
@@ -186,10 +194,10 @@
 }
 
 .cardTitle {
-  margin: 0 0 var(--spacing-2);
+  margin: 0 0 0.2rem;
   color: var(--color-espresso);
   font-family: var(--font-serif);
-  font-size: 1.0625rem;
+  font-size: 0.98rem;
   font-weight: 400;
   line-height: 1.25;
   overflow-wrap: anywhere;
@@ -197,15 +205,15 @@
 
 .cardContent {
   color: var(--color-text-primary);
-  font-size: 0.875rem;
-  line-height: 1.5;
+  font-size: 0.78rem;
+  line-height: 1.35;
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
 
 .cardMode {
-  min-width: 3.5rem;
-  padding: 0.35rem 0.45rem;
+  min-width: 3.1rem;
+  padding: 0.28rem 0.35rem;
   border: 1px solid var(--color-accent);
   background: rgba(196, 169, 119, 0.12);
   text-align: center;
@@ -216,12 +224,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
-  padding: 0 var(--spacing-8);
+  min-height: 36px;
+  padding: 0 var(--spacing-5);
   border: 1px solid var(--color-espresso);
   color: var(--color-espresso);
   font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -232,7 +240,7 @@
 }
 
 .panelDirectionsBtn {
-  margin-top: var(--spacing-5);
+  margin-top: clamp(0.6rem, 1.2vh, 0.9rem);
 }
 
 .directionsBtn:hover,
@@ -256,6 +264,10 @@
   .mapFrame,
   .mapFallback {
     min-height: 240px;
+  }
+
+  .mapFrame {
+    height: 240px;
   }
 
   .cardsGrid {

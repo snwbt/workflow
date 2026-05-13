@@ -7,8 +7,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  --slide-gap: clamp(0.85rem, 1.6vw, 1.4rem);
-  --slide-size: clamp(340px, 48vw, 760px);
+  --slide-gap: clamp(1rem, 2vw, 1.5rem);
+  --slide-size: clamp(560px, 76vw, 1180px);
 }
 
 .sliderShell {
@@ -16,8 +16,8 @@
   opacity: 0;
   transform: translateY(18px);
   transition: opacity 0.6s var(--ease-luxury), transform 0.6s var(--ease-luxury);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
 }
 
 .sliderShell.visible {
@@ -27,15 +27,19 @@
 
 .sliderTrack {
   display: flex;
-  width: max-content;
   gap: var(--slide-gap);
-  animation: galleryDrift 28s linear infinite;
-  will-change: transform;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 max(var(--spacing-4), calc((100vw - var(--slide-size)) / 2));
+  scroll-behavior: smooth;
+  scroll-padding-inline: max(var(--spacing-4), calc((100vw - var(--slide-size)) / 2));
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
-.sliderShell:hover .sliderTrack,
-.sliderShell:focus-within .sliderTrack {
-  animation-play-state: paused;
+.sliderTrack::-webkit-scrollbar {
+  display: none;
 }
 
 .slide {
@@ -44,6 +48,7 @@
   aspect-ratio: 16 / 10;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.08);
+  scroll-snap-align: center;
 }
 
 .image {
@@ -79,20 +84,11 @@
   line-height: 1.5;
 }
 
-@keyframes galleryDrift {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(calc(-50% - (var(--slide-gap) / 2)), 0, 0);
-  }
-}
-
 @media (max-width: 767px) {
   .container {
     min-height: auto;
     padding: var(--spacing-12) 0;
-    --slide-size: 86vw;
+    --slide-size: 90vw;
   }
 
   .sliderShell {
@@ -114,10 +110,7 @@
   }
 
   .sliderTrack {
-    width: 100%;
-    overflow-x: auto;
-    animation: none;
-    will-change: auto;
+    scroll-behavior: auto;
   }
 
   .image {
