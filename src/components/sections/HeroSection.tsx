@@ -39,6 +39,8 @@ export default function HeroSection({ config }: { config?: any }) {
   const img0 = collageImages[0] || { url: '/media/hero-collage-1.png', alt: 'The couple' };
   const img1 = collageImages[1] || null;
   const img2 = collageImages[2] || null;
+  const headingParts = heading.split(/\s*&\s*/);
+  const hasStyledAmpersand = headingParts.length === 2 && headingParts.every(Boolean);
 
   const isExternalLink = ctaLink.startsWith('http');
   const getCtaScrollTarget = () => {
@@ -150,7 +152,17 @@ export default function HeroSection({ config }: { config?: any }) {
       <div className={styles.contentOverlay}>
         <div className={styles.content}>
           {eyebrow && <span className={styles.eyebrow}>{eyebrow}</span>}
-          <h1 className={styles.names}>{heading}</h1>
+          <h1 className={styles.names}>
+            {hasStyledAmpersand ? (
+              <>
+                <span className={styles.namePart}>{headingParts[0]}</span>
+                <span className={styles.ampersand} aria-label="and">&</span>
+                <span className={styles.namePart}>{headingParts[1]}</span>
+              </>
+            ) : (
+              heading
+            )}
+          </h1>
           <div className={styles.details}>
             {date && <span>{date}</span>}
             {venueText && <span>{venueText}</span>}
