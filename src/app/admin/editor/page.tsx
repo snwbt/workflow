@@ -106,7 +106,7 @@ export default function EditorPage() {
         ].filter(Boolean);
         setMessage(`Failed to save ${failures.join(' and ')}.`);
       }
-    } catch (e) {
+    } catch {
       setMessage('Error saving changes.');
     }
     setSaving(false);
@@ -131,6 +131,23 @@ export default function EditorPage() {
     setConfig((prev: any) => ({ ...prev, ...updates }));
   };
 
+  const uploadMediaFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch('/api/admin/media/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.url) {
+      throw new Error(data.error || 'Failed to upload media.');
+    }
+
+    return data.url as string;
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -138,28 +155,52 @@ export default function EditorPage() {
     setUploading(true);
     setMessage('Uploading media...');
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
-      const res = await fetch('/api/admin/media/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      
-      if (res.ok && data.url) {
-        callback(data.url);
-        setMessage('Media uploaded successfully!');
-      } else {
-        setMessage(data.error || 'Failed to upload media.');
-      }
-    } catch (err) {
+      const url = await uploadMediaFile(file);
+      callback(url);
+      setMessage('Media uploaded successfully!');
+    } catch {
       setMessage('Error uploading media.');
     }
-    
+
     setUploading(false);
+    e.target.value = '';
     setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleGalleryBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setUploading(true);
+
+    const uploadedImages: { url: string; alt: string }[] = [];
+    try {
+      for (const [index, file] of files.entries()) {
+        setMessage(`Uploading gallery image ${index + 1} of ${files.length}...`);
+        const url = await uploadMediaFile(file);
+        uploadedImages.push({
+          url,
+          alt: file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' '),
+        });
+      }
+
+      updateActiveSection('collageImages', [
+        ...(activeSection?.collageImages || []),
+        ...uploadedImages,
+      ]);
+      setMessage(`${uploadedImages.length} gallery image${uploadedImages.length === 1 ? '' : 's'} uploaded.`);
+    } catch {
+      setMessage(
+        uploadedImages.length > 0
+          ? `${uploadedImages.length} image${uploadedImages.length === 1 ? '' : 's'} uploaded before one failed.`
+          : 'Error uploading gallery images.'
+      );
+    }
+
+    setUploading(false);
+    e.target.value = '';
+    setTimeout(() => setMessage(''), 4000);
   };
 
   // Site Settings Sub-editor
@@ -724,7 +765,18 @@ export default function EditorPage() {
         <input className={styles.input} value={activeSection?.bodyCopy || ''} onChange={(e) => updateActiveSection('bodyCopy', e.target.value)} />
       </div>
       <div className={styles.formGroup}>
-        <label className={styles.label}>Detail Images (Up to 9)</label>
+        <label className={styles.label}>Detail Images</label>
+        <label className={styles.secondaryButton} style={{display: 'inline-flex', marginBottom: '0.75rem', cursor: 'pointer'}}>
+          {uploading ? 'Uploading...' : 'Bulk Upload Images'}
+          <input
+            type="file"
+            style={{display: 'none'}}
+            accept="image/*"
+            multiple
+            onChange={handleGalleryBulkUpload}
+            disabled={uploading}
+          />
+        </label>
         {(activeSection?.collageImages || []).map((img, i) => (
           <div key={i} style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center'}}>
             <span style={{width: '20px'}}>{i+1}.</span>
@@ -747,11 +799,9 @@ export default function EditorPage() {
             }}>X</button>
           </div>
         ))}
-        {(activeSection?.collageImages || []).length < 9 && (
-          <button className={styles.secondaryButton} onClick={() => {
-            updateActiveSection('collageImages', [...(activeSection?.collageImages || []), { url: '', alt: '' }]);
-          }}>+ Add Image</button>
-        )}
+        <button className={styles.secondaryButton} onClick={() => {
+          updateActiveSection('collageImages', [...(activeSection?.collageImages || []), { url: '', alt: '' }]);
+        }}>+ Add Image</button>
       </div>
     </>
   );

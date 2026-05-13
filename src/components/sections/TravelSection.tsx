@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useReveal } from '@/hooks/useReveal';
 import { getGoogleMapsUrl, getWeddingVenues, type WeddingVenue } from '@/lib/venues';
 import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
@@ -23,17 +24,19 @@ function getTravelCards(venue: WeddingVenue): TravelCard[] {
   ].filter((card): card is TravelCard => card !== null);
 }
 
-function VenueMap({ venue }: { venue: WeddingVenue }) {
+function VenueMap({ venue, mapsEnabled }: { venue: WeddingVenue; mapsEnabled: boolean }) {
   const hasCoordinates = venue.lat !== undefined && venue.lng !== undefined;
   const mapsUrl = getGoogleMapsUrl(venue);
 
-  if (!hasCoordinates || !process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+  if (!hasCoordinates || !mapsEnabled) {
     return (
       <div className={styles.mapFallback}>
-        <span>{venue.address || venue.name}</span>
+        <span className={styles.mapKicker}>Map Preview</span>
+        <strong>{venue.name}</strong>
+        <span>{venue.address || 'Location details will be shared soon.'}</span>
         {mapsUrl && (
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.directionsBtn}>
-            Open Map
+            Open in Google Maps
           </a>
         )}
       </div>
@@ -49,7 +52,6 @@ function VenueMap({ venue }: { venue: WeddingVenue }) {
         defaultZoom={16}
         gestureHandling="cooperative"
         disableDefaultUI
-        mapId="wedding-travel-map"
       >
         <Marker position={center} />
       </Map>
@@ -57,7 +59,17 @@ function VenueMap({ venue }: { venue: WeddingVenue }) {
   );
 }
 
-function DestinationPanel({ venue, index, isVisible }: { venue: WeddingVenue; index: number; isVisible: boolean }) {
+function DestinationPanel({
+  venue,
+  index,
+  isVisible,
+  mapsEnabled,
+}: {
+  venue: WeddingVenue;
+  index: number;
+  isVisible: boolean;
+  mapsEnabled: boolean;
+}) {
   const cards = getTravelCards(venue);
   const mapsUrl = getGoogleMapsUrl(venue);
 
@@ -73,15 +85,17 @@ function DestinationPanel({ venue, index, isVisible }: { venue: WeddingVenue; in
         {venue.arrivalNote && <p className={styles.arrivalNote}>{venue.arrivalNote}</p>}
       </div>
 
-      <VenueMap venue={venue} />
+      <VenueMap venue={venue} mapsEnabled={mapsEnabled} />
 
       {cards.length > 0 && (
         <div className={styles.cardsGrid}>
           {cards.map((card) => (
             <div key={`${venue.key}-${card.mode}`} className={styles.card}>
               <span className={styles.cardMode}>{card.mode}</span>
-              <h4 className={styles.cardTitle}>{card.title}</h4>
-              <p className={styles.cardContent}>{card.content}</p>
+              <div className={styles.cardBody}>
+                <h4 className={styles.cardTitle}>{card.title}</h4>
+                <p className={styles.cardContent}>{card.content}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -98,15 +112,23 @@ function DestinationPanel({ venue, index, isVisible }: { venue: WeddingVenue; in
 
 export default function TravelSection({ config, globalConfig }: { config?: any; globalConfig?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.1 });
+  const [mapsUnavailable, setMapsUnavailable] = useState(false);
 
   const heading = config?.heading || 'Getting Here';
   const subheading = config?.bodyCopy || '';
   const venues = getWeddingVenues(globalConfig);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const mapsEnabled = Boolean(apiKey) && !mapsUnavailable;
   const destinationPanels = (
     <div className={`${styles.destinationsGrid} ${venues.length === 1 ? styles.singleDestination : ''}`}>
       {venues.map((venue, index) => (
-        <DestinationPanel key={venue.key} venue={venue} index={index} isVisible={isVisible} />
+        <DestinationPanel
+          key={venue.key}
+          venue={venue}
+          index={index}
+          isVisible={isVisible}
+          mapsEnabled={mapsEnabled}
+        />
       ))}
     </div>
   );
@@ -124,7 +146,17 @@ export default function TravelSection({ config, globalConfig }: { config?: any; 
         )}
 
         {venues.length > 0 && (
-          apiKey ? <APIProvider apiKey={apiKey}>{destinationPanels}</APIProvider> : destinationPanels
+          mapsEnabled ? (
+            <APIProvider
+              apiKey={apiKey || ''}
+              onError={(error) => {
+                console.warn('Google Maps failed to load, showing fallback travel cards.', error);
+                setMapsUnavailable(true);
+              }}
+            >
+              {destinationPanels}
+            </APIProvider>
+          ) : destinationPanels
         )}
       </div>
     </section>

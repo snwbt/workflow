@@ -139,13 +139,13 @@ export default async function Home() {
         )}
 
         {/* RSVP */}
-        <div className={`${styles.section} ${styles.withNav} ${styles.themeRsvp}`}>
+        <div className={`${styles.section} ${styles.fullscreenSection} ${styles.themeRsvp}`}>
           <RsvpSection globalConfig={globalConfig} />
         </div>
 
         {/* Closing */}
         {(!config.closing || config.closing.enabled) && (
-          <div className={`${styles.section} ${styles.themeHero}`}>
+          <div className={`${styles.section} ${styles.fullscreenSection} ${styles.themeHero}`}>
             <ClosingSection config={config.closing} globalConfig={globalConfig} />
           </div>
         )}

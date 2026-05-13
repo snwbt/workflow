@@ -28,7 +28,7 @@ export default function GalleryInterludeSection({ config }: { config?: any }) {
                 alt={img.alt || 'Wedding detail'}
                 fill
                 className={styles.image}
-                sizes="(max-width: 768px) 82vw, 34vw"
+                sizes="(max-width: 768px) 86vw, 48vw"
               />
             </figure>
           ))}

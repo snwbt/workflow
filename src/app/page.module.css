@@ -36,6 +36,11 @@
   min-height: 100dvh;
 }
 
+.fullscreenSection {
+  min-height: 100dvh;
+  scroll-margin-top: 0;
+}
+
 .compactSection.withNav,
 .naturalSection.withNav {
   min-height: 100dvh;
@@ -108,8 +113,13 @@
   .compactSection.withNav,
   .naturalSection,
   .naturalSection.withNav,
+  .fullscreenSection,
   .motifDivider {
     min-height: auto;
     padding: var(--spacing-6) var(--spacing-4);
+  }
+
+  .fullscreenSection {
+    padding: 0;
   }
 }
