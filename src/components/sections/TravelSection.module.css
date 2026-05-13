@@ -160,7 +160,17 @@
 
 @media (max-width: 480px) {
   .travel {
-    padding: var(--spacing-20) var(--spacing-4);
+    padding: var(--spacing-16) var(--spacing-4);
+    align-items: flex-start;
+  }
+
+  .header {
+    margin-bottom: var(--spacing-8);
+  }
+
+  .venueCard,
+  .card {
+    padding: var(--spacing-5);
   }
 
   .directionsBtn {

@@ -31,9 +31,28 @@
 .compactSection,
 .naturalSection {
   min-height: auto;
+  scroll-snap-align: none;
 }
 
 .compactSection.withNav,
 .naturalSection.withNav {
   min-height: auto;
+}
+
+@media (max-width: 767px) {
+  .main {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: visible;
+    scroll-snap-type: none;
+  }
+
+  .section {
+    min-height: auto;
+    scroll-snap-align: none;
+  }
+
+  .withNav {
+    min-height: auto;
+  }
 }

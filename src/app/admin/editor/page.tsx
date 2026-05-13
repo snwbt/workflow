@@ -644,7 +644,7 @@ export default function EditorPage() {
         <input className={styles.input} value={activeSection?.bodyCopy || ''} onChange={(e) => updateActiveSection('bodyCopy', e.target.value)} />
       </div>
       <div className={styles.formGroup}>
-        <label className={styles.label}>Detail Images (Up to 3)</label>
+        <label className={styles.label}>Detail Images (Up to 9)</label>
         {(activeSection?.collageImages || []).map((img, i) => (
           <div key={i} style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center'}}>
             <span style={{width: '20px'}}>{i+1}.</span>
@@ -667,7 +667,7 @@ export default function EditorPage() {
             }}>X</button>
           </div>
         ))}
-        {(activeSection?.collageImages || []).length < 3 && (
+        {(activeSection?.collageImages || []).length < 9 && (
           <button className={styles.secondaryButton} onClick={() => {
             updateActiveSection('collageImages', [...(activeSection?.collageImages || []), { url: '', alt: '' }]);
           }}>+ Add Image</button>

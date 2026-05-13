@@ -25,6 +25,7 @@ export default function AdminGuests() {
   const [error, setError] = useState('');
   const [editingRsvp, setEditingRsvp] = useState<Rsvp | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
   const editButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -57,7 +58,7 @@ export default function AdminGuests() {
   };
 
   useEffect(() => {
-    fetchRsvps();
+    void Promise.resolve().then(fetchRsvps);
   }, []);
 
   // Focus trap inside modal
@@ -117,16 +118,23 @@ export default function AdminGuests() {
   };
 
   const handleDelete = async (rsvp_id: string) => {
+    if (deletingId) return;
+
+    setDeletingId(rsvp_id);
     try {
-      const res = await fetch(`/api/admin/guests?rsvp_id=${rsvp_id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/guests?rsvp_id=${encodeURIComponent(rsvp_id)}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+
       if (res.ok) {
         setDeleteConfirm(null);
         fetchRsvps();
       } else {
-        alert('Failed to delete RSVP');
+        alert(data.error || 'Failed to delete RSVP');
       }
     } catch {
       alert('Error deleting RSVP');
+    } finally {
+      setDeletingId('');
     }
   };
 
@@ -258,10 +266,11 @@ export default function AdminGuests() {
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(rsvp.rsvp_id)}
+                      disabled={deletingId === rsvp.rsvp_id}
                       style={{ background: 'none', border: 'none', color: 'var(--color-error, #c0392b)', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.875rem' }}
                       aria-label={`Delete ${rsvp.guest_name}`}
                     >
-                      Delete
+                      {deletingId === rsvp.rsvp_id ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
                 </td>
@@ -414,13 +423,15 @@ export default function AdminGuests() {
       {deleteConfirm && (
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
-          onClick={(e) => { if (e.target === e.currentTarget) setDeleteConfirm(null); }}
+          onClick={(e) => { if (e.target === e.currentTarget && !deletingId) setDeleteConfirm(null); }}
         >
           <div style={{ background: 'var(--color-surface)', padding: 'var(--spacing-8)', borderRadius: '8px', maxWidth: '400px', textAlign: 'center' }}>
             <p style={{ marginBottom: 'var(--spacing-6)' }}>Are you sure you want to delete this RSVP? This cannot be undone.</p>
             <div style={{ display: 'flex', gap: 'var(--spacing-4)', justifyContent: 'center' }}>
-              <button onClick={() => setDeleteConfirm(null)} style={{ padding: '0.5rem 1.25rem', border: '1px solid var(--color-border)', background: 'none', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={() => handleDelete(deleteConfirm)} style={{ padding: '0.5rem 1.25rem', background: '#c0392b', color: 'white', border: 'none', cursor: 'pointer' }}>Delete</button>
+              <button onClick={() => setDeleteConfirm(null)} disabled={!!deletingId} style={{ padding: '0.5rem 1.25rem', border: '1px solid var(--color-border)', background: 'none', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => handleDelete(deleteConfirm)} disabled={!!deletingId} style={{ padding: '0.5rem 1.25rem', background: '#c0392b', color: 'white', border: 'none', cursor: 'pointer' }}>
+                {deletingId ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           </div>
         </div>

@@ -66,6 +66,15 @@
       }
     },
     "RSVP_CUSTOM_QUESTIONS": [],
+    "ADMIN_AUTH": {
+      "username": "admin",
+      "passwordHash": "de0be1dce9ea466a918d92b61f76427723934853eb246d1c292cdf3eeeb71e69973b2e2f854e1b22e1a10e1dd5d10ad66684ac3a55fc8cef0d349fdae328c273",
+      "salt": "db466d6c415f03a9f5236810fc27c8d1",
+      "iterations": 210000,
+      "keyLength": 64,
+      "digest": "sha512",
+      "updatedAt": "2026-05-13T04:31:47.756Z"
+    },
     "SIGNATURE_MOTIF": "ROP & TSM",
     "ENABLE_MOTIF": true
   },

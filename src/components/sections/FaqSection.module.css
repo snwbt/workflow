@@ -136,3 +136,32 @@
   line-height: 1.7;
   font-size: 0.9375rem;
 }
+
+@media (max-width: 640px) {
+  .faq {
+    padding: var(--spacing-16) var(--spacing-4);
+  }
+
+  .title {
+    margin-bottom: var(--spacing-8);
+  }
+
+  .detailCard {
+    padding: var(--spacing-4) var(--spacing-3);
+  }
+
+  .detailValue {
+    font-size: 0.875rem;
+  }
+
+  .question {
+    align-items: flex-start;
+    font-size: 1.0625rem;
+    padding: var(--spacing-4) 0;
+  }
+
+  .answer p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+}

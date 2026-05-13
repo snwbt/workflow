@@ -179,3 +179,30 @@
   color: var(--color-text-tertiary);
   margin-top: var(--spacing-2);
 }
+
+@media (max-width: 640px) {
+  .schedule {
+    padding: var(--spacing-16) var(--spacing-4);
+  }
+
+  .dayGroup {
+    margin-bottom: var(--spacing-12);
+  }
+
+  .dayHeader {
+    margin-bottom: var(--spacing-4);
+    padding-bottom: var(--spacing-4);
+  }
+
+  .event {
+    padding: var(--spacing-4) 0;
+  }
+
+  .eventName {
+    font-size: 1.25rem;
+  }
+
+  .eventDetails {
+    font-size: 0.9rem;
+  }
+}
