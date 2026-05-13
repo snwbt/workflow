@@ -17,13 +17,12 @@
 .title {
   margin-bottom: clamp(0.5rem, 1.2vh, 1rem);
   color: var(--color-espresso);
-  font-family: var(--font-sans);
-  font-size: clamp(1.75rem, 3vw, 2.75rem);
-  font-weight: 800;
+  font-family: var(--font-serif);
+  font-size: clamp(2.25rem, 4.2vw, 4.4rem);
+  font-weight: 400;
   letter-spacing: 0;
-  line-height: 1.05;
-  text-align: center;
-  text-transform: uppercase;
+  line-height: 0.95;
+  text-align: left;
   opacity: 0;
   transform: translateY(18px);
   transition: opacity 0.6s var(--ease-luxury), transform 0.6s var(--ease-luxury);
@@ -36,13 +35,12 @@
 
 .intro {
   max-width: 680px;
-  margin: 0 auto clamp(0.75rem, 1.6vh, 1.5rem);
+  margin: 0 0 clamp(0.75rem, 1.6vh, 1.5rem);
   color: var(--color-text-secondary);
   font-family: var(--font-serif);
   font-size: 0.9375rem;
   font-style: italic;
   line-height: 1.5;
-  text-align: center;
 }
 
 .desktopSchedule {
@@ -53,6 +51,40 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--spacing-12);
+}
+
+.scheduleNote {
+  max-width: 760px;
+  margin-top: clamp(1.5rem, 4vh, 3rem);
+  padding-top: clamp(1rem, 2vh, 1.5rem);
+  border-top: 1px solid var(--color-border);
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s var(--ease-luxury),
+    transform 0.6s var(--ease-luxury);
+}
+
+.scheduleNote.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.noteHeading {
+  margin-bottom: var(--spacing-2);
+  color: var(--color-espresso);
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.noteBody {
+  max-width: 680px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: clamp(0.92rem, 1.2vw, 1rem);
+  line-height: 1.65;
 }
 
 @media (min-width: 960px) {
@@ -251,7 +283,7 @@
   }
 
   .title {
-    font-size: clamp(2rem, 8vw, 2.75rem);
+    font-size: clamp(2.4rem, 12vw, 3.4rem);
   }
 
   .dayGroup {
@@ -276,13 +308,18 @@
     font-size: 0.9rem;
     line-height: 1.55;
   }
+
+  .scheduleNote {
+    margin-top: var(--spacing-8);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .title,
   .desktopSchedule,
   .dayGroup,
-  .event {
+  .event,
+  .scheduleNote {
     transition: none;
     opacity: 1;
     transform: none;

@@ -28,6 +28,9 @@ interface SectionConfig {
   collageImages?: { url: string; alt?: string }[];
   // Schedule specific
   days?: { label: string; date: string; events: { time: string; title: string; location: string; notes?: string; dressCode?: string; }[] }[];
+  noteEnabled?: boolean;
+  noteHeading?: string;
+  noteBody?: string;
   // FAQ specific
   faqs?: { question: string; answer: string; enabled: boolean }[];
   // At A Glance / Details
@@ -269,7 +272,7 @@ export default function EditorPage() {
         <input className={styles.input} value={config.VENUE_DAY_TWO_ARRIVAL_NOTE || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_ARRIVAL_NOTE', e.target.value)} />
       </div>
       <div className={styles.formGroup}>
-        <label className={styles.label}>Venue Image</label>
+        <label className={styles.label}>Venue Illustration Image</label>
         <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
           <input className={styles.input} style={{flex: 1}} placeholder="/media/image.jpg" value={config.VENUE_DAY_TWO_IMAGE || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_IMAGE', e.target.value)} />
           <label className={styles.secondaryButton} style={{padding: '0.5rem 1rem', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center'}}>
@@ -279,7 +282,7 @@ export default function EditorPage() {
         </div>
       </div>
       <div className={styles.formGroup}>
-        <label className={styles.label}>Venue Image Alt Text</label>
+        <label className={styles.label}>Venue Illustration Alt Text</label>
         <input className={styles.input} value={config.VENUE_DAY_TWO_IMAGE_ALT || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_IMAGE_ALT', e.target.value)} />
       </div>
 
@@ -511,6 +514,10 @@ export default function EditorPage() {
         <label className={styles.label}>Schedule Title</label>
         <input className={styles.input} value={activeSection?.heading || ''} onChange={(e) => updateActiveSection('heading', e.target.value)} />
       </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Schedule Intro</label>
+        <textarea className={styles.textarea} value={activeSection?.bodyCopy || ''} onChange={(e) => updateActiveSection('bodyCopy', e.target.value)} />
+      </div>
       
       <div className={styles.formGroup}>
         <label className={styles.label}>Schedule Days</label>
@@ -588,6 +595,37 @@ export default function EditorPage() {
         <button className={styles.secondaryButton} onClick={() => {
           updateActiveSection('days', [...(activeSection?.days || []), { label: 'New Day', date: '', events: [] }]);
         }}>+ Add Day</button>
+      </div>
+
+      <div className={styles.formGroup}>
+        <h3 style={{marginBottom: '1rem'}}>Message Under Schedule</h3>
+        <label className={styles.label} style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+          <input
+            type="checkbox"
+            checked={activeSection?.noteEnabled !== false}
+            onChange={(e) => updateActiveSection('noteEnabled', e.target.checked)}
+          />
+          Show message under schedule
+        </label>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Message Heading</label>
+        <input
+          className={styles.input}
+          value={activeSection?.noteHeading || ''}
+          onChange={(e) => updateActiveSection('noteHeading', e.target.value)}
+          placeholder="A note about the weekend"
+        />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Message Body</label>
+        <textarea
+          className={styles.textarea}
+          rows={4}
+          value={activeSection?.noteBody || ''}
+          onChange={(e) => updateActiveSection('noteBody', e.target.value)}
+          placeholder="Share a short message explaining the two celebrations."
+        />
       </div>
     </>
   );
@@ -693,17 +731,11 @@ export default function EditorPage() {
         <label className={styles.label}>Venue Description</label>
         <textarea className={styles.textarea} value={activeSection?.bodyCopy || ''} onChange={(e) => updateActiveSection('bodyCopy', e.target.value)} />
       </div>
+      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>Friday / Westin Illustration</h3>
       <div className={styles.formGroup}>
-        <label className={styles.label}>Visual Mode</label>
-        <select className={styles.select} value={activeSection?.displayMode || 'image'} onChange={(e) => updateActiveSection('displayMode', e.target.value as 'image' | 'fallback')}>
-          <option value="image">Image when available</option>
-          <option value="fallback">Designed location card</option>
-        </select>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Venue Reveal Image</label>
+        <label className={styles.label}>Westin Illustration Image</label>
         <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
-          <input className={styles.input} style={{flex: 1}} placeholder="/media/image.jpg" value={activeSection?.mediaUrl || ''} onChange={(e) => updateActiveSection('mediaUrl', e.target.value)} />
+          <input className={styles.input} style={{flex: 1}} placeholder="/media/westin-illustration.jpg" value={activeSection?.mediaUrl || ''} onChange={(e) => updateActiveSection('mediaUrl', e.target.value)} />
           <label className={styles.secondaryButton} style={{padding: '0.5rem 1rem', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center'}}>
             {uploading ? 'Uploading...' : 'Upload File'}
             <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => handleFileUpload(e, (url) => updateActiveSection('mediaUrl', url))} disabled={uploading} />
@@ -711,8 +743,32 @@ export default function EditorPage() {
         </div>
       </div>
       <div className={styles.formGroup}>
-        <label className={styles.label}>Venue Image Alt Text</label>
+        <label className={styles.label}>Westin Illustration Alt Text</label>
         <input className={styles.input} value={activeSection?.imageAlt || ''} onChange={(e) => updateActiveSection('imageAlt', e.target.value)} placeholder="The Westin Singapore Grand Ballroom" />
+      </div>
+
+      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>Saturday / Church Illustration</h3>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Church Venue Name</label>
+        <input className={styles.input} value={config.VENUE_DAY_TWO_NAME || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_NAME', e.target.value)} placeholder="Church of the Holy Family" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Church Venue Address</label>
+        <input className={styles.input} value={config.VENUE_DAY_TWO_ADDRESS || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_ADDRESS', e.target.value)} />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Church Illustration Image</label>
+        <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
+          <input className={styles.input} style={{flex: 1}} placeholder="/media/church-illustration.jpg" value={config.VENUE_DAY_TWO_IMAGE || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_IMAGE', e.target.value)} />
+          <label className={styles.secondaryButton} style={{padding: '0.5rem 1rem', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center'}}>
+            {uploading ? 'Uploading...' : 'Upload File'}
+            <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => handleFileUpload(e, (url) => updateConfig('VENUE_DAY_TWO_IMAGE', url))} disabled={uploading} />
+          </label>
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Church Illustration Alt Text</label>
+        <input className={styles.input} value={config.VENUE_DAY_TWO_IMAGE_ALT || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_IMAGE_ALT', e.target.value)} placeholder="Church of the Holy Family illustration" />
       </div>
       <div style={{display: 'flex', gap: '1rem'}}>
         <div className={styles.formGroup} style={{flex: 1}}>

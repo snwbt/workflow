@@ -77,5 +77,9 @@ export function getGoogleMapsUrl(venue: WeddingVenue) {
     return `https://www.google.com/maps/search/${encodeURIComponent(venue.address)}`;
   }
 
+  if (venue.name) {
+    return `https://www.google.com/maps/search/${encodeURIComponent(venue.name)}`;
+  }
+
   return null;
 }

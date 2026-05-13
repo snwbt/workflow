@@ -1,17 +1,17 @@
 .container {
   min-height: 100vh;
-  padding: clamp(4rem, 7vh, 6rem) var(--spacing-4);
+  padding: clamp(4rem, 8vh, 6.5rem) var(--spacing-4);
   background: var(--color-bg);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: var(--spacing-8);
+  gap: clamp(1.5rem, 4vw, 3rem);
 }
 
 .header {
-  max-width: 720px;
+  width: min(100%, 1160px);
   margin: 0 auto;
-  text-align: center;
+  text-align: left;
   opacity: 0;
   transform: translateY(18px);
   transition: opacity 0.6s var(--ease-luxury), transform 0.6s var(--ease-luxury);
@@ -23,8 +23,7 @@
 }
 
 .eyebrow,
-.dateLabel,
-.fallbackDate {
+.dateLabel {
   color: var(--color-accent);
   font-family: var(--font-sans);
   font-size: 0.6875rem;
@@ -34,134 +33,128 @@
 }
 
 .heading {
+  max-width: 760px;
   margin: var(--spacing-2) 0 var(--spacing-3);
   color: var(--color-espresso);
-  font-family: var(--font-sans);
-  font-size: clamp(2rem, 4vw, 3.25rem);
-  font-weight: 800;
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 5vw, 5rem);
+  font-weight: 400;
   letter-spacing: 0;
-  line-height: 1.05;
-  text-transform: uppercase;
+  line-height: 0.95;
 }
 
 .bodyCopy {
   max-width: 620px;
-  margin: 0 auto;
+  margin: 0;
   color: var(--color-text-secondary);
   font-size: 1rem;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
-.venueGrid {
-  width: min(100%, 1160px);
+.venuePanels {
+  width: min(100%, 1240px);
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(1rem, 2.5vw, 2rem);
+  gap: clamp(0.75rem, 1.8vw, 1.4rem);
 }
 
-.venueGrid.singleVenue {
-  grid-template-columns: minmax(0, 680px);
-  justify-content: center;
+.venuePanels.singleVenue {
+  grid-template-columns: minmax(0, 760px);
 }
 
-.venueCard {
+.venuePanel {
+  position: relative;
   min-width: 0;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  min-height: clamp(480px, 68vh, 720px);
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(216, 199, 166, 0.18), rgba(255, 249, 238, 0.05)),
+    var(--color-surface);
   opacity: 0;
   transform: translateY(18px);
   transition:
-    opacity 0.5s var(--ease-luxury),
-    transform 0.5s var(--ease-luxury),
-    border-color var(--duration-fast) var(--ease-standard);
+    opacity 0.65s var(--ease-luxury),
+    transform 0.65s var(--ease-luxury);
 }
 
-.venueCard.visible {
+.venuePanel.visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-.venueCard:hover {
-  border-color: var(--color-accent);
-}
-
-.imageFrame {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 11;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
-}
-
 .image {
   object-fit: cover;
-  transition: transform 900ms var(--ease-luxury);
+  filter: saturate(0.92) contrast(1.02);
+  transform: scale(1.01);
+  transition: transform 1200ms var(--ease-luxury), filter 1200ms var(--ease-luxury);
 }
 
-.venueCard:hover .image {
-  transform: scale(1.025);
+.venuePanel:hover .image {
+  filter: saturate(1) contrast(1.04);
+  transform: scale(1.035);
 }
 
-.fallbackCard {
-  width: 100%;
-  height: 100%;
-  padding: var(--spacing-8);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-4);
-  text-align: center;
+.panelOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(to top, rgba(20, 16, 12, 0.68), rgba(20, 16, 12, 0.14) 55%, rgba(20, 16, 12, 0.08)),
+    linear-gradient(to right, rgba(20, 16, 12, 0.28), transparent 58%);
+  pointer-events: none;
 }
 
-.fallbackRule {
-  width: 44px;
-  height: 1px;
-  background: var(--color-accent);
+.fallbackPanel::before {
+  content: '';
+  position: absolute;
+  inset: var(--spacing-6);
+  border: 1px solid rgba(216, 199, 166, 0.28);
+  pointer-events: none;
 }
 
-.fallbackName {
-  max-width: 360px;
-  color: var(--color-espresso);
-  font-family: var(--font-serif);
-  font-size: clamp(1.4rem, 2.5vw, 2rem);
-  font-weight: 400;
-  line-height: 1.1;
+.fallbackPanel::after {
+  content: '';
+  position: absolute;
+  top: 18%;
+  right: -12%;
+  width: 52%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(216, 199, 166, 0.24);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
-.fallbackAddress {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  color: var(--color-text-secondary);
-  font-size: 0.75rem;
-  font-style: normal;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.cardBody {
-  padding: clamp(1.25rem, 2vw, 2rem);
+.panelContent {
+  position: absolute;
+  left: clamp(1.25rem, 3.5vw, 3rem);
+  right: clamp(1.25rem, 3.5vw, 3rem);
+  bottom: clamp(1.5rem, 4vw, 3rem);
+  z-index: 2;
+  max-width: 520px;
+  color: var(--color-text-primary);
 }
 
 .venueName {
   margin: var(--spacing-2) 0;
   color: var(--color-espresso);
   font-family: var(--font-serif);
-  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  font-size: clamp(2.35rem, 5.2vw, 5.25rem);
   font-weight: 400;
-  line-height: 1.1;
+  line-height: 0.9;
 }
 
 .address,
 .arrivalNote {
+  max-width: 480px;
+  margin: 0;
   color: var(--color-text-secondary);
-  font-size: 0.9375rem;
+  font-size: clamp(0.9rem, 1.1vw, 1rem);
   line-height: 1.55;
 }
 
 .arrivalNote {
+  margin-top: var(--spacing-2);
   font-family: var(--font-serif);
   font-style: italic;
 }
@@ -171,14 +164,14 @@
   align-items: center;
   justify-content: center;
   min-height: 42px;
-  margin-top: var(--spacing-3);
-  padding: 0 var(--spacing-8);
-  border: 1px solid var(--color-espresso);
+  margin-top: var(--spacing-5);
+  padding: 0 var(--spacing-7);
+  border: 1px solid currentColor;
   color: var(--color-espresso);
   font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   transition:
     background-color var(--duration-fast) var(--ease-standard),
@@ -192,26 +185,41 @@
   transform: translateY(-1px);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 959px) {
   .container {
     min-height: auto;
     padding: var(--spacing-16) var(--spacing-4);
   }
 
-  .venueGrid {
+  .venuePanels,
+  .venuePanels.singleVenue {
     grid-template-columns: 1fr;
+  }
+
+  .venuePanel {
+    min-height: 72vh;
+  }
+}
+
+@media (max-width: 520px) {
+  .venuePanel {
+    min-height: 620px;
+  }
+
+  .venueName {
+    font-size: clamp(2.55rem, 16vw, 4.1rem);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .header,
-  .venueCard,
+  .venuePanel,
   .image {
     transition: none;
   }
 
   .header,
-  .venueCard {
+  .venuePanel {
     opacity: 1;
     transform: none;
   }

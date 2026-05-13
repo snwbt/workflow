@@ -74,10 +74,9 @@
 }
 
 .heading {
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   font-size: 1.875rem;
-  font-weight: 800;
-  text-transform: uppercase;
+  font-weight: 400;
   color: var(--color-espresso);
   margin-bottom: var(--spacing-6);
   letter-spacing: 0;

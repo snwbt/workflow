@@ -34,6 +34,10 @@ export default function ScheduleSection({ config }: { config?: any }) {
 
   const heading = config?.heading || 'The Weekend';
   const intro = config?.bodyCopy || '';
+  const noteEnabled = config?.noteEnabled !== false;
+  const noteHeading = config?.noteHeading || '';
+  const noteBody = config?.noteBody || '';
+  const hasNote = noteEnabled && Boolean(noteHeading.trim() || noteBody.trim());
   const days: ScheduleDay[] = config?.days?.length > 0 ? config.days : defaultDays;
   const displayedDays = days.slice(0, 2);
   const maxEvents = Math.max(...displayedDays.map((day) => day.events.length), 0);
@@ -112,6 +116,16 @@ export default function ScheduleSection({ config }: { config?: any }) {
             </div>
           ))}
         </div>
+
+        {hasNote && (
+          <aside
+            className={`${styles.scheduleNote} ${isVisible ? styles.visible : ''}`}
+            style={{ transitionDelay: '0.28s' }}
+          >
+            {noteHeading && <h3 className={styles.noteHeading}>{noteHeading}</h3>}
+            {noteBody && <p className={styles.noteBody}>{noteBody}</p>}
+          </aside>
+        )}
       </div>
     </section>
   );

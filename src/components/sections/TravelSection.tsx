@@ -12,6 +12,32 @@ interface TravelCard {
   content: string;
 }
 
+const mapStyles = [
+  {
+    featureType: 'all',
+    elementType: 'geometry',
+    stylers: [{ color: '#f2f0ea' }],
+  },
+  {
+    featureType: 'water',
+    elementType: 'geometry.fill',
+    stylers: [{ color: '#d8c7a6' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry.fill',
+    stylers: [{ color: '#fffdf8' }],
+  },
+  {
+    featureType: 'poi',
+    stylers: [{ visibility: 'off' }],
+  },
+  {
+    featureType: 'transit',
+    stylers: [{ visibility: 'off' }],
+  },
+];
+
 function getTravelCards(venue: WeddingVenue): TravelCard[] {
   return [
     venue.mrtStation ? { mode: 'MRT', title: venue.mrtStation, content: venue.mrtDirections || venue.mrtStation } : null,
@@ -52,6 +78,7 @@ function VenueMap({ venue, mapsEnabled }: { venue: WeddingVenue; mapsEnabled: bo
         defaultZoom={16}
         gestureHandling="cooperative"
         disableDefaultUI
+        styles={mapStyles}
         style={{ width: '100%', height: '100%' }}
       >
         <Marker position={center} />

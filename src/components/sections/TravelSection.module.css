@@ -15,8 +15,8 @@
 
 .header {
   max-width: 720px;
-  margin: 0 auto clamp(0.75rem, 1.8vh, 1.5rem);
-  text-align: center;
+  margin: 0 0 clamp(0.75rem, 1.8vh, 1.5rem);
+  text-align: left;
   opacity: 0;
   transform: translateY(18px);
   transition: opacity 0.55s var(--ease-luxury), transform 0.55s var(--ease-luxury);
@@ -30,18 +30,17 @@
 .title {
   margin-bottom: var(--spacing-2);
   color: var(--color-espresso);
-  font-family: var(--font-sans);
-  font-size: clamp(1.7rem, 3vw, 2.45rem);
-  font-weight: 800;
+  font-family: var(--font-serif);
+  font-size: clamp(2.25rem, 4.2vw, 4.2rem);
+  font-weight: 400;
   letter-spacing: 0;
-  line-height: 1.05;
-  text-transform: uppercase;
+  line-height: 0.95;
 }
 
 .subtitle,
 .empty {
   max-width: 600px;
-  margin: 0 auto;
+  margin: 0;
   color: var(--color-text-secondary);
   font-size: 0.92rem;
   line-height: 1.45;

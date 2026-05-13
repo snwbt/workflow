@@ -9,6 +9,11 @@
     "VENUE_LAT": 1.27831,
     "VENUE_LNG": 103.8508,
     "VENUE_ARRIVAL_NOTE": "Valet parking is available at the main entrance.",
+    "VENUE_DAY_TWO_NAME": "Church of the Holy Family",
+    "VENUE_DAY_TWO_ADDRESS": "6 Chapel Road, Singapore 429509",
+    "VENUE_DAY_TWO_ARRIVAL_NOTE": "Please arrive early to settle in before Mass begins.",
+    "VENUE_DAY_TWO_IMAGE": "",
+    "VENUE_DAY_TWO_IMAGE_ALT": "Church of the Holy Family illustration",
     "WHATSAPP_NUMBER": "6597553585",
     "WHATSAPP_LABEL": "Message Wedding Concierge",
     "TRAVEL_MRT_STATION": "Downtown MRT (DT17)",
@@ -148,6 +153,9 @@
       "enabled": true,
       "heading": "Our Wedding Weekend",
       "bodyCopy": "",
+      "noteEnabled": true,
+      "noteHeading": "A note about the weekend",
+      "noteBody": "Our Friday dinner is an intimate celebration with limited seating, while Saturday's Nuptial Mass is open to all who would like to join us in prayer and thanksgiving. Thank you for understanding as we do our best to gather meaningfully across both days.",
       "days": [
         {
           "label": "Friday",

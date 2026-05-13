@@ -6,61 +6,53 @@ import Image from 'next/image';
 import { useState } from 'react';
 import styles from './VenueRevealSection.module.css';
 
-function VenueCard({
+function VenuePanel({
   venue,
   index,
   isVisible,
+  ctaLabel,
+  ctaOverride,
   failedImages,
   onImageError,
 }: {
   venue: WeddingVenue;
   index: number;
   isVisible: boolean;
+  ctaLabel?: string;
+  ctaOverride?: string;
   failedImages: string[];
   onImageError: (url: string) => void;
 }) {
   const mapsUrl = getGoogleMapsUrl(venue);
+  const directionsUrl = ctaOverride || mapsUrl;
   const hasImage = !!(venue.imageUrl && !failedImages.includes(venue.imageUrl));
 
   return (
     <article
-      className={`${styles.venueCard} ${isVisible ? styles.visible : ''}`}
-      style={{ transitionDelay: `${index * 90}ms` }}
+      className={`${styles.venuePanel} ${!hasImage ? styles.fallbackPanel : ''} ${isVisible ? styles.visible : ''}`}
+      style={{ transitionDelay: `${index * 120}ms` }}
     >
-      <div className={styles.imageFrame}>
-        {hasImage ? (
-          <Image
-            src={venue.imageUrl || ''}
-            alt={venue.imageAlt || venue.name}
-            fill
-            className={styles.image}
-            sizes="(max-width: 768px) 100vw, 50vw"
-            onError={() => onImageError(venue.imageUrl || '')}
-          />
-        ) : (
-          <div className={styles.fallbackCard}>
-            <span className={styles.fallbackDate}>{venue.dateLabel}</span>
-            <span className={styles.fallbackRule} />
-            <h3 className={styles.fallbackName}>{venue.name || 'Venue to be announced'}</h3>
-            {venue.address && (
-              <address className={styles.fallbackAddress}>
-                {venue.address.split(',').map((line, lineIndex) => (
-                  <span key={lineIndex}>{line.trim()}</span>
-                ))}
-              </address>
-            )}
-          </div>
-        )}
-      </div>
+      {hasImage && (
+        <Image
+          src={venue.imageUrl || ''}
+          alt={venue.imageAlt || venue.name}
+          fill
+          className={styles.image}
+          sizes="(max-width: 959px) 100vw, 50vw"
+          onError={() => onImageError(venue.imageUrl || '')}
+        />
+      )}
 
-      <div className={styles.cardBody}>
+      <div className={styles.panelOverlay} />
+
+      <div className={styles.panelContent}>
         <span className={styles.dateLabel}>{venue.dateLabel}</span>
         <h3 className={styles.venueName}>{venue.name}</h3>
         {venue.address && <p className={styles.address}>{venue.address}</p>}
         {venue.arrivalNote && <p className={styles.arrivalNote}>{venue.arrivalNote}</p>}
-        {mapsUrl && (
-          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.directionsBtn}>
-            Get Directions
+        {directionsUrl && (
+          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className={styles.directionsBtn}>
+            {ctaLabel || 'Get Directions'}
           </a>
         )}
       </div>
@@ -86,13 +78,15 @@ export default function VenueRevealSection({ config, globalConfig }: { config?: 
         {config.bodyCopy && <p className={styles.bodyCopy}>{config.bodyCopy}</p>}
       </div>
 
-      <div className={`${styles.venueGrid} ${venues.length === 1 ? styles.singleVenue : ''}`}>
+      <div className={`${styles.venuePanels} ${venues.length === 1 ? styles.singleVenue : ''}`}>
         {venues.map((venue, index) => (
-          <VenueCard
+          <VenuePanel
             key={venue.key}
             venue={venue}
             index={index}
             isVisible={isVisible}
+            ctaLabel={config.ctaLabel}
+            ctaOverride={venue.key === 'dayOne' ? config.ctaLink : undefined}
             failedImages={failedImages}
             onImageError={(url) => setFailedImages((current) => [...current, url])}
           />

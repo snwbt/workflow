@@ -154,11 +154,10 @@
 }
 
 .names {
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   font-size: clamp(3rem, 8vw, 5.5rem);
   line-height: 1;
-  font-weight: 800;
-  text-transform: uppercase;
+  font-weight: 400;
   letter-spacing: 0;
   color: var(--color-espresso);
   margin-bottom: var(--spacing-2);
