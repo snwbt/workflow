@@ -14,8 +14,16 @@ const imageTypes = new Set([
 
 const videoTypes = new Set(['video/mp4', 'video/webm']);
 
-function getUploadType(file: File) {
+function getUploadType(file: File, purpose?: FormDataEntryValue | null) {
   const ext = path.extname(file.name).toLowerCase();
+  if (purpose === 'wallpaper') {
+    const isJpeg = file.type === 'image/jpeg' || (ext === '.jpg' || ext === '.jpeg') && (!file.type || file.type === 'application/octet-stream');
+    const isPng = file.type === 'image/png' || ext === '.png' && (!file.type || file.type === 'application/octet-stream');
+    if (isJpeg) return { valid: true, contentType: 'image/jpeg', mediaType: 'image' };
+    if (isPng) return { valid: true, contentType: 'image/png', mediaType: 'image' };
+    return { valid: false, contentType: file.type, mediaType: '' };
+  }
+
   if (ext === '.ico' && (!file.type || file.type === 'application/octet-stream' || imageTypes.has(file.type))) {
     return { valid: true, contentType: 'image/x-icon', mediaType: 'image' };
   }
@@ -33,9 +41,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    const uploadType = getUploadType(file);
+    const purpose = formData.get('purpose');
+    const uploadType = getUploadType(file, purpose);
     if (!uploadType.valid) {
-      return NextResponse.json({ error: 'Unsupported file type. Please upload an image or video.' }, { status: 400 });
+      const message = purpose === 'wallpaper'
+        ? 'Unsupported wallpaper type. Please upload a PNG or JPG image.'
+        : 'Unsupported file type. Please upload an image or video.';
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
     // Validate size (e.g. 50MB max)

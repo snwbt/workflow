@@ -16,6 +16,7 @@
 }
 
 .content {
+  z-index: 1;
   width: 100%;
   max-width: 760px;
   max-height: calc(100dvh - var(--rsvp-top-offset) - var(--rsvp-bottom-offset));

@@ -1,0 +1,32 @@
+.wallpaper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.image {
+  object-fit: cover;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.light .overlay {
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.82), rgba(255, 253, 248, 0.9));
+}
+
+.paper .overlay {
+  background:
+    linear-gradient(180deg, rgba(250, 248, 244, 0.78), rgba(250, 248, 244, 0.9));
+}
+
+.dark .overlay {
+  background:
+    linear-gradient(180deg, rgba(22, 18, 15, 0.7), rgba(22, 18, 15, 0.82));
+}

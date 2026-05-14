@@ -2,6 +2,7 @@
 
 import { useReveal } from '@/hooks/useReveal';
 import { useSiteText } from '@/lib/sitePreferences';
+import SectionWallpaper from '@/components/SectionWallpaper';
 import styles from './ScheduleSection.module.css';
 
 interface ScheduleEvent {
@@ -79,6 +80,7 @@ export default function ScheduleSection({ config }: { config?: any }) {
 
   return (
     <section id="schedule" className={styles.schedule} ref={ref as React.RefObject<HTMLElement>}>
+      <SectionWallpaper src={config?.wallpaperUrl} alt={config?.wallpaperAlt || ''} tone="dark" />
       <div className={styles.content}>
         <h2 className={`${styles.title} ${isVisible ? styles.visible : ''}`}>{t(heading)}</h2>
         {intro && <p className={styles.intro}>{t(intro)}</p>}

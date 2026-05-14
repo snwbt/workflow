@@ -23,6 +23,8 @@ interface SectionConfig {
   bodyCopy: string;
   mediaUrl?: string;
   imageAlt?: string;
+  wallpaperUrl?: string;
+  wallpaperAlt?: string;
   displayMode?: 'image' | 'fallback';
   motionPreset?: string;
   // Hero specific
@@ -98,6 +100,8 @@ const readOnlyTemplateVariables = [
   'calendarSummary',
   'photoUrl',
 ];
+
+const wallpaperAccept = '.jpg,.jpeg,.png,image/jpeg,image/png';
 
 function stringifyCustomVariables(config: Record<string, any>) {
   return JSON.stringify(config.INVITE_TEMPLATE_VARIABLES || {}, null, 2);
@@ -232,9 +236,10 @@ export default function EditorPage() {
     setConfig((prev: any) => ({ ...prev, ...updates }));
   };
 
-  const uploadMediaFile = async (file: File) => {
+  const uploadMediaFile = async (file: File, purpose?: 'wallpaper') => {
     const formData = new FormData();
     formData.append('file', file);
+    if (purpose) formData.append('purpose', purpose);
 
     const res = await fetch('/api/admin/media/upload', {
       method: 'POST',
@@ -249,7 +254,7 @@ export default function EditorPage() {
     return data.url as string;
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void, purpose?: 'wallpaper') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -257,11 +262,11 @@ export default function EditorPage() {
     setMessage('Uploading media...');
 
     try {
-      const url = await uploadMediaFile(file);
+      const url = await uploadMediaFile(file, purpose);
       callback(url);
       setMessage('Media uploaded successfully!');
-    } catch {
-      setMessage('Error uploading media.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Error uploading media.');
     }
 
     setUploading(false);
@@ -334,6 +339,103 @@ export default function EditorPage() {
   }, [invitationPayload, previewConfig]);
 
   if (loading) return <div style={{padding: '2rem'}}>Loading editor...</div>;
+
+  const renderSectionWallpaperControl = () => (
+    <>
+      <h4 style={{marginTop: '1.5rem', marginBottom: '1rem'}}>Wallpaper</h4>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Wallpaper Image (PNG or JPG)</label>
+        <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
+          <input
+            className={styles.input}
+            style={{flex: 1}}
+            placeholder="/media/wallpaper.jpg"
+            value={activeSection?.wallpaperUrl || ''}
+            onChange={(e) => updateActiveSection('wallpaperUrl', e.target.value)}
+          />
+          <label className={styles.secondaryButton} style={{padding: '0.5rem 1rem', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center'}}>
+            {uploading ? 'Uploading...' : 'Upload'}
+            <input
+              type="file"
+              accept={wallpaperAccept}
+              style={{display: 'none'}}
+              onChange={(e) => handleFileUpload(e, (url) => updateActiveSection('wallpaperUrl', url), 'wallpaper')}
+              disabled={uploading}
+            />
+          </label>
+          {activeSection?.wallpaperUrl && (
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              style={{color: 'red', borderColor: 'red'}}
+              onClick={() => {
+                updateActiveSection('wallpaperUrl', '');
+                updateActiveSection('wallpaperAlt', '');
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Wallpaper Alt Text</label>
+        <input
+          className={styles.input}
+          value={activeSection?.wallpaperAlt || ''}
+          onChange={(e) => updateActiveSection('wallpaperAlt', e.target.value)}
+          placeholder="Decorative wallpaper"
+        />
+      </div>
+    </>
+  );
+
+  const renderRsvpWallpaperControl = () => (
+    <>
+      <h4 style={{marginTop: '1.5rem', marginBottom: '1rem'}}>Wallpaper</h4>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>RSVP Wallpaper Image (PNG or JPG)</label>
+        <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.5rem'}}>
+          <input
+            className={styles.input}
+            style={{flex: 1}}
+            placeholder="/media/rsvp-wallpaper.jpg"
+            value={config.RSVP_WALLPAPER || ''}
+            onChange={(e) => updateConfig('RSVP_WALLPAPER', e.target.value)}
+          />
+          <label className={styles.secondaryButton} style={{padding: '0.5rem 1rem', cursor: 'pointer', textAlign: 'center', display: 'flex', alignItems: 'center'}}>
+            {uploading ? 'Uploading...' : 'Upload'}
+            <input
+              type="file"
+              accept={wallpaperAccept}
+              style={{display: 'none'}}
+              onChange={(e) => handleFileUpload(e, (url) => updateConfig('RSVP_WALLPAPER', url), 'wallpaper')}
+              disabled={uploading}
+            />
+          </label>
+          {config.RSVP_WALLPAPER && (
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              style={{color: 'red', borderColor: 'red'}}
+              onClick={() => updateConfigFields({ RSVP_WALLPAPER: '', RSVP_WALLPAPER_ALT: '' })}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>RSVP Wallpaper Alt Text</label>
+        <input
+          className={styles.input}
+          value={config.RSVP_WALLPAPER_ALT || ''}
+          onChange={(e) => updateConfig('RSVP_WALLPAPER_ALT', e.target.value)}
+          placeholder="Decorative wallpaper"
+        />
+      </div>
+    </>
+  );
 
   const renderSiteSettings = () => (
     <div style={{maxWidth: '800px'}}>
@@ -616,6 +718,8 @@ export default function EditorPage() {
         <input className={styles.input} value={config.RSVP_INITIAL_HEADING || ''} onChange={(e) => updateConfig('RSVP_INITIAL_HEADING', e.target.value)} placeholder="Begin With Your Invitation" />
       </div>
 
+      {renderRsvpWallpaperControl()}
+
       <h4 style={{marginTop: '1.5rem', marginBottom: '1rem'}}>RSVP Field Labels</h4>
       <div className={styles.formGroup}>
         <label className={styles.label}>Invite Code Label</label>
@@ -892,6 +996,8 @@ export default function EditorPage() {
         <label className={styles.label}>Schedule Intro</label>
         <textarea className={styles.textarea} value={activeSection?.bodyCopy || ''} onChange={(e) => updateActiveSection('bodyCopy', e.target.value)} />
       </div>
+
+      {renderSectionWallpaperControl()}
       
       <div className={styles.formGroup}>
         <label className={styles.label}>Schedule Days</label>
@@ -1011,6 +1117,8 @@ export default function EditorPage() {
         <label className={styles.label}>FAQ Title</label>
         <input className={styles.input} value={activeSection?.heading || ''} onChange={(e) => updateActiveSection('heading', e.target.value)} />
       </div>
+
+      {renderSectionWallpaperControl()}
       
       <div className={styles.formGroup}>
         <label className={styles.label}>Questions & Answers</label>

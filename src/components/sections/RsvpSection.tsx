@@ -9,6 +9,7 @@ import { getRsvpDeadlineDisplay } from '@/lib/eventDisplay';
 import { useSiteText } from '@/lib/sitePreferences';
 import { getCalendarEvents, getCalendarLinks, type CalendarEvent } from '@/lib/calendar';
 import { MAIN_SCROLL_CONTAINER_ID } from '@/lib/scroll';
+import SectionWallpaper from '@/components/SectionWallpaper';
 
 type AttendanceStatus = 'attending' | 'declined';
 type InviteType = 'friday_saturday' | 'saturday_only';
@@ -339,6 +340,7 @@ export default function RsvpSection({ globalConfig, scheduleConfig }: { globalCo
   if (deadlinePassed && step !== 'confirmation') {
     return (
       <section id="rsvp" className={styles.rsvp} ref={ref as React.RefObject<HTMLElement>}>
+        <SectionWallpaper src={globalConfig?.RSVP_WALLPAPER} alt={globalConfig?.RSVP_WALLPAPER_ALT || ''} tone="paper" />
         <div className={`${styles.content} ${isVisible ? styles.visible : ''}`}>
           <div className={styles.fadeContainer}>
             <h2 className={styles.title}>{t('RSVP Closed')}</h2>
@@ -351,6 +353,7 @@ export default function RsvpSection({ globalConfig, scheduleConfig }: { globalCo
 
   return (
     <section id="rsvp" className={styles.rsvp} ref={ref as React.RefObject<HTMLElement>}>
+      <SectionWallpaper src={globalConfig?.RSVP_WALLPAPER} alt={globalConfig?.RSVP_WALLPAPER_ALT || ''} tone="paper" />
       <div id="rsvp-form" className={`${styles.content} ${isVisible ? styles.visible : ''}`}>
         {step === 'initial' && (
           <div className={styles.fadeContainer}>

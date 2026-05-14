@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useReveal } from '@/hooks/useReveal';
 import { useSiteText } from '@/lib/sitePreferences';
+import SectionWallpaper from '@/components/SectionWallpaper';
 import styles from './FaqSection.module.css';
 
 interface FaqItem {
@@ -33,6 +34,7 @@ export default function FaqSection({ config }: { config?: any }) {
 
   return (
     <section id="faq" className={styles.faq} ref={ref as React.RefObject<HTMLElement>}>
+      <SectionWallpaper src={config?.wallpaperUrl} alt={config?.wallpaperAlt || ''} tone="light" />
       <div className={styles.content}>
         <h2 className={`${styles.title} revealFadeUp ${isVisible ? 'revealFadeUpVisible' : ''}`}>{t(heading)}</h2>
 
