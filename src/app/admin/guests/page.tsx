@@ -18,9 +18,31 @@ interface Rsvp {
   dietary_restrictions?: string;
   accessibility_requirements?: string;
   message?: string;
+  custom_answers?: {
+    per_guest_dietary?: DietaryAnswer[];
+    [key: string]: unknown;
+  };
   submitted_at: string;
   updated_at?: string;
   source?: string;
+}
+
+interface DietaryAnswer {
+  name?: string;
+  dietary?: string;
+  notes?: string;
+}
+
+interface GuestTableRow {
+  rowId: string;
+  rsvp: Rsvp;
+  name: string;
+  email: string;
+  relationship: string;
+  relationshipDetail: string;
+  dietary: string;
+  isPrimary: boolean;
+  index: number;
 }
 
 const labelStyle = {
@@ -51,6 +73,78 @@ const answerLabel = (value?: string) => {
   if (value === 'no') return 'No';
   return '-';
 };
+
+const normalizeText = (value: unknown) => String(value || '')
+  .trim()
+  .toLowerCase()
+  .normalize('NFKD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-z0-9]+/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+const splitGuestNames = (value?: string) => String(value || '')
+  .split(/\r?\n|,|;/)
+  .map((name) => name.trim())
+  .filter(Boolean);
+
+const formatDietaryAnswer = (answer?: DietaryAnswer) => {
+  if (!answer) return '';
+  const dietary = String(answer.dietary || '').trim();
+  const notes = String(answer.notes || '').trim();
+  return [dietary, notes].filter(Boolean).join(' - ');
+};
+
+const dietaryForName = (rsvp: Rsvp, name: string) => {
+  const entries = Array.isArray(rsvp.custom_answers?.per_guest_dietary)
+    ? rsvp.custom_answers.per_guest_dietary
+    : [];
+  const match = entries.find((entry) => normalizeText(entry?.name) === normalizeText(name));
+  return formatDietaryAnswer(match) || rsvp.dietary_restrictions || '-';
+};
+
+const hasDietaryNeed = (value: string) => {
+  const normalized = normalizeText(value);
+  return Boolean(normalized && normalized !== '-' && normalized !== 'no restriction');
+};
+
+const deriveGuestRows = (rsvps: Rsvp[]): GuestTableRow[] => rsvps.flatMap((rsvp) => {
+  const primaryName = String(rsvp.guest_name || '').trim() || 'Unnamed guest';
+  const additionalNames = splitGuestNames(rsvp.additional_guest_names || rsvp.plus_one_name);
+  const expectedCount = Math.max(Number(rsvp.guest_count || (rsvp.attendance_status === 'attending' ? 1 : 0)), 0);
+  const extraCount = Math.max(expectedCount - 1, additionalNames.length);
+  const rows: GuestTableRow[] = [];
+
+  rows.push({
+    rowId: `${rsvp.rsvp_id}:primary`,
+    rsvp,
+    name: primaryName,
+    email: rsvp.email,
+    relationship: 'Primary guest',
+    relationshipDetail: expectedCount > 1 ? `${expectedCount} guests in party` : 'Solo RSVP',
+    dietary: dietaryForName(rsvp, primaryName),
+    isPrimary: true,
+    index: 0,
+  });
+
+  for (let index = 0; index < extraCount; index += 1) {
+    const guestNumber = index + 2;
+    const name = additionalNames[index] || `Unnamed plus-one ${guestNumber}`;
+    rows.push({
+      rowId: `${rsvp.rsvp_id}:plus-one:${index}`,
+      rsvp,
+      name,
+      email: '',
+      relationship: `Plus-one of ${primaryName}`,
+      relationshipDetail: `Guest ${guestNumber} of ${Math.max(expectedCount, guestNumber)}`,
+      dietary: dietaryForName(rsvp, name),
+      isPrimary: false,
+      index: guestNumber - 1,
+    });
+  }
+
+  return rows;
+});
 
 export default function AdminGuests() {
   const [rsvps, setRsvps] = useState<Rsvp[]>([]);
@@ -209,9 +303,15 @@ export default function AdminGuests() {
     }
   };
 
-  const filteredRsvps = rsvps
-    .filter((r) => {
+  const guestRows = deriveGuestRows(rsvps);
+  const filteredRows = guestRows
+    .filter((row) => {
+      const r = row.rsvp;
       const haystack = [
+        row.name,
+        row.relationship,
+        row.relationshipDetail,
+        row.dietary,
         r.guest_name,
         r.email,
         r.invite_code,
@@ -226,20 +326,21 @@ export default function AdminGuests() {
       const matchesMass = massFilter === 'all' || r.mass_attendance === massFilter || (massFilter === 'none' && !r.mass_attendance);
       const matchesNeeds =
         needsFilter === 'all' ||
-        (needsFilter === 'dietary' && Boolean(r.dietary_restrictions?.trim())) ||
+        (needsFilter === 'dietary' && hasDietaryNeed(row.dietary)) ||
         (needsFilter === 'accessibility' && Boolean(r.accessibility_requirements?.trim()));
       return matchesSearch && matchesStatus && matchesInvite && matchesDinner && matchesMass && matchesNeeds;
     })
     .sort((a, b) => {
-      if (sortBy === 'submitted_asc') return (a.submitted_at || '').localeCompare(b.submitted_at || '');
-      if (sortBy === 'name') return (a.guest_name || '').localeCompare(b.guest_name || '');
-      if (sortBy === 'guest_count') return (b.guest_count || 0) - (a.guest_count || 0);
-      if (sortBy === 'invite_type') return inviteTypeLabel(a.invite_type).localeCompare(inviteTypeLabel(b.invite_type));
-      if (sortBy === 'dinner') return answerLabel(a.dinner_attendance).localeCompare(answerLabel(b.dinner_attendance));
-      if (sortBy === 'mass') return answerLabel(a.mass_attendance).localeCompare(answerLabel(b.mass_attendance));
-      return (b.submitted_at || '').localeCompare(a.submitted_at || '');
+      if (sortBy === 'submitted_asc') return (a.rsvp.submitted_at || '').localeCompare(b.rsvp.submitted_at || '') || a.index - b.index;
+      if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
+      if (sortBy === 'guest_count') return (b.rsvp.guest_count || 0) - (a.rsvp.guest_count || 0) || a.index - b.index;
+      if (sortBy === 'invite_type') return inviteTypeLabel(a.rsvp.invite_type).localeCompare(inviteTypeLabel(b.rsvp.invite_type)) || a.index - b.index;
+      if (sortBy === 'dinner') return answerLabel(a.rsvp.dinner_attendance).localeCompare(answerLabel(b.rsvp.dinner_attendance)) || a.index - b.index;
+      if (sortBy === 'mass') return answerLabel(a.rsvp.mass_attendance).localeCompare(answerLabel(b.rsvp.mass_attendance)) || a.index - b.index;
+      return (b.rsvp.submitted_at || '').localeCompare(a.rsvp.submitted_at || '') || a.index - b.index;
     });
-  const allFilteredSelected = filteredRsvps.length > 0 && filteredRsvps.every((rsvp) => selectedRsvpIds.has(rsvp.rsvp_id));
+  const visibleRsvpIds = Array.from(new Set(filteredRows.map((row) => row.rsvp.rsvp_id)));
+  const allFilteredSelected = visibleRsvpIds.length > 0 && visibleRsvpIds.every((rsvpId) => selectedRsvpIds.has(rsvpId));
 
   if (loading) return <div style={{ padding: '2rem' }}>Loading RSVP submissions...</div>;
   if (error) return <div style={{ padding: '2rem', color: 'var(--color-error)' }}>{error}</div>;
@@ -301,7 +402,7 @@ export default function AdminGuests() {
 
       <div className={styles.tableToolbar}>
         <p>
-          Showing {filteredRsvps.length} of {rsvps.length} submissions
+          Showing {filteredRows.length} of {guestRows.length} guest rows from {rsvps.length} submissions
           {selectedRsvpIds.size > 0 ? ` | ${selectedRsvpIds.size} selected` : ''}
         </p>
         <button type="button" onClick={() => setBulkDeleteConfirm(true)} disabled={selectedRsvpIds.size === 0 || Boolean(deletingId)}>
@@ -320,9 +421,9 @@ export default function AdminGuests() {
                   onChange={(e) => {
                     setSelectedRsvpIds((current) => {
                       const next = new Set(current);
-                      filteredRsvps.forEach((rsvp) => {
-                        if (e.target.checked) next.add(rsvp.rsvp_id);
-                        else next.delete(rsvp.rsvp_id);
+                      visibleRsvpIds.forEach((rsvpId) => {
+                        if (e.target.checked) next.add(rsvpId);
+                        else next.delete(rsvpId);
                       });
                       return next;
                     });
@@ -335,7 +436,7 @@ export default function AdminGuests() {
               <th className={styles.th}>Invite</th>
               <th className={styles.th}>Status</th>
               <th className={styles.th}>Guests</th>
-              <th className={styles.th}>Guest Names</th>
+              <th className={styles.th}>Party</th>
               <th className={styles.th}>Dinner</th>
               <th className={styles.th}>Mass</th>
               <th className={styles.th}>Dietary</th>
@@ -345,8 +446,10 @@ export default function AdminGuests() {
             </tr>
           </thead>
           <tbody>
-            {filteredRsvps.map((rsvp) => (
-              <tr key={rsvp.rsvp_id} className={styles.tr}>
+            {filteredRows.map((row) => {
+              const rsvp = row.rsvp;
+              return (
+              <tr key={row.rowId} className={styles.tr}>
                 <td className={styles.td}>
                   <input
                     type="checkbox"
@@ -359,11 +462,14 @@ export default function AdminGuests() {
                         return next;
                       });
                     }}
-                    aria-label={`Select ${rsvp.guest_name}`}
+                    aria-label={`Select ${row.name}`}
                   />
                 </td>
-                <td className={styles.td} style={{ fontWeight: 500 }}>{rsvp.guest_name}</td>
-                <td className={styles.td}>{rsvp.email}</td>
+                <td className={styles.td} style={{ fontWeight: 500 }}>
+                  {row.name}
+                  {!row.isPrimary && <span className={styles.relationship}>{row.relationship}</span>}
+                </td>
+                <td className={styles.td}>{row.email || <span className={styles.muted}>Same party</span>}</td>
                 <td className={styles.td}>
                   <span>{inviteTypeLabel(rsvp.invite_type)}</span>
                   {rsvp.invite_code && <small style={{ display: 'block', color: 'var(--color-text-secondary)' }}>{rsvp.invite_code}</small>}
@@ -374,10 +480,13 @@ export default function AdminGuests() {
                   </span>
                 </td>
                 <td className={styles.td}>{rsvp.guest_count || (rsvp.attendance_status === 'attending' ? 1 : 0)}</td>
-                <td className={styles.td}>{rsvp.additional_guest_names || rsvp.plus_one_name || '-'}</td>
+                <td className={styles.td}>
+                  <span>{row.relationship}</span>
+                  <span className={styles.relationship}>{row.relationshipDetail}</span>
+                </td>
                 <td className={styles.td}>{answerLabel(rsvp.dinner_attendance)}</td>
                 <td className={styles.td}>{answerLabel(rsvp.mass_attendance)}</td>
-                <td className={styles.td}>{rsvp.dietary_restrictions || '-'}</td>
+                <td className={styles.td}>{row.dietary || '-'}</td>
                 <td className={styles.td}>{rsvp.accessibility_requirements || '-'}</td>
                 <td className={styles.td} style={{ whiteSpace: 'nowrap' }}>
                   {rsvp.submitted_at ? new Date(rsvp.submitted_at).toLocaleDateString() : '-'}
@@ -406,8 +515,9 @@ export default function AdminGuests() {
                   </div>
                 </td>
               </tr>
-            ))}
-            {filteredRsvps.length === 0 && (
+              );
+            })}
+            {filteredRows.length === 0 && (
               <tr>
                 <td colSpan={13} className={styles.td} style={{ textAlign: 'center', color: 'var(--color-text-secondary)', padding: '2rem' }}>
                   No RSVP submissions found.

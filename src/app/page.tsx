@@ -140,7 +140,7 @@ export default async function Home() {
         )}
 
         {/* RSVP */}
-        <div className={`${styles.section} ${styles.fullscreenSection} ${styles.themeRsvp}`}>
+        <div className={`${styles.section} ${styles.rsvpSection} ${styles.themeRsvp}`}>
           <RsvpSection globalConfig={globalConfig} scheduleConfig={config.schedule} />
         </div>
 

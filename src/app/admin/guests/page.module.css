@@ -72,6 +72,17 @@
   background-color: var(--color-bg);
 }
 
+.relationship {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.muted {
+  color: var(--color-text-secondary);
+}
+
 .statusBadge {
   display: inline-block;
   padding: var(--spacing-1) var(--spacing-2);
