@@ -20,6 +20,7 @@ interface SeatPlanProps {
   showOccupants?: boolean;
   readonly?: boolean;
   wayfinding?: boolean;
+  fitToFrame?: boolean;
   onSeatClick?: (tableId: string, seatNumber: number) => void;
 }
 
@@ -130,6 +131,7 @@ export default function SeatPlan({
   showOccupants = false,
   readonly = false,
   wayfinding = false,
+  fitToFrame = false,
   onSeatClick,
 }: SeatPlanProps) {
   const { t } = useSiteText();
@@ -279,7 +281,7 @@ export default function SeatPlan({
   }, [animateViewBox, floorplan, fullView, progress, reduceMotion, route, selectedSeat?.seatNumber, selectedSeat?.tableId, showRoute, viewH, viewW, viewX, viewY]);
 
   return (
-    <div className={`${styles.planFrame} ${showRoute ? styles.planFrameWayfinding : ''}`}>
+    <div className={`${styles.planFrame} ${showRoute ? styles.planFrameWayfinding : ''} ${fitToFrame ? styles.planFrameFit : ''}`}>
       <svg
         viewBox={viewBox}
         className={styles.plan}

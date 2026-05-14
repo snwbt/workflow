@@ -33,6 +33,19 @@ function inviteTypeLabel(value: InvitationInviteType) {
   return value === 'friday_saturday' ? 'Fri + Sat' : 'Sat only';
 }
 
+const templateSections: { inviteType: InvitationInviteType; title: string; description: string }[] = [
+  {
+    inviteType: 'friday_saturday',
+    title: 'Fri + Sat templates',
+    description: 'Used for guests invited to both Friday dinner and Saturday Mass.',
+  },
+  {
+    inviteType: 'saturday_only',
+    title: 'Saturday only templates',
+    description: 'Used for guests invited to the Saturday celebration only.',
+  },
+];
+
 function channelStatus(invite: InvitationView, channel: InvitationChannel) {
   const status = invite.sent?.[channel];
   if (!status?.status || status.status === 'idle') return 'Not sent';
@@ -99,13 +112,16 @@ export default function AdminInvitesPage() {
     }
   };
 
-  const updateTemplate = (key: keyof InvitationTemplates, value: string) => {
+  const updateTemplate = (inviteType: InvitationInviteType, key: keyof InvitationTemplates[InvitationInviteType], value: string) => {
     if (!payload?.templates) return;
     setPayload({
       ...payload,
       templates: {
         ...payload.templates,
-        [key]: value,
+        [inviteType]: {
+          ...payload.templates[inviteType],
+          [key]: value,
+        },
       },
     });
   };
@@ -350,7 +366,7 @@ export default function AdminInvitesPage() {
     }
   };
 
-  const uploadPhoto = async (file?: File) => {
+  const uploadPhoto = async (inviteType: InvitationInviteType, file?: File) => {
     if (!file || !templates) return;
     setSaving(true);
     setError('');
@@ -360,7 +376,13 @@ export default function AdminInvitesPage() {
       const res = await fetch('/api/admin/media/upload', { method: 'POST', body });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to upload invite photo.');
-      await saveTemplates({ ...templates, photoUrl: data.url });
+      await saveTemplates({
+        ...templates,
+        [inviteType]: {
+          ...templates[inviteType],
+          photoUrl: data.url,
+        },
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload invite photo.');
     } finally {
@@ -423,30 +445,43 @@ export default function AdminInvitesPage() {
 
         <section className={styles.panel}>
           <h2>Templates</h2>
-          <label>
-            Email subject
-            <input value={templates.emailSubject} onChange={(e) => updateTemplate('emailSubject', e.target.value)} />
-          </label>
-          <label>
-            Email message
-            <textarea value={templates.emailBody} onChange={(e) => updateTemplate('emailBody', e.target.value)} rows={6} />
-          </label>
-          <label>
-            WhatsApp message
-            <textarea value={templates.whatsappMessage} onChange={(e) => updateTemplate('whatsappMessage', e.target.value)} rows={5} />
-          </label>
-          <label>
-            Telegram message
-            <textarea value={templates.telegramMessage} onChange={(e) => updateTemplate('telegramMessage', e.target.value)} rows={5} />
-          </label>
-          <label>
-            Invite photo URL
-            <input value={templates.photoUrl || ''} onChange={(e) => updateTemplate('photoUrl', e.target.value)} />
-          </label>
-          <label className={styles.uploadButton}>
-            Upload photo
-            <input type="file" accept="image/*" onChange={(e) => uploadPhoto(e.target.files?.[0])} />
-          </label>
+          <div className={styles.templateGrid}>
+            {templateSections.map((section) => {
+              const template = templates[section.inviteType];
+              return (
+                <div key={section.inviteType} className={styles.templateSet}>
+                  <div>
+                    <h3>{section.title}</h3>
+                    <p>{section.description}</p>
+                  </div>
+                  <label>
+                    Email subject
+                    <input value={template.emailSubject} onChange={(e) => updateTemplate(section.inviteType, 'emailSubject', e.target.value)} />
+                  </label>
+                  <label>
+                    Email message
+                    <textarea value={template.emailBody} onChange={(e) => updateTemplate(section.inviteType, 'emailBody', e.target.value)} rows={6} />
+                  </label>
+                  <label>
+                    WhatsApp message
+                    <textarea value={template.whatsappMessage} onChange={(e) => updateTemplate(section.inviteType, 'whatsappMessage', e.target.value)} rows={5} />
+                  </label>
+                  <label>
+                    Telegram message
+                    <textarea value={template.telegramMessage} onChange={(e) => updateTemplate(section.inviteType, 'telegramMessage', e.target.value)} rows={5} />
+                  </label>
+                  <label>
+                    Invite photo URL
+                    <input value={template.photoUrl || ''} onChange={(e) => updateTemplate(section.inviteType, 'photoUrl', e.target.value)} />
+                  </label>
+                  <label className={styles.uploadButton}>
+                    Upload photo
+                    <input type="file" accept="image/*" onChange={(e) => uploadPhoto(section.inviteType, e.target.files?.[0])} />
+                  </label>
+                </div>
+              );
+            })}
+          </div>
           <button type="button" onClick={() => saveTemplates(templates)} disabled={saving}>Save templates</button>
           <p className={styles.helper}>Variables: {'{inviteGreeting}'}, {'{guestName}'}, {'{plusOneName}'}, {'{inviteLink}'}, {'{eventDetails}'}, {'{calendarSummary}'}, {'{coupleNames}'}, {'{fridayVenue}'}, {'{saturdayVenue}'}, {'{rsvpDeadline}'}.</p>
         </section>

@@ -150,6 +150,15 @@
   color: var(--color-surface);
 }
 
+.bulkClearBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+
 .assignmentTableWrap {
   max-height: 70vh;
   overflow: auto;
@@ -180,6 +189,12 @@
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.assignmentTable input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-espresso);
 }
 
 .assignmentTable tbody tr {
@@ -300,5 +315,10 @@
 
   .header {
     display: grid;
+  }
+
+  .bulkClearBar {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

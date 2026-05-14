@@ -11,12 +11,25 @@
   overflow: hidden;
 }
 
+.planFrameFit {
+  aspect-ratio: 1800 / 650;
+  min-height: clamp(260px, 42vw, 560px);
+  max-height: calc(100dvh - 220px);
+  overflow: hidden;
+}
+
 .plan {
   display: block;
   min-width: 920px;
   width: 100%;
   height: auto;
   background: #fcf9f5;
+}
+
+.planFrameFit .plan {
+  min-width: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .ballroom {
@@ -169,6 +182,11 @@
 }
 
 @media (max-width: 760px) {
+  .planFrameFit {
+    min-height: clamp(220px, 62vw, 420px);
+    max-height: none;
+  }
+
   .planFrameWayfinding .plan {
     min-width: 0;
   }

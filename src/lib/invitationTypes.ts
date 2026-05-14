@@ -24,13 +24,15 @@ export interface InvitationRecord {
   updatedAt?: string;
 }
 
-export interface InvitationTemplates {
+export interface InvitationTemplateSet {
   emailSubject: string;
   emailBody: string;
   whatsappMessage: string;
   telegramMessage: string;
   photoUrl?: string;
 }
+
+export type InvitationTemplates = Record<InvitationInviteType, InvitationTemplateSet>;
 
 export interface InvitationState {
   invitations: InvitationRecord[];

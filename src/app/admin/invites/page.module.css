@@ -92,6 +92,33 @@
   resize: vertical;
 }
 
+.templateGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-4);
+}
+
+.templateSet {
+  display: grid;
+  gap: var(--spacing-4);
+  border: 1px solid var(--color-border);
+  background: rgba(255, 253, 248, 0.56);
+  padding: var(--spacing-4);
+}
+
+.templateSet h3 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+}
+
+.templateSet p {
+  margin: var(--spacing-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
 .panel button,
 .actions button {
   min-height: 36px;
@@ -320,7 +347,8 @@
 
 @media (max-width: 980px) {
   .header,
-  .grid {
+  .grid,
+  .templateGrid {
     grid-template-columns: 1fr;
     display: grid;
   }

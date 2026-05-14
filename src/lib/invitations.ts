@@ -3,6 +3,7 @@ import type {
   InvitationInviteType,
   InvitationRecord,
   InvitationState,
+  InvitationTemplateSet,
   InvitationTemplates,
   InvitationView,
 } from './invitationTypes';
@@ -34,12 +35,17 @@ const DEFAULT_CHAT_BODY = [
   '{coupleNames}',
 ].join('\n');
 
-export const defaultInvitationTemplates: InvitationTemplates = {
+export const defaultInvitationTemplateSet: InvitationTemplateSet = {
   emailSubject: 'Wedding invitation from {coupleNames}',
   emailBody: DEFAULT_EMAIL_BODY,
   whatsappMessage: DEFAULT_CHAT_BODY,
   telegramMessage: DEFAULT_CHAT_BODY,
   photoUrl: '',
+};
+
+export const defaultInvitationTemplates: InvitationTemplates = {
+  friday_saturday: { ...defaultInvitationTemplateSet },
+  saturday_only: { ...defaultInvitationTemplateSet },
 };
 
 export function normalizeInvitationState(value: unknown): InvitationState {
@@ -48,11 +54,38 @@ export function normalizeInvitationState(value: unknown): InvitationState {
     invitations: Array.isArray(state.invitations)
       ? state.invitations.map(normalizeInvitationRecord).filter(Boolean)
       : [],
-    templates: {
-      ...defaultInvitationTemplates,
-      ...(state.templates || {}),
-    },
+    templates: normalizeInvitationTemplates(state.templates),
     updatedAt: state.updatedAt,
+  };
+}
+
+export function normalizeInvitationTemplates(value: unknown): InvitationTemplates {
+  const input = (value || {}) as Partial<InvitationTemplates> & Partial<InvitationTemplateSet>;
+  const legacyTemplate: InvitationTemplateSet = {
+    ...defaultInvitationTemplateSet,
+    ...pickTemplateSet(input),
+  };
+
+  return {
+    friday_saturday: {
+      ...legacyTemplate,
+      ...pickTemplateSet(input.friday_saturday),
+    },
+    saturday_only: {
+      ...legacyTemplate,
+      ...pickTemplateSet(input.saturday_only),
+    },
+  };
+}
+
+function pickTemplateSet(value: unknown): Partial<InvitationTemplateSet> {
+  const input = (value || {}) as Partial<InvitationTemplateSet>;
+  return {
+    ...(typeof input.emailSubject === 'string' ? { emailSubject: input.emailSubject } : {}),
+    ...(typeof input.emailBody === 'string' ? { emailBody: input.emailBody } : {}),
+    ...(typeof input.whatsappMessage === 'string' ? { whatsappMessage: input.whatsappMessage } : {}),
+    ...(typeof input.telegramMessage === 'string' ? { telegramMessage: input.telegramMessage } : {}),
+    ...(typeof input.photoUrl === 'string' ? { photoUrl: input.photoUrl } : {}),
   };
 }
 
@@ -128,6 +161,7 @@ export function invitationTemplateVars(
   inviteLink: string,
   templates: InvitationTemplates
 ) {
+  const templateSet = getInvitationTemplateSet(templates, invite.inviteType);
   const guestName = String(invite.guestName || '');
   const plusOneName = String(invite.plusOneName || '').trim();
   const inviteGreeting = plusOneName ? `Dear ${guestName} and ${plusOneName}` : `Dear ${guestName}`;
@@ -143,11 +177,18 @@ export function invitationTemplateVars(
     fridayVenue: String(config.VENUE_NAME || 'The Westin Singapore'),
     saturdayVenue: String(config.VENUE_DAY_TWO_NAME || 'Church of the Holy Family'),
     rsvpDeadline: String(config.RSVP_DEADLINE_DISPLAY || ''),
-    photoUrl: String(templates.photoUrl || ''),
+    photoUrl: String(templateSet.photoUrl || ''),
     inviteType: invite.inviteType === 'friday_saturday' ? 'Friday + Saturday' : 'Saturday only',
     eventDetails,
     calendarSummary: eventDetails,
   };
+}
+
+export function getInvitationTemplateSet(
+  templates: InvitationTemplates,
+  inviteType: InvitationInviteType
+): InvitationTemplateSet {
+  return templates[inviteType] || templates.saturday_only || defaultInvitationTemplateSet;
 }
 
 export function renderInvitationTemplate(template: string, vars: Record<string, string>) {
@@ -161,9 +202,10 @@ export function getChannelTemplate(
 ) {
   const override = invite.messageOverrides?.[channel];
   if (override) return override;
-  if (channel === 'email') return templates.emailBody;
-  if (channel === 'telegram') return templates.telegramMessage;
-  return templates.whatsappMessage;
+  const templateSet = getInvitationTemplateSet(templates, invite.inviteType);
+  if (channel === 'email') return templateSet.emailBody;
+  if (channel === 'telegram') return templateSet.telegramMessage;
+  return templateSet.whatsappMessage;
 }
 
 export function buildWhatsappUrl(phone: string, message: string) {

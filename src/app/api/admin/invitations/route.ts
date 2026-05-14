@@ -6,6 +6,7 @@ import {
   generateInviteCode,
   isInviteType,
   normalizeInvitationState,
+  normalizeInvitationTemplates,
 } from '@/lib/invitations';
 import type { InvitationRecord, InvitationTemplates } from '@/lib/invitationTypes';
 import { normalizeInvitationImportRows, previewInvitationImport } from '@/lib/invitationImport';
@@ -86,10 +87,9 @@ export async function PUT(request: Request) {
     const db = await getDb();
     const state = normalizeInvitationState(db.invitations);
 
-    const nextTemplates: InvitationTemplates = {
-      ...state.templates,
-      ...(body.templates || {}),
-    };
+    const nextTemplates: InvitationTemplates = body.templates
+      ? normalizeInvitationTemplates(body.templates)
+      : state.templates;
 
     let nextInvitations = state.invitations;
     const input = body.invitation as Partial<InvitationRecord> | undefined;

@@ -33,6 +33,7 @@ export default function AdminSeatingPage() {
   const [payload, setPayload] = useState<SeatingPayload | null>(null);
   const [assignments, setAssignments] = useState<SeatingAssignment[]>([]);
   const [selectedPersonId, setSelectedPersonId] = useState('');
+  const [selectedClearIds, setSelectedClearIds] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -110,6 +111,12 @@ export default function AdminSeatingPage() {
       return a.displayName.localeCompare(b.displayName);
     });
 
+  const visibleAssignedIds = visibleRoster
+    .filter((person) => assignmentByPerson.has(person.id))
+    .map((person) => person.id);
+  const selectedAssignedIds = Array.from(selectedClearIds).filter((id) => assignmentByPerson.has(id));
+  const allVisibleAssignedSelected = visibleAssignedIds.length > 0 && visibleAssignedIds.every((id) => selectedClearIds.has(id));
+
   const persistAssignments = async (nextAssignments: SeatingAssignment[], successMessage: string) => {
     const previousAssignments = assignments;
     setAssignments(nextAssignments);
@@ -182,8 +189,43 @@ export default function AdminSeatingPage() {
     const assignment = assignmentByPerson.get(personId);
     if (!assignment) return;
     const nextAssignments = assignments.filter((item) => item.personId !== personId);
+    setSelectedClearIds((current) => {
+      const next = new Set(current);
+      next.delete(personId);
+      return next;
+    });
     if (selectedPersonId === personId) setSelectedPersonId(personId);
     void persistAssignments(nextAssignments, 'Assignment cleared.');
+  };
+
+  const clearSelectedAssignments = () => {
+    const ids = selectedAssignedIds;
+    if (ids.length === 0) return;
+    if (!window.confirm(`Clear assignments for ${ids.length} selected guest${ids.length === 1 ? '' : 's'}?`)) return;
+    const idSet = new Set(ids);
+    const nextAssignments = assignments.filter((item) => !idSet.has(item.personId));
+    setSelectedClearIds(new Set());
+    void persistAssignments(nextAssignments, `${ids.length} assignment${ids.length === 1 ? '' : 's'} cleared.`);
+  };
+
+  const toggleClearSelection = (personId: string, checked: boolean) => {
+    setSelectedClearIds((current) => {
+      const next = new Set(current);
+      if (checked) next.add(personId);
+      else next.delete(personId);
+      return next;
+    });
+  };
+
+  const toggleVisibleAssigned = (checked: boolean) => {
+    setSelectedClearIds((current) => {
+      const next = new Set(current);
+      visibleAssignedIds.forEach((id) => {
+        if (checked) next.add(id);
+        else next.delete(id);
+      });
+      return next;
+    });
   };
 
   if (loading && !payload) return <div className={styles.container}>Loading seating planner...</div>;
@@ -282,12 +324,32 @@ export default function AdminSeatingPage() {
                 </button>
               ))}
             </div>
+            <div className={styles.bulkClearBar}>
+              <span>{selectedAssignedIds.length > 0 ? `${selectedAssignedIds.length} selected` : 'Select assigned guests to clear'}</span>
+              <button
+                type="button"
+                className={styles.clearButton}
+                onClick={clearSelectedAssignments}
+                disabled={selectedAssignedIds.length === 0 || saving}
+              >
+                Clear selected
+              </button>
+            </div>
           </div>
 
           <div className={styles.assignmentTableWrap}>
             <table className={styles.assignmentTable}>
               <thead>
                 <tr>
+                  <th>
+                    <input
+                      type="checkbox"
+                      checked={allVisibleAssignedSelected}
+                      disabled={visibleAssignedIds.length === 0 || saving}
+                      onChange={(event) => toggleVisibleAssigned(event.target.checked)}
+                      aria-label="Select all visible assigned guests"
+                    />
+                  </th>
                   <th>Guest</th>
                   <th>Table</th>
                   <th>Seat</th>
@@ -312,6 +374,16 @@ export default function AdminSeatingPage() {
                     }
                   }}
                 >
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedClearIds.has(person.id)}
+                      disabled={!assignment || saving}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={(event) => toggleClearSelection(person.id, event.target.checked)}
+                      aria-label={`Select ${person.displayName} for clearing`}
+                    />
+                  </td>
                   <td>
                     <strong>{person.displayName}</strong>
                     <small>{sourceLabel(person.source)}{person.dietary ? ` | ${person.dietary}` : ''}</small>

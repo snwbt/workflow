@@ -201,6 +201,7 @@ export default function SeatingPage() {
               selectedPersonId={selected?.personId}
               selectedSeat={selected ? { tableId: selected.tableId, seatNumber: selected.seatNumber } : null}
               wayfinding={Boolean(selected)}
+              fitToFrame
               readonly
             />
 

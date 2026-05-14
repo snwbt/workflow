@@ -5,6 +5,7 @@ import {
   buildInviteLink,
   deriveInvitationViews,
   getChannelTemplate,
+  getInvitationTemplateSet,
   invitationTemplateVars,
   normalizeInvitationState,
   renderInvitationTemplate,
@@ -45,7 +46,8 @@ export async function POST(request: Request) {
 
       const inviteLink = buildInviteLink(origin, invite.inviteCode);
       const vars = invitationTemplateVars(invite, db.config || {}, inviteLink, state.templates);
-      const subject = renderInvitationTemplate(state.templates.emailSubject, vars);
+      const templateSet = getInvitationTemplateSet(state.templates, invite.inviteType);
+      const subject = renderInvitationTemplate(templateSet.emailSubject, vars);
       const message = renderInvitationTemplate(getChannelTemplate(invite, state.templates, 'email'), vars);
       const calendarHtml = renderCalendarEmailHtml(getCalendarEvents(invite.inviteType, scheduleConfig, db.config || {}));
 
