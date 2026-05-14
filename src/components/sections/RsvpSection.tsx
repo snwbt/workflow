@@ -13,6 +13,12 @@ type AttendanceStatus = 'attending' | 'declined';
 type InviteType = 'friday_saturday' | 'saturday_only';
 type RsvpStep = 'initial' | 'details' | 'declined' | 'submitting' | 'confirmation';
 type EventAnswer = 'yes' | 'no' | '';
+type DietaryChoice = 'none' | 'halal' | 'vegetarian' | 'other';
+
+interface DietaryEntry {
+  choice: DietaryChoice;
+  notes: string;
+}
 
 const INVITE_LABELS: Record<InviteType, string> = {
   friday_saturday: 'Friday + Saturday',
@@ -34,6 +40,13 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+function dietaryLabel(value: DietaryChoice) {
+  if (value === 'halal') return 'Halal';
+  if (value === 'vegetarian') return 'Vegetarian';
+  if (value === 'other') return 'Other';
+  return 'No restriction';
+}
+
 export default function RsvpSection({ globalConfig, scheduleConfig }: { globalConfig?: any; scheduleConfig?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.18 });
   const { t } = useSiteText();
@@ -47,7 +60,7 @@ export default function RsvpSection({ globalConfig, scheduleConfig }: { globalCo
   const [attendance, setAttendance] = useState<AttendanceStatus | null>(null);
   const [guestCount, setGuestCount] = useState(1);
   const [companionNames, setCompanionNames] = useState<string[]>([]);
-  const [dietary, setDietary] = useState('');
+  const [dietaryByGuest, setDietaryByGuest] = useState<Record<string, DietaryEntry>>({});
   const [accessibility, setAccessibility] = useState('');
   const [dinnerAttendance, setDinnerAttendance] = useState<EventAnswer>('');
   const [massAttendance, setMassAttendance] = useState<EventAnswer>('');
@@ -111,6 +124,35 @@ export default function RsvpSection({ globalConfig, scheduleConfig }: { globalCo
   const requiredCompanionCount = Math.max(0, guestCount - 1);
   const companionValues = companionNames.slice(0, requiredCompanionCount);
   const additionalGuestNames = companionValues.map((name) => name.trim()).filter(Boolean).join('\n');
+  const attendingGuests = [
+    { id: 'primary', name: guestName.trim() || 'You' },
+    ...Array.from({ length: requiredCompanionCount }, (_, index) => ({
+      id: `companion-${index}`,
+      name: companionValues[index]?.trim() || `Guest ${index + 2}`,
+    })),
+  ];
+
+  const updateDietaryEntry = (id: string, updates: Partial<DietaryEntry>) => {
+    setDietaryByGuest((current) => {
+      const existing = current[id] || { choice: 'none' as DietaryChoice, notes: '' };
+      const next = { ...existing, ...updates };
+      if (updates.choice && updates.choice !== 'other') next.notes = '';
+      return { ...current, [id]: next };
+    });
+  };
+
+  const perGuestDietary = attendingGuests.map((guest) => {
+    const entry = dietaryByGuest[guest.id] || { choice: 'none' as DietaryChoice, notes: '' };
+    return {
+      name: guest.name,
+      dietary: dietaryLabel(entry.choice),
+      notes: entry.choice === 'other' ? entry.notes.trim() : '',
+    };
+  });
+
+  const dietarySummary = perGuestDietary
+    .map((entry) => `${entry.name}: ${entry.dietary}${entry.notes ? ` - ${entry.notes}` : ''}`)
+    .join('\n');
 
   const updateGuestCount = (count: number) => {
     const nextCount = Math.max(1, Math.min(4, count));
@@ -236,11 +278,11 @@ export default function RsvpSection({ globalConfig, scheduleConfig }: { globalCo
         dinner_attendance: inviteType === 'friday_saturday' ? dinnerAttendance : '',
         mass_attendance: attendance === 'attending' ? massAttendance : '',
         meal_preference: '',
-        dietary_restrictions: dietary.trim(),
+        dietary_restrictions: dietarySummary,
         accessibility_requirements: accessibility.trim(),
         transport_needed: false,
         message: message.trim(),
-        custom_answers: {},
+        custom_answers: { per_guest_dietary: perGuestDietary },
         source: 'guest',
       };
 
@@ -275,7 +317,7 @@ export default function RsvpSection({ globalConfig, scheduleConfig }: { globalCo
     setAttendance(null);
     setGuestCount(1);
     setCompanionNames([]);
-    setDietary('');
+    setDietaryByGuest({});
     setAccessibility('');
     setDinnerAttendance('');
     setMassAttendance('');
@@ -439,16 +481,12 @@ export default function RsvpSection({ globalConfig, scheduleConfig }: { globalCo
                 invalid={fieldInvalid(massAttendance)}
               />
 
-              <div className={styles.field}>
-                <label htmlFor="dietary" className={styles.label}>{t(labels.dietary)}</label>
-                <textarea
-                  id="dietary"
-                  className={styles.textarea}
-                  value={dietary}
-                  onChange={(e) => setDietary(e.target.value)}
-                  placeholder={t('Please write any dietary needs here')}
-                />
-              </div>
+              <DietaryMatrix
+                label={labels.dietary}
+                guests={attendingGuests}
+                values={dietaryByGuest}
+                onChange={updateDietaryEntry}
+              />
 
               <div className={styles.field}>
                 <label htmlFor="accessibility" className={styles.label}>{t(labels.accessibility)}</label>
@@ -564,7 +602,10 @@ function CalendarActions({ events }: { events: CalendarEvent[] }) {
         const links = getCalendarLinks(event);
         return (
           <div key={event.id} className={styles.calendarEvent}>
-            <p>{t(event.title)}</p>
+            <div>
+              <p>{t(event.title)}</p>
+              <span>{event.start.toLocaleDateString('en-SG', { day: 'numeric', month: 'long', year: 'numeric' })} | {event.location}</span>
+            </div>
             <div className={styles.calendarButtons}>
               <a href={links.google} target="_blank" rel="noopener noreferrer" className={styles.calendarButton}>
                 <span className={styles.googleMark}>G</span>
@@ -583,6 +624,55 @@ function CalendarActions({ events }: { events: CalendarEvent[] }) {
         );
       })}
     </div>
+  );
+}
+
+function DietaryMatrix({
+  label,
+  guests,
+  values,
+  onChange,
+}: {
+  label: string;
+  guests: { id: string; name: string }[];
+  values: Record<string, DietaryEntry>;
+  onChange: (id: string, updates: Partial<DietaryEntry>) => void;
+}) {
+  const { t } = useSiteText();
+
+  return (
+    <fieldset className={styles.dietaryMatrix}>
+      <legend className={styles.label}>{t(label)}</legend>
+      <div className={styles.dietaryRows}>
+        {guests.map((guest) => {
+          const entry = values[guest.id] || { choice: 'none' as DietaryChoice, notes: '' };
+          return (
+            <div key={guest.id} className={styles.dietaryRow}>
+              <span>{guest.name}</span>
+              <select
+                className={styles.select}
+                value={entry.choice}
+                onChange={(event) => onChange(guest.id, { choice: event.target.value as DietaryChoice })}
+              >
+                <option value="none">{t('No restriction')}</option>
+                <option value="halal">{t('Halal')}</option>
+                <option value="vegetarian">{t('Vegetarian')}</option>
+                <option value="other">{t('Other')}</option>
+              </select>
+              {entry.choice === 'other' && (
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={entry.notes}
+                  onChange={(event) => onChange(guest.id, { notes: event.target.value })}
+                  placeholder={t('Please write any dietary needs here')}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 

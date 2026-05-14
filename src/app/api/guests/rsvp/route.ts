@@ -157,7 +157,8 @@ export async function POST(request: Request) {
       if (custom_answers && Object.keys(custom_answers).length > 0) {
         detailsStr += '\nAdditional Details:\n';
         Object.entries(custom_answers).forEach(([q, a]) => {
-          detailsStr += `- ${q}: ${a}\n`;
+          if (q === 'per_guest_dietary' && Array.isArray(a)) return;
+          detailsStr += `- ${q}: ${typeof a === 'object' ? JSON.stringify(a) : a}\n`;
         });
       }
     }

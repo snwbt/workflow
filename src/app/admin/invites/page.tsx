@@ -11,6 +11,7 @@ import {
   renderInvitationTemplate,
 } from '@/lib/invitations';
 import type { InvitationChannel, InvitationInviteType, InvitationTemplates, InvitationView } from '@/lib/invitationTypes';
+import type { InvitationImportPreviewRow } from '@/lib/invitationImport';
 import styles from './page.module.css';
 
 interface InvitationPayload {
@@ -45,6 +46,9 @@ export default function AdminInvitesPage() {
   const [editingId, setEditingId] = useState('');
   const [drafts, setDrafts] = useState<Record<string, InvitationView>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [importRows, setImportRows] = useState<Record<string, unknown>[]>([]);
+  const [importPreview, setImportPreview] = useState<InvitationImportPreviewRow[]>([]);
+  const [chatQueue, setChatQueue] = useState<{ channel: 'whatsapp' | 'telegram'; invites: InvitationView[]; index: number } | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -57,6 +61,7 @@ export default function AdminInvitesPage() {
     [...(payload?.invitations || [])].sort((a, b) => a.guestName.localeCompare(b.guestName))
   ), [payload?.invitations]);
   const allSelected = sortedInvitations.length > 0 && sortedInvitations.every((invite) => selectedIds.has(invite.id));
+  const selectedInvitations = sortedInvitations.filter((invite) => selectedIds.has(invite.id));
 
   const loadInvitations = () => {
     setError('');
@@ -181,20 +186,33 @@ export default function AdminInvitesPage() {
     void deleteInvitations(ids);
   };
 
-  const sendEmail = async (invite: InvitationView) => {
-    if (!window.confirm(`Send email invitation to ${invite.guestName}?`)) return;
+  const sendEmail = async (inviteOrInvites: InvitationView | InvitationView[]) => {
+    const invites = Array.isArray(inviteOrInvites) ? inviteOrInvites : [inviteOrInvites];
+    const withEmail = invites.filter((invite) => invite.email);
+    if (withEmail.length === 0) {
+      setError('No selected guests have email addresses.');
+      return;
+    }
+    if (!window.confirm(`Send email invitation to ${withEmail.length === 1 ? withEmail[0].guestName : `${withEmail.length} selected guests`}?`)) return;
     setSaving(true);
     setError('');
     try {
       const res = await fetch('/api/admin/invitations/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: invite.id }),
+        body: JSON.stringify({ ids: withEmail.map((invite) => invite.id) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to send email.');
-      loadInvitations();
-      setMessage('Email invitation sent.');
+      if (Array.isArray(data.invitations)) {
+        setPayload((current) => current ? { ...current, invitations: data.invitations } : current);
+      } else {
+        loadInvitations();
+      }
+      const failed = Array.isArray(data.results) ? data.results.filter((result: any) => !result.success).length : 0;
+      setMessage(failed > 0
+        ? `${withEmail.length - failed} email invitation${withEmail.length - failed === 1 ? '' : 's'} sent, ${failed} failed.`
+        : withEmail.length === 1 ? 'Email invitation sent.' : `${withEmail.length} email invitations sent.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send email.');
     } finally {
@@ -230,6 +248,106 @@ export default function AdminInvitesPage() {
       }),
     }).then(() => loadInvitations());
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const startChatQueue = (channel: 'whatsapp' | 'telegram') => {
+    const eligible = selectedInvitations.filter((invite) => channel === 'whatsapp' ? invite.phone : invite.telegramUsername);
+    if (eligible.length === 0) {
+      setError(`No selected guests have ${channel === 'whatsapp' ? 'WhatsApp phone numbers' : 'Telegram usernames'}.`);
+      return;
+    }
+    if (!window.confirm(`Prepare ${eligible.length} ${channel === 'whatsapp' ? 'WhatsApp' : 'Telegram'} invite${eligible.length === 1 ? '' : 's'}?`)) return;
+    setChatQueue({ channel, invites: eligible, index: 0 });
+  };
+
+  const sendQueuedChat = () => {
+    if (!chatQueue) return;
+    const invite = chatQueue.invites[chatQueue.index];
+    if (!invite) return;
+    const messageText = renderMessage(invite, chatQueue.channel);
+    const url = chatQueue.channel === 'whatsapp'
+      ? buildWhatsappUrl(invite.phone || '', messageText)
+      : buildTelegramUrl(invite.telegramUsername || '', messageText);
+    if (!url) return;
+
+    void fetch('/api/admin/invitations', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        invitation: {
+          ...invite,
+          sent: {
+            ...invite.sent,
+            [chatQueue.channel]: { status: 'sent', sentAt: new Date().toISOString() },
+          },
+        },
+      }),
+    }).then(() => loadInvitations());
+    window.open(url, '_blank', 'noopener,noreferrer');
+    const nextIndex = chatQueue.index + 1;
+    setChatQueue(nextIndex >= chatQueue.invites.length ? null : { ...chatQueue, index: nextIndex });
+  };
+
+  const previewImportRows = async (rows: Record<string, unknown>[]) => {
+    setSaving(true);
+    setError('');
+    try {
+      const res = await fetch('/api/admin/invitations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ importRows: rows, previewOnly: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to preview import.');
+      setImportRows(rows);
+      setImportPreview(data.preview || []);
+      setMessage(`Parsed ${rows.length} invitee row${rows.length === 1 ? '' : 's'}. Review before importing.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to preview import.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleImportFile = async (file?: File) => {
+    if (!file) return;
+    setSaving(true);
+    setError('');
+    try {
+      const XLSX = await import('xlsx');
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' });
+      await previewImportRows(rows);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to read import file.');
+      setSaving(false);
+    }
+  };
+
+  const commitImport = async () => {
+    if (importRows.length === 0) return;
+    const validCount = importPreview.filter((row) => row.action !== 'invalid').length;
+    if (!window.confirm(`Import ${validCount} valid invitee row${validCount === 1 ? '' : 's'}?`)) return;
+    setSaving(true);
+    setError('');
+    try {
+      const res = await fetch('/api/admin/invitations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ importRows, previewOnly: false }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to import invitees.');
+      setPayload(data);
+      setImportRows([]);
+      setImportPreview([]);
+      setMessage(`${validCount} invitee row${validCount === 1 ? '' : 's'} imported.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to import invitees.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const uploadPhoto = async (file?: File) => {
@@ -330,8 +448,66 @@ export default function AdminInvitesPage() {
             <input type="file" accept="image/*" onChange={(e) => uploadPhoto(e.target.files?.[0])} />
           </label>
           <button type="button" onClick={() => saveTemplates(templates)} disabled={saving}>Save templates</button>
-          <p className={styles.helper}>Variables: {'{inviteGreeting}'}, {'{guestName}'}, {'{plusOneName}'}, {'{inviteLink}'}, {'{coupleNames}'}, {'{fridayVenue}'}, {'{saturdayVenue}'}, {'{rsvpDeadline}'}.</p>
+          <p className={styles.helper}>Variables: {'{inviteGreeting}'}, {'{guestName}'}, {'{plusOneName}'}, {'{inviteLink}'}, {'{eventDetails}'}, {'{calendarSummary}'}, {'{coupleNames}'}, {'{fridayVenue}'}, {'{saturdayVenue}'}, {'{rsvpDeadline}'}.</p>
         </section>
+      </section>
+
+      <section className={styles.tablePanel}>
+        <div className={styles.tableHeader}>
+          <h2>Import Invitees</h2>
+          <label className={styles.uploadButton}>
+            Upload Excel / CSV
+            <input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => handleImportFile(e.target.files?.[0])} />
+          </label>
+        </div>
+        <p className={styles.helper}>Columns: guestName, email, plusOneName, phone, telegramUsername, inviteType, inviteCode. Duplicates update by invite code, then email, phone, and guest name.</p>
+        {importPreview.length > 0 && (
+          <>
+            <div className={styles.importSummary}>
+              <span>{importPreview.filter((row) => row.action === 'create').length} create</span>
+              <span>{importPreview.filter((row) => row.action === 'update').length} update</span>
+              <span>{importPreview.filter((row) => row.action === 'invalid').length} invalid</span>
+              <button type="button" onClick={commitImport} disabled={saving || importPreview.every((row) => row.action === 'invalid')}>Import valid rows</button>
+              <button type="button" onClick={() => { setImportRows([]); setImportPreview([]); }}>Clear preview</button>
+            </div>
+            <div className={styles.tableWrap}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Row</th>
+                    <th>Action</th>
+                    <th>Guest</th>
+                    <th>Contact</th>
+                    <th>Invite</th>
+                    <th>Errors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importPreview.map((row) => (
+                    <tr key={row.rowNumber}>
+                      <td>{row.rowNumber}</td>
+                      <td><span className={row.action === 'invalid' ? styles.noPill : styles.yesPill}>{row.action}</span></td>
+                      <td>
+                        <strong>{row.invitation.guestName || '-'}</strong>
+                        {row.invitation.plusOneName && <small>Plus one: {row.invitation.plusOneName}</small>}
+                      </td>
+                      <td>
+                        <small>{row.invitation.email || '-'}</small>
+                        <small>{row.invitation.phone || '-'}</small>
+                        <small>{row.invitation.telegramUsername ? `@${row.invitation.telegramUsername}` : '-'}</small>
+                      </td>
+                      <td>
+                        <small>{row.invitation.inviteType || '-'}</small>
+                        <small>{row.invitation.inviteCode || '-'}</small>
+                      </td>
+                      <td>{row.errors.length ? row.errors.join(' ') : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </section>
 
       <section className={styles.tablePanel}>
@@ -339,6 +515,9 @@ export default function AdminInvitesPage() {
           <h2>Guest Invites</h2>
           <div className={styles.bulkActions}>
             <span>{selectedIds.size > 0 ? `${selectedIds.size} selected` : `${sortedInvitations.length} guests`}</span>
+            <button type="button" onClick={() => sendEmail(selectedInvitations)} disabled={selectedIds.size === 0 || saving}>Email selected</button>
+            <button type="button" onClick={() => startChatQueue('whatsapp')} disabled={selectedIds.size === 0 || saving}>WhatsApp selected</button>
+            <button type="button" onClick={() => startChatQueue('telegram')} disabled={selectedIds.size === 0 || saving}>Telegram selected</button>
             <button type="button" onClick={bulkDelete} disabled={selectedIds.size === 0 || saving}>Delete selected</button>
           </div>
         </div>
@@ -465,6 +644,20 @@ export default function AdminInvitesPage() {
           </table>
         </div>
       </section>
+
+      {chatQueue && (
+        <div className={styles.queueOverlay} role="dialog" aria-modal="true" aria-label={`${chatQueue.channel} send queue`}>
+          <div className={styles.queueModal}>
+            <h2>{chatQueue.channel === 'whatsapp' ? 'WhatsApp' : 'Telegram'} queue</h2>
+            <p>{chatQueue.index + 1} of {chatQueue.invites.length}: {chatQueue.invites[chatQueue.index]?.guestName}</p>
+            <div className={styles.queuePreview}>{renderMessage(chatQueue.invites[chatQueue.index], chatQueue.channel)}</div>
+            <div className={styles.queueActions}>
+              <button type="button" onClick={sendQueuedChat}>Open compose</button>
+              <button type="button" onClick={() => setChatQueue(null)}>Close queue</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

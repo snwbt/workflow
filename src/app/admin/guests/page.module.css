@@ -15,6 +15,38 @@
   border-radius: 4px;
 }
 
+.tableToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+}
+
+.tableToolbar p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+
+.tableToolbar button {
+  min-height: 36px;
+  border: 1px solid var(--color-error, #c0392b);
+  background: transparent;
+  color: var(--color-error, #c0392b);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0 var(--spacing-3);
+  text-transform: uppercase;
+}
+
+.tableToolbar button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;

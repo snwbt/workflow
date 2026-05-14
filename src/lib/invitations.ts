@@ -6,11 +6,14 @@ import type {
   InvitationTemplates,
   InvitationView,
 } from './invitationTypes';
+import { getCalendarEvents, renderEventDetailsText } from './calendar';
 
 const DEFAULT_EMAIL_BODY = [
   '{inviteGreeting},',
   '',
   'We would be honoured to celebrate with you at our wedding.',
+  '',
+  '{eventDetails}',
   '',
   'Please RSVP here: {inviteLink}',
   '',
@@ -21,7 +24,11 @@ const DEFAULT_EMAIL_BODY = [
 const DEFAULT_CHAT_BODY = [
   '{inviteGreeting},',
   '',
-  'We would be honoured to celebrate with you at our wedding. Please RSVP here:',
+  'We would be honoured to celebrate with you at our wedding.',
+  '',
+  '{eventDetails}',
+  '',
+  'Please RSVP here:',
   '{inviteLink}',
   '',
   '{coupleNames}',
@@ -124,6 +131,8 @@ export function invitationTemplateVars(
   const guestName = String(invite.guestName || '');
   const plusOneName = String(invite.plusOneName || '').trim();
   const inviteGreeting = plusOneName ? `Dear ${guestName} and ${plusOneName}` : `Dear ${guestName}`;
+  const events = getCalendarEvents(invite.inviteType, null, config);
+  const eventDetails = renderEventDetailsText(events);
   return {
     guestName,
     plusOneName,
@@ -136,6 +145,8 @@ export function invitationTemplateVars(
     rsvpDeadline: String(config.RSVP_DEADLINE_DISPLAY || ''),
     photoUrl: String(templates.photoUrl || ''),
     inviteType: invite.inviteType === 'friday_saturday' ? 'Friday + Saturday' : 'Saturday only',
+    eventDetails,
+    calendarSummary: eventDetails,
   };
 }
 

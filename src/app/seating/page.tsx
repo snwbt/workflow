@@ -208,6 +208,7 @@ export default function SeatingPage() {
               <aside className={styles.tablemates} aria-label={t('Guests at your table')}>
                 <span className={styles.eyebrow}>{t('Guests at your table')}</span>
                 <h3>{t('Table {table}', { table: selected.tableLabel })}</h3>
+                <span className={styles.subheading}>{t('Your seat')}</span>
                 <GuestSeatList guests={[selected]} currentPersonId={selected.personId} />
                 {(selected.groupMembers || []).length > 0 && (
                   <>

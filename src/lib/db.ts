@@ -537,6 +537,33 @@ export async function deleteRsvp(rsvpId: string) {
   return deleted.length > 0;
 }
 
+export async function deleteRsvps(rsvpIds: string[]) {
+  const ids = Array.from(new Set(rsvpIds.map((id) => String(id || '').trim()).filter(Boolean)));
+  if (ids.length === 0) return { deleted: 0, requested: 0 };
+
+  const sql = await ensureDatabase();
+  if (!sql) {
+    assertWritableJsonFallback();
+    const db = readJsonDbRaw();
+    const rsvps = db.rsvps || [];
+    const idSet = new Set(ids);
+    const nextRsvps = rsvps.filter((rsvp: RsvpRecord) => !idSet.has(rsvp.rsvp_id));
+    saveJsonDbKey('rsvps', nextRsvps);
+    return { deleted: rsvps.length - nextRsvps.length, requested: ids.length };
+  }
+
+  let deletedCount = 0;
+  for (const id of ids) {
+    const deleted = await sql`
+      DELETE FROM rsvps
+      WHERE rsvp_id = ${id}
+      RETURNING rsvp_id
+    ` as Array<{ rsvp_id: string }>;
+    deletedCount += deleted.length;
+  }
+  return { deleted: deletedCount, requested: ids.length };
+}
+
 export async function getAdminAuth() {
   const sql = await ensureDatabase();
   if (!sql) {

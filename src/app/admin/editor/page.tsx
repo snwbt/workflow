@@ -475,6 +475,60 @@ export default function EditorPage() {
         <input className={styles.input} value={config.RSVP_INITIAL_HEADING || ''} onChange={(e) => updateConfig('RSVP_INITIAL_HEADING', e.target.value)} placeholder="Begin With Your Invitation" />
       </div>
 
+      <h4 style={{marginTop: '1.5rem', marginBottom: '1rem'}}>Calendar Cards</h4>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Friday Calendar Title</label>
+        <input className={styles.input} value={config.CALENDAR_FRIDAY_TITLE || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_TITLE', e.target.value)} placeholder="Russell & Siaw Min Wedding Dinner" />
+      </div>
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Friday Date</label>
+          <input className={styles.input} value={config.CALENDAR_FRIDAY_DATE || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_DATE', e.target.value)} placeholder="23 October 2026" />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Friday Start Time</label>
+          <input className={styles.input} value={config.CALENDAR_FRIDAY_START_TIME || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_START_TIME', e.target.value)} placeholder="6:45 PM" />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Friday End Time</label>
+          <input className={styles.input} value={config.CALENDAR_FRIDAY_END_TIME || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_END_TIME', e.target.value)} placeholder="10:30 PM" />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Friday Venue</label>
+        <input className={styles.input} value={config.CALENDAR_FRIDAY_VENUE || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_VENUE', e.target.value)} placeholder="The Westin Singapore, Grand Ballroom" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Friday Description</label>
+        <textarea className={styles.textarea} value={config.CALENDAR_FRIDAY_DESCRIPTION || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_DESCRIPTION', e.target.value)} placeholder="Wedding dinner reception." />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Saturday Calendar Title</label>
+        <input className={styles.input} value={config.CALENDAR_SATURDAY_TITLE || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_TITLE', e.target.value)} placeholder="Russell & Siaw Min Nuptial Mass" />
+      </div>
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Saturday Date</label>
+          <input className={styles.input} value={config.CALENDAR_SATURDAY_DATE || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_DATE', e.target.value)} placeholder="24 October 2026" />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Saturday Start Time</label>
+          <input className={styles.input} value={config.CALENDAR_SATURDAY_START_TIME || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_START_TIME', e.target.value)} placeholder="10:00 AM" />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Saturday End Time</label>
+          <input className={styles.input} value={config.CALENDAR_SATURDAY_END_TIME || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_END_TIME', e.target.value)} placeholder="1:00 PM" />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Saturday Venue</label>
+        <input className={styles.input} value={config.CALENDAR_SATURDAY_VENUE || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_VENUE', e.target.value)} placeholder="Church of the Holy Family" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Saturday Description</label>
+        <textarea className={styles.textarea} value={config.CALENDAR_SATURDAY_DESCRIPTION || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_DESCRIPTION', e.target.value)} placeholder="Nuptial Mass and celebration." />
+      </div>
+
       <h4 style={{marginTop: '1.5rem', marginBottom: '1rem'}}>RSVP Field Labels</h4>
       <div className={styles.formGroup}>
         <label className={styles.label}>Invite Code Label</label>

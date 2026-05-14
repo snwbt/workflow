@@ -58,7 +58,9 @@ export default function AdminGuests() {
   const [error, setError] = useState('');
   const [editingRsvp, setEditingRsvp] = useState<Rsvp | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
   const [deletingId, setDeletingId] = useState('');
+  const [selectedRsvpIds, setSelectedRsvpIds] = useState<Set<string>>(new Set());
   const modalRef = useRef<HTMLDivElement>(null);
   const editButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -172,6 +174,33 @@ export default function AdminGuests() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    const rsvpIds = Array.from(selectedRsvpIds);
+    if (rsvpIds.length === 0 || deletingId) return;
+
+    setDeletingId('bulk');
+    try {
+      const res = await fetch('/api/admin/guests', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rsvp_ids: rsvpIds }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        setBulkDeleteConfirm(false);
+        setSelectedRsvpIds(new Set());
+        fetchRsvps();
+      } else {
+        alert(data.error || 'Failed to delete selected RSVPs');
+      }
+    } catch {
+      alert('Error deleting selected RSVPs');
+    } finally {
+      setDeletingId('');
+    }
+  };
+
   const getStatusClass = (status: string) => {
     switch (status) {
       case 'attending': return styles.statusAttending;
@@ -210,6 +239,7 @@ export default function AdminGuests() {
       if (sortBy === 'mass') return answerLabel(a.mass_attendance).localeCompare(answerLabel(b.mass_attendance));
       return (b.submitted_at || '').localeCompare(a.submitted_at || '');
     });
+  const allFilteredSelected = filteredRsvps.length > 0 && filteredRsvps.every((rsvp) => selectedRsvpIds.has(rsvp.rsvp_id));
 
   if (loading) return <div style={{ padding: '2rem' }}>Loading RSVP submissions...</div>;
   if (error) return <div style={{ padding: '2rem', color: 'var(--color-error)' }}>{error}</div>;
@@ -269,14 +299,37 @@ export default function AdminGuests() {
         ]} />
       </div>
 
-      <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-4)' }}>
-        Showing {filteredRsvps.length} of {rsvps.length} submissions
-      </p>
+      <div className={styles.tableToolbar}>
+        <p>
+          Showing {filteredRsvps.length} of {rsvps.length} submissions
+          {selectedRsvpIds.size > 0 ? ` | ${selectedRsvpIds.size} selected` : ''}
+        </p>
+        <button type="button" onClick={() => setBulkDeleteConfirm(true)} disabled={selectedRsvpIds.size === 0 || Boolean(deletingId)}>
+          Delete selected
+        </button>
+      </div>
 
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead>
             <tr>
+              <th className={styles.th}>
+                <input
+                  type="checkbox"
+                  checked={allFilteredSelected}
+                  onChange={(e) => {
+                    setSelectedRsvpIds((current) => {
+                      const next = new Set(current);
+                      filteredRsvps.forEach((rsvp) => {
+                        if (e.target.checked) next.add(rsvp.rsvp_id);
+                        else next.delete(rsvp.rsvp_id);
+                      });
+                      return next;
+                    });
+                  }}
+                  aria-label="Select all visible RSVP submissions"
+                />
+              </th>
               <th className={styles.th}>Name</th>
               <th className={styles.th}>Email</th>
               <th className={styles.th}>Invite</th>
@@ -294,6 +347,21 @@ export default function AdminGuests() {
           <tbody>
             {filteredRsvps.map((rsvp) => (
               <tr key={rsvp.rsvp_id} className={styles.tr}>
+                <td className={styles.td}>
+                  <input
+                    type="checkbox"
+                    checked={selectedRsvpIds.has(rsvp.rsvp_id)}
+                    onChange={(e) => {
+                      setSelectedRsvpIds((current) => {
+                        const next = new Set(current);
+                        if (e.target.checked) next.add(rsvp.rsvp_id);
+                        else next.delete(rsvp.rsvp_id);
+                        return next;
+                      });
+                    }}
+                    aria-label={`Select ${rsvp.guest_name}`}
+                  />
+                </td>
                 <td className={styles.td} style={{ fontWeight: 500 }}>{rsvp.guest_name}</td>
                 <td className={styles.td}>{rsvp.email}</td>
                 <td className={styles.td}>
@@ -341,7 +409,7 @@ export default function AdminGuests() {
             ))}
             {filteredRsvps.length === 0 && (
               <tr>
-                <td colSpan={12} className={styles.td} style={{ textAlign: 'center', color: 'var(--color-text-secondary)', padding: '2rem' }}>
+                <td colSpan={13} className={styles.td} style={{ textAlign: 'center', color: 'var(--color-text-secondary)', padding: '2rem' }}>
                   No RSVP submissions found.
                 </td>
               </tr>
@@ -374,6 +442,23 @@ export default function AdminGuests() {
               <button onClick={() => setDeleteConfirm(null)} disabled={!!deletingId} style={{ padding: '0.5rem 1.25rem', border: '1px solid var(--color-border)', background: 'none', cursor: 'pointer' }}>Cancel</button>
               <button onClick={() => handleDelete(deleteConfirm)} disabled={!!deletingId} style={{ padding: '0.5rem 1.25rem', background: '#c0392b', color: 'white', border: 'none', cursor: 'pointer' }}>
                 {deletingId ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bulkDeleteConfirm && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+          onClick={(e) => { if (e.target === e.currentTarget && !deletingId) setBulkDeleteConfirm(false); }}
+        >
+          <div style={{ background: 'var(--color-surface)', padding: 'var(--spacing-8)', borderRadius: '8px', maxWidth: '420px', textAlign: 'center' }}>
+            <p style={{ marginBottom: 'var(--spacing-6)' }}>Delete {selectedRsvpIds.size} selected RSVP submission{selectedRsvpIds.size === 1 ? '' : 's'}? This cannot be undone.</p>
+            <div style={{ display: 'flex', gap: 'var(--spacing-4)', justifyContent: 'center' }}>
+              <button onClick={() => setBulkDeleteConfirm(false)} disabled={!!deletingId} style={{ padding: '0.5rem 1.25rem', border: '1px solid var(--color-border)', background: 'none', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleBulkDelete} disabled={!!deletingId} style={{ padding: '0.5rem 1.25rem', background: '#c0392b', color: 'white', border: 'none', cursor: 'pointer' }}>
+                {deletingId ? 'Deleting...' : 'Delete selected'}
               </button>
             </div>
           </div>

@@ -36,6 +36,10 @@ function cleanText(value: unknown) {
   return String(value || '').trim();
 }
 
+function getConfigText(config: Record<string, any>, key: string, fallback = '') {
+  return cleanText(config[key]) || fallback;
+}
+
 function parseDateParts(value: string) {
   const match = value.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
   if (!match) return null;
@@ -99,6 +103,27 @@ function buildEventFromDay(day: any, fallback: CalendarEvent): CalendarEvent {
   };
 }
 
+function applyConfigOverrides(event: CalendarEvent, config: Record<string, any>): CalendarEvent {
+  const prefix = event.id === 'friday' ? 'CALENDAR_FRIDAY' : 'CALENDAR_SATURDAY';
+  const defaultDate = event.id === 'friday' ? '23 October 2026' : '24 October 2026';
+  const defaultStart = event.id === 'friday' ? '6:45 PM' : '10:00 AM';
+  const defaultEnd = event.id === 'friday' ? '10:30 PM' : '1:00 PM';
+  const dateText = getConfigText(config, `${prefix}_DATE`, defaultDate);
+  const startText = getConfigText(config, `${prefix}_START_TIME`, defaultStart);
+  const endText = getConfigText(config, `${prefix}_END_TIME`, defaultEnd);
+  const start = buildDate(dateText, startText);
+  const end = buildDate(dateText, endText);
+
+  return {
+    ...event,
+    title: getConfigText(config, `${prefix}_TITLE`, event.title),
+    location: getConfigText(config, `${prefix}_VENUE`, event.location),
+    description: getConfigText(config, `${prefix}_DESCRIPTION`, event.description),
+    start,
+    end: end > start ? end : event.end,
+  };
+}
+
 export function getCalendarEvents(inviteType: CalendarInviteType | null | undefined, scheduleConfig: any, config: Record<string, any> = {}) {
   const fridayStart = buildDate('23 October 2026', '6:45 PM');
   const saturdayStart = buildDate('24 October 2026', '10:00 AM');
@@ -121,12 +146,22 @@ export function getCalendarEvents(inviteType: CalendarInviteType | null | undefi
 
   const events: CalendarEvent[] = [];
   if (inviteType === 'friday_saturday') {
-    events.push(buildEventFromDay(getScheduleDay(scheduleConfig, 'friday'), fridayFallback));
+    events.push(applyConfigOverrides(buildEventFromDay(getScheduleDay(scheduleConfig, 'friday'), fridayFallback), config));
   }
   if (inviteType === 'friday_saturday' || inviteType === 'saturday_only') {
-    events.push(buildEventFromDay(getScheduleDay(scheduleConfig, 'saturday'), saturdayFallback));
+    events.push(applyConfigOverrides(buildEventFromDay(getScheduleDay(scheduleConfig, 'saturday'), saturdayFallback), config));
   }
   return events;
+}
+
+export function formatEventDateTime(event: CalendarEvent) {
+  return `${event.start.toLocaleDateString('en-SG', { day: 'numeric', month: 'long', year: 'numeric' })}, ${event.start.toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit' })}`;
+}
+
+export function renderEventDetailsText(events: CalendarEvent[]) {
+  return events.map((event) => (
+    `${event.title}\n${formatEventDateTime(event)}\n${event.location}`
+  )).join('\n\n');
 }
 
 export function getGoogleCalendarUrl(event: CalendarEvent) {

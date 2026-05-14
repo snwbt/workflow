@@ -19,6 +19,9 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
   const imageAlt  = config?.imageAlt || (signOff || 'The couple');
   const ctaLabel  = config?.ctaLabel || 'RSVP';
   const ctaLink   = config?.ctaLink  || '#rsvp';
+  const whatsappLabel = !globalConfig?.WHATSAPP_LABEL || globalConfig.WHATSAPP_LABEL === 'Message Wedding Concierge'
+    ? 'Message Us'
+    : globalConfig.WHATSAPP_LABEL;
   
   const isExternalLink = ctaLink.startsWith('http');
   const getCtaScrollTarget = () => {
@@ -79,7 +82,7 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
               className={styles.whatsappButton}
               onClick={() => trackEvent('whatsapp_cta_clicked')}
             >
-              {t(globalConfig.WHATSAPP_LABEL || 'Message Us')}
+              {t(whatsappLabel)}
             </a>
           )}
         </div>

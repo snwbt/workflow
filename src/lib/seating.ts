@@ -40,6 +40,16 @@ function addPerson(people: SeatingPerson[], seenNames: Set<string>, person: Seat
   people.push(person);
 }
 
+function dietaryForName(rsvp: any, name: string) {
+  const entries = Array.isArray(rsvp.custom_answers?.per_guest_dietary)
+    ? rsvp.custom_answers.per_guest_dietary
+    : [];
+  const match = entries.find((entry: any) => normalize(entry?.name) === normalize(name));
+  if (!match) return rsvp.dietary_restrictions;
+  const dietary = [match.dietary, match.notes].filter(Boolean).join(' - ');
+  return dietary || rsvp.dietary_restrictions;
+}
+
 export function normalizeSeatingState(value: unknown): SeatingState {
   const state = (value || {}) as Partial<SeatingState>;
   return {
@@ -95,7 +105,7 @@ export function deriveSeatingRoster(db: any): SeatingPerson[] {
         source: 'rsvp',
         rsvpId,
         email: index === 0 ? rsvp.email : undefined,
-        dietary: rsvp.dietary_restrictions,
+        dietary: dietaryForName(rsvp, name),
         accessibility: rsvp.accessibility_requirements,
       });
     });

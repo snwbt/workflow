@@ -178,7 +178,7 @@
 }
 
 .planLayoutWithSidebar {
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 480px);
   align-items: start;
 }
 
@@ -187,7 +187,7 @@
   gap: var(--spacing-4);
   border: 1px solid var(--color-border);
   background: rgba(255, 253, 248, 0.88);
-  padding: clamp(var(--spacing-5), 2.4vw, var(--spacing-7));
+  padding: clamp(var(--spacing-6), 2.8vw, var(--spacing-8));
   box-shadow: 0 18px 60px rgba(44, 36, 32, 0.08);
 }
 

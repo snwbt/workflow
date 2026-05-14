@@ -8,6 +8,7 @@ import {
   normalizeInvitationState,
 } from '@/lib/invitations';
 import type { InvitationRecord, InvitationTemplates } from '@/lib/invitationTypes';
+import { normalizeInvitationImportRows, previewInvitationImport } from '@/lib/invitationImport';
 
 function cleanString(value: unknown) {
   return String(value || '').trim();
@@ -92,6 +93,26 @@ export async function PUT(request: Request) {
 
     let nextInvitations = state.invitations;
     const input = body.invitation as Partial<InvitationRecord> | undefined;
+
+    if (body.importRows) {
+      const rows = normalizeInvitationImportRows(body.importRows);
+      const preview = previewInvitationImport(rows, state.invitations);
+      if (body.previewOnly) {
+        return NextResponse.json({ success: true, preview });
+      }
+
+      const validRows = preview.filter((row) => row.action !== 'invalid');
+      nextInvitations = state.invitations;
+      validRows.forEach((row) => {
+        const existingCodes = nextInvitations
+          .filter((item) => item.id !== row.matchId)
+          .map((item) => item.inviteCode);
+        const sanitized = sanitizeInvitation(row.invitation, existingCodes, nextInvitations.find((item) => item.id === row.matchId));
+        nextInvitations = row.matchId
+          ? nextInvitations.map((item) => item.id === row.matchId ? sanitized : item)
+          : [...nextInvitations, sanitized];
+      });
+    }
 
     if (input?.id) {
       const existing = state.invitations.find((item) => item.id === input.id);
