@@ -42,10 +42,12 @@
 }
 
 .rsvpSection {
-  min-height: auto;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
   scroll-snap-align: start;
-  scroll-snap-stop: normal;
-  scroll-margin-top: var(--nav-height, 60px);
+  scroll-snap-stop: always;
+  scroll-margin-top: 0;
 }
 
 .compactSection.withNav,
@@ -136,7 +138,6 @@
   .naturalSection,
   .naturalSection.withNav,
   .fullscreenSection,
-  .rsvpSection,
   .motifDivider {
     min-height: auto;
     padding: var(--spacing-6) var(--spacing-4);
@@ -144,6 +145,9 @@
 
   .fullscreenSection,
   .rsvpSection {
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
     padding: 0;
   }
 }
