@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "optimize:media": "node scripts/optimize-media.mjs",
+    "data:audit": "node scripts/data-audit.mjs",
+    "data:check-clean-seed": "node scripts/data-check-clean-seed.mjs",
     "lint": "eslint"
   },
   "dependencies": {

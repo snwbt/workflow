@@ -29,6 +29,13 @@ interface BackupPreview {
   counts: Record<string, number | undefined>;
 }
 
+interface DatabaseRuntimeInfo {
+  mode: 'database' | 'seed-readonly' | 'local-json';
+  hasDatabaseUrl: boolean;
+  writable: boolean;
+  localDbInitialized: boolean;
+}
+
 const scopeOptions: { value: BackupScope; label: string }[] = [
   { value: 'rsvps', label: 'RSVP Guests' },
   { value: 'guests', label: 'Guest roster' },
@@ -61,6 +68,7 @@ export default function AdminBackupsPage() {
   });
   const [backups, setBackups] = useState<BackupListItem[]>([]);
   const [encryption, setEncryption] = useState({ dataConfigured: false, backupConfigured: false });
+  const [database, setDatabase] = useState<DatabaseRuntimeInfo | null>(null);
   const [selectedScopes, setSelectedScopes] = useState<BackupScope[]>(['rsvps', 'guests', 'invitations', 'seating']);
   const [importBackup, setImportBackup] = useState<any>(null);
   const [preview, setPreview] = useState<BackupPreview | null>(null);
@@ -82,6 +90,7 @@ export default function AdminBackupsPage() {
         setSelectedScopes(data.settings.scopes);
         setBackups(data.backups || []);
         setEncryption(data.encryption || {});
+        setDatabase(data.database || null);
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load backups.'));
   };
@@ -230,6 +239,18 @@ export default function AdminBackupsPage() {
       {(message || error) && (
         <div className={`${styles.notice} ${error ? styles.noticeError : ''}`}>
           {error || message}
+        </div>
+      )}
+
+      {database?.mode === 'seed-readonly' && (
+        <div className={`${styles.notice} ${styles.noticeError}`}>
+          Production database is not configured. Public pages can read the clean seed data, but admin changes will not persist until DATABASE_URL is set.
+        </div>
+      )}
+
+      {database?.mode === 'local-json' && (
+        <div className={styles.notice}>
+          Local development is using the ignored runtime database at data/local-db.json. The tracked seed stays clean for commits.
         </div>
       )}
 

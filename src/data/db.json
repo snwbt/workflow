@@ -116,24 +116,7 @@
     "MONOGRAM_ALT": "Russell and Siaw Min monogram",
     "ENABLE_MONOGRAM_WATERMARK": true
   },
-  "rsvps": [
-    {
-      "rsvp_id": "d240dbfc-46b0-4f60-9c3e-851779da4b0f",
-      "guest_name": "Russe",
-      "email": "russell@outlook.com",
-      "attendance_status": "attending",
-      "guest_count": 2,
-      "plus_one_name": "My partner",
-      "meal_preference": "beef",
-      "dietary_restrictions": "Not halal",
-      "transport_needed": false,
-      "message": "Congrats",
-      "custom_answers": {},
-      "submitted_at": "2026-05-11T14:51:59.124Z",
-      "updated_at": "2026-05-11T14:51:59.124Z",
-      "source": "guest"
-    }
-  ],
+  "rsvps": [],
   "homepage_sections": [
     {
       "id": "hero",
@@ -406,5 +389,12 @@
       "signOff": "Russell & Siaw Min"
     }
   ],
-  "events": []
+  "events": [],
+  "guests": [],
+  "invitations": {
+    "invitations": []
+  },
+  "seating": {
+    "assignments": []
+  }
 }

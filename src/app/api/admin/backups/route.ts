@@ -6,7 +6,7 @@ import {
   normalizeBackupSettings,
   type BackupScope,
 } from '@/lib/backups';
-import { getDb, saveBackupSettings } from '@/lib/db';
+import { getDatabaseRuntimeInfo, getDb, saveBackupSettings } from '@/lib/db';
 import { hasBackupEncryptionKey, hasDataEncryptionKey } from '@/lib/cryptoVault';
 
 export const dynamic = 'force-dynamic';
@@ -26,6 +26,7 @@ export async function GET() {
         dataConfigured: hasDataEncryptionKey(),
         backupConfigured: hasBackupEncryptionKey(),
       },
+      database: getDatabaseRuntimeInfo(),
     }));
   } catch (error) {
     console.error('Error loading backups:', error);

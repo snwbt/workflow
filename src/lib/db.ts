@@ -9,7 +9,8 @@ import { normalizeInvitationState } from './invitations';
 import { decryptDataIfNeeded, encryptDataIfConfigured, hasDataEncryptionKey } from './cryptoVault';
 import type { InvitationState } from './invitationTypes';
 
-const dbPath = path.join(process.cwd(), 'src/data/db.json');
+const seedDbPath = path.join(process.cwd(), 'src/data/db.json');
+const localDbPath = path.join(process.cwd(), 'data/local-db.json');
 
 type SqlClient = ReturnType<typeof neon>;
 
@@ -75,9 +76,44 @@ function getSql() {
   return sqlClient;
 }
 
-function readJsonDbRaw() {
-  const fileContents = fs.readFileSync(dbPath, 'utf8');
+function readSeedDbRaw() {
+  const fileContents = fs.readFileSync(seedDbPath, 'utf8');
   return JSON.parse(fileContents);
+}
+
+function ensureLocalJsonDb() {
+  if (fs.existsSync(localDbPath)) return;
+
+  fs.mkdirSync(path.dirname(localDbPath), { recursive: true });
+  fs.writeFileSync(localDbPath, JSON.stringify(readSeedDbRaw(), null, 2), 'utf8');
+}
+
+function readJsonDbRaw() {
+  if (isVercelRuntime()) {
+    return readSeedDbRaw();
+  }
+
+  ensureLocalJsonDb();
+  const fileContents = fs.readFileSync(localDbPath, 'utf8');
+  return JSON.parse(fileContents);
+}
+
+function writeJsonDbRaw(data: unknown) {
+  assertWritableJsonFallback();
+  ensureLocalJsonDb();
+  fs.writeFileSync(localDbPath, JSON.stringify(data, null, 2), 'utf8');
+}
+
+export function getDatabaseRuntimeInfo() {
+  const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+  const vercelRuntime = isVercelRuntime();
+
+  return {
+    mode: hasDatabaseUrl ? 'database' : vercelRuntime ? 'seed-readonly' : 'local-json',
+    hasDatabaseUrl,
+    writable: hasDatabaseUrl || !vercelRuntime,
+    localDbInitialized: fs.existsSync(localDbPath),
+  };
 }
 
 function decodeStateValue(key: string, value: unknown) {
@@ -261,12 +297,18 @@ async function seedFromJson(sql: SqlClient) {
 
   const siteCountRows = await sql`SELECT COUNT(*)::int AS count FROM site_state` as Array<{ count: number }>;
   const rsvpCountRows = await sql`SELECT COUNT(*)::int AS count FROM rsvps` as Array<{ count: number }>;
+  const rsvpStateCountRows = await sql`
+    SELECT COUNT(*)::int AS count
+    FROM site_state
+    WHERE key IN ('rsvps', 'rsvps_secure')
+  ` as Array<{ count: number }>;
   const authCountRows = await sql`SELECT COUNT(*)::int AS count FROM admin_auth` as Array<{ count: number }>;
   const siteCount = siteCountRows[0]?.count || 0;
   const rsvpCount = rsvpCountRows[0]?.count || 0;
+  const rsvpStateCount = rsvpStateCountRows[0]?.count || 0;
   const authCount = authCountRows[0]?.count || 0;
 
-  const seed = readJsonDbRaw();
+  const seed = readSeedDbRaw();
 
   if (siteCount === 0) {
     await upsertSiteState(sql, 'config', stripPrivateConfig(seed.config || {}));
@@ -277,9 +319,9 @@ async function seedFromJson(sql: SqlClient) {
     await upsertSiteState(sql, 'invitations', normalizeInvitationState(seed.invitations));
   }
 
-  if (rsvpCount === 0 && hasDataEncryptionKey()) {
+  if (rsvpCount === 0 && rsvpStateCount === 0 && hasDataEncryptionKey()) {
     await upsertSiteState(sql, 'rsvps_secure', seed.rsvps || []);
-  } else if (rsvpCount === 0) {
+  } else if (rsvpCount === 0 && rsvpStateCount === 0) {
     for (const rsvp of seed.rsvps || []) {
       await insertRsvp(sql, rsvp);
     }
@@ -311,8 +353,6 @@ async function ensureDatabase() {
 }
 
 function saveJsonDb(data: any) {
-  assertWritableJsonFallback();
-
   const existing = readJsonDbRaw();
   const merged = {
     ...existing,
@@ -326,23 +366,19 @@ function saveJsonDb(data: any) {
   for (const key of sensitiveStateKeys) {
     if (key in merged) merged[key] = encodeStateValue(key, merged[key]);
   }
-  fs.writeFileSync(dbPath, JSON.stringify(merged, null, 2), 'utf8');
+  writeJsonDbRaw(merged);
 }
 
 function saveJsonDbKey(key: string, value: unknown) {
-  assertWritableJsonFallback();
-
   const existing = readJsonDbRaw();
   const merged = {
     ...existing,
     [key]: encodeStateValue(key, value),
   };
-  fs.writeFileSync(dbPath, JSON.stringify(merged, null, 2), 'utf8');
+  writeJsonDbRaw(merged);
 }
 
 function saveJsonConfig(config: Record<string, unknown>) {
-  assertWritableJsonFallback();
-
   const existing = readJsonDbRaw();
   const merged = {
     ...existing,
@@ -352,7 +388,7 @@ function saveJsonConfig(config: Record<string, unknown>) {
       ADMIN_AUTH: existing.config?.ADMIN_AUTH,
     },
   };
-  fs.writeFileSync(dbPath, JSON.stringify(merged, null, 2), 'utf8');
+  writeJsonDbRaw(merged);
 }
 
 export async function getDb() {
@@ -673,7 +709,7 @@ export async function saveAdminAuth(auth: AdminAuthRecord) {
       ...(db.config || {}),
       ADMIN_AUTH: auth,
     };
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2), 'utf8');
+    writeJsonDbRaw(db);
     return;
   }
 
