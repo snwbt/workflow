@@ -126,6 +126,7 @@ function DestinationPanel({
   const { t } = useSiteText();
   const cards = getTravelCards(venue);
   const mapsUrl = getGoogleMapsUrl(venue);
+  const translateMultiline = (value: string) => value.split('\n\n').map((part) => t(part)).join('\n\n');
 
   return (
     <article
@@ -151,7 +152,7 @@ function DestinationPanel({
               <div className={styles.cardBody}>
                 <span className={styles.cardMode}>{t(card.mode)}</span>
                 <h4 className={styles.cardTitle}>{t(card.title)}</h4>
-                <p className={styles.cardContent}>{t(card.content)}</p>
+                <p className={styles.cardContent}>{translateMultiline(card.content)}</p>
               </div>
             </div>
           ))}

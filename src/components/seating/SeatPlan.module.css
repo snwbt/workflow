@@ -19,12 +19,26 @@
   background: #fcf9f5;
 }
 
-.ballroom,
-.leftPanel {
+.ballroom {
   fill: none;
   stroke: rgba(184, 168, 138, 0.58);
   stroke-dasharray: 8 4;
   stroke-width: 1.2;
+}
+
+.stageBox {
+  fill: rgba(212, 197, 169, 0.18);
+  stroke: rgba(145, 112, 74, 0.72);
+  stroke-width: 1.4;
+}
+
+.stageText {
+  fill: var(--color-espresso, #2c2420);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .door {
@@ -125,10 +139,10 @@
 .routePath {
   fill: none;
   stroke: var(--seatplan-route);
-  stroke-width: 8;
+  stroke-width: 7;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 18 14;
+  stroke-dasharray: 20 16;
   opacity: 0.94;
 }
 

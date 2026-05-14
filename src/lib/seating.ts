@@ -211,11 +211,30 @@ export function searchAssignedGuests(
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
     .filter(({ person }) => normalize(person.displayName).includes(normalizedQuery))
     .slice(0, 8)
-    .map(({ assignment, person, table }) => ({
-      personId: person.id,
-      displayName: person.displayName,
-      tableId: table.id,
-      tableLabel: table.label,
-      seatNumber: assignment.seatNumber,
-    }));
+    .map(({ assignment, person, table }) => {
+      const tablemates = assignments
+        .filter((mateAssignment) => mateAssignment.tableId === table.id && mateAssignment.personId !== person.id)
+        .map((mateAssignment) => {
+          const mate = peopleById.get(mateAssignment.personId);
+          if (!mate) return null;
+          return {
+            personId: mate.id,
+            displayName: mate.displayName,
+            tableId: table.id,
+            tableLabel: table.label,
+            seatNumber: mateAssignment.seatNumber,
+          };
+        })
+        .filter((item): item is NonNullable<typeof item> => Boolean(item))
+        .sort((a, b) => a.seatNumber - b.seatNumber);
+
+      return {
+        personId: person.id,
+        displayName: person.displayName,
+        tableId: table.id,
+        tableLabel: table.label,
+        seatNumber: assignment.seatNumber,
+        tablemates,
+      };
+    });
 }

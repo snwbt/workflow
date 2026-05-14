@@ -5,6 +5,8 @@ import path from 'path';
 import { neon } from '@neondatabase/serverless';
 import { defaultSeatingState } from './seatingDefaults';
 import { normalizeSeatingState } from './seating';
+import { normalizeInvitationState } from './invitations';
+import type { InvitationState } from './invitationTypes';
 
 const dbPath = path.join(process.cwd(), 'src/data/db.json');
 
@@ -90,6 +92,7 @@ function normalizeDb(data: any) {
     guests: data?.guests || [],
     events: data?.events || [],
     seating: normalizeSeatingState(data?.seating || defaultSeatingState),
+    invitations: normalizeInvitationState(data?.invitations),
   };
 }
 
@@ -250,6 +253,7 @@ async function seedFromJson(sql: SqlClient) {
     await upsertSiteState(sql, 'guests', seed.guests || []);
     await upsertSiteState(sql, 'events', seed.events || []);
     await upsertSiteState(sql, 'seating', normalizeSeatingState(seed.seating || defaultSeatingState));
+    await upsertSiteState(sql, 'invitations', normalizeInvitationState(seed.invitations));
   }
 
   if (rsvpCount === 0) {
@@ -369,6 +373,7 @@ export async function getDb() {
     guests: state.guests || [],
     events: state.events || [],
     seating: normalizeSeatingState(state.seating || defaultSeatingState),
+    invitations: normalizeInvitationState(state.invitations),
     rsvps: rsvps.map((rsvp: any) => ({
       ...rsvp,
       submitted_at: rsvp.submitted_at instanceof Date ? rsvp.submitted_at.toISOString() : rsvp.submitted_at,
@@ -389,6 +394,7 @@ export async function saveDb(data: any) {
   await upsertSiteState(sql, 'guests', data.guests || []);
   await upsertSiteState(sql, 'events', data.events || []);
   await upsertSiteState(sql, 'seating', normalizeSeatingState(data.seating || defaultSeatingState));
+  await upsertSiteState(sql, 'invitations', normalizeInvitationState(data.invitations));
 
   await sql`DELETE FROM rsvps`;
   for (const rsvp of data.rsvps || []) {
@@ -454,6 +460,22 @@ export async function saveSeating(seating: unknown) {
 
   await upsertSiteState(sql, 'seating', nextSeating);
   return nextSeating;
+}
+
+export async function saveInvitations(invitations: InvitationState) {
+  const nextInvitations = normalizeInvitationState({
+    ...invitations,
+    updatedAt: new Date().toISOString(),
+  });
+  const sql = await ensureDatabase();
+
+  if (!sql) {
+    saveJsonDbKey('invitations', nextInvitations);
+    return nextInvitations;
+  }
+
+  await upsertSiteState(sql, 'invitations', nextInvitations);
+  return nextInvitations;
 }
 
 export async function saveRsvps(rsvps: RsvpRecord[]) {

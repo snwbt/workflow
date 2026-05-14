@@ -78,3 +78,34 @@ export async function sendAdminNotification(
     console.error('Failed to send admin notification:', error);
   }
 }
+
+export async function sendInvitationEmail(
+  guestEmail: string,
+  subject: string,
+  message: string,
+  coupleNames = 'Russell & Siaw Min'
+) {
+  if (!resend) {
+    console.log('Resend not configured, skipping invitation email to:', guestEmail);
+    return;
+  }
+
+  const safeMessage = message
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br />');
+
+  await resend.emails.send({
+    from: `${coupleNames} <${fromEmail}>`,
+    to: guestEmail,
+    subject,
+    html: `
+      <div style="font-family: Georgia, serif; color: #2c2420; max-width: 640px; margin: 0 auto; padding: 28px; background: #fffaf3;">
+        <div style="border: 1px solid #d8c7a6; padding: 28px; background: #fffdf8;">
+          <div style="font-size: 17px; line-height: 1.7;">${safeMessage}</div>
+        </div>
+      </div>
+    `,
+  });
+}

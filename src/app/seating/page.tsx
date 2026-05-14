@@ -14,6 +14,7 @@ interface SearchResult {
   tableId: string;
   tableLabel: string;
   seatNumber: number;
+  tablemates?: SearchResult[];
 }
 
 export default function SeatingPage() {
@@ -74,18 +75,33 @@ export default function SeatingPage() {
 
   const publicAssignment: SeatingAssignment[] = useMemo(() => (
     selected
-      ? [{ personId: selected.personId, tableId: selected.tableId, seatNumber: selected.seatNumber }]
+      ? [
+          { personId: selected.personId, tableId: selected.tableId, seatNumber: selected.seatNumber },
+          ...(selected.tablemates || []).map((mate) => ({
+            personId: mate.personId,
+            tableId: mate.tableId,
+            seatNumber: mate.seatNumber,
+          })),
+        ]
       : []
   ), [selected]);
 
   const publicRoster: SeatingPerson[] = useMemo(() => (
     selected
-      ? [{
-          id: selected.personId,
-          displayName: selected.displayName,
-          firstName: selected.displayName.split(/\s+/)[0] || selected.displayName,
-          source: 'rsvp',
-        }]
+      ? [
+          {
+            id: selected.personId,
+            displayName: selected.displayName,
+            firstName: selected.displayName.split(/\s+/)[0] || selected.displayName,
+            source: 'rsvp',
+          },
+          ...(selected.tablemates || []).map((mate) => ({
+            id: mate.personId,
+            displayName: mate.displayName,
+            firstName: mate.displayName.split(/\s+/)[0] || mate.displayName,
+            source: 'rsvp' as const,
+          })),
+        ]
       : []
   ), [selected]);
 
@@ -170,15 +186,36 @@ export default function SeatingPage() {
             )}
           </div>
 
-          <SeatPlan
-            floorplan={floorplan}
-            assignments={publicAssignment}
-            roster={publicRoster}
-            selectedPersonId={selected?.personId}
-            selectedSeat={selected ? { tableId: selected.tableId, seatNumber: selected.seatNumber } : null}
-            wayfinding={Boolean(selected)}
-            readonly
-          />
+          <div className={`${styles.planLayout} ${selected ? styles.planLayoutWithSidebar : ''}`}>
+            <SeatPlan
+              floorplan={floorplan}
+              assignments={publicAssignment}
+              roster={publicRoster}
+              selectedPersonId={selected?.personId}
+              selectedSeat={selected ? { tableId: selected.tableId, seatNumber: selected.seatNumber } : null}
+              wayfinding={Boolean(selected)}
+              readonly
+            />
+
+            {selected && (
+              <aside className={styles.tablemates} aria-label={t('Guests at your table')}>
+                <span className={styles.eyebrow}>{t('Guests at your table')}</span>
+                <h3>{t('Table {table}', { table: selected.tableLabel })}</h3>
+                <ul>
+                  <li className={styles.currentGuest}>
+                    <strong>{selected.displayName}</strong>
+                    <span>{t('Seat {seat}', { seat: selected.seatNumber })}</span>
+                  </li>
+                  {(selected.tablemates || []).map((mate) => (
+                    <li key={mate.personId}>
+                      <strong>{mate.displayName}</strong>
+                      <span>{t('Seat {seat}', { seat: mate.seatNumber })}</span>
+                    </li>
+                  ))}
+                </ul>
+              </aside>
+            )}
+          </div>
         </section>
       )}
     </main>

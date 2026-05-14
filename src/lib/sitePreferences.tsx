@@ -98,6 +98,7 @@ const zh: Record<string, string> = {
   'Evening Concludes': '晚宴结束',
   'Thank you for joining us on this special evening. We look forward to saying goodbye before you depart.': '感谢您与我们共度这个特别夜晚。离席前期待与您道别。',
   'Church of the Holy Family': '圣家堂',
+  'Church of The Holy Family': '圣家堂',
   'Kindly arrive early to be seated before Mass begins.': '请提早抵达，以便在弥撒开始前入座。',
   'Nuptial Mass': '婚配弥撒',
   'Join us as we celebrate the sacrament of matrimony in the presence of family and friends.': '欢迎与我们一起在亲友见证下庆祝婚姻圣事。',
@@ -112,6 +113,14 @@ const zh: Record<string, string> = {
   'Set above Marina Bay, the celebration will take place in the Grand Ballroom on Level 3.': '婚礼庆祝将在滨海湾上方的新加坡威斯汀酒店三楼大宴会厅举行。',
   '12 Marina View, Asia Square Tower 2, Singapore 018961': '新加坡 Marina View 12号，Asia Square Tower 2，邮区018961',
   '6 Chapel Road, Singapore 429509': '新加坡 Chapel Road 6号，邮区429509',
+  'Marine Parade MRT (TE26)': 'Marine Parade 地铁站 (TE26)',
+  'Take the Thomson-East Coast Line to Marine Parade MRT (TE26). Use Exit 4 and walk approximately 7 minutes to Church of the Holy Family via Marine Parade Road and Chapel Road.': '乘搭汤申-东海岸线至 Marine Parade 地铁站 (TE26)，从 4 号出口出站，经 Marine Parade Road 和 Chapel Road 步行约7分钟到圣家堂。',
+  'The Holy Family Church': '圣家堂',
+  'Alight at Bus Stop 92129, The Holy Family Church, and walk approximately 1 minute to the church. Alternatively, alight at Bus Stop 92121, Opp The Holy Family Church, and cross East Coast Road to the venue.': '在巴士站 92129（The Holy Family Church）下车，步行约1分钟到教堂。也可在巴士站 92121（Opp The Holy Family Church）下车，穿过 East Coast Road 前往场地。',
+  'Limited parking is available. Guests are encouraged to carpool, take public transport, or use nearby public parking in the Katong / Marine Parade area where available.': '现场停车位有限。建议宾客共乘、搭乘公共交通，或使用 Katong / Marine Parade 一带附近的公共停车场。',
+  'Drop-off is at the church entrance along Chapel Road. Taxis and private hire vehicles may stop here, subject to onsite traffic conditions.': '可在 Chapel Road 沿线的教堂入口下车。德士与私召车可在此停靠，视现场交通情况而定。',
+  'From nearby Katong / Marine Parade hotels, take a short taxi or private hire ride to Church of the Holy Family, 6 Chapel Road. Guests staying near Marine Parade MRT, Parkway Parade, i12 Katong or Katong V may also walk to the church via Marine Parade Road and Chapel Road.': '从附近的 Katong / Marine Parade 酒店出发，可乘搭短程德士或私召车前往圣家堂（6 Chapel Road）。住在 Marine Parade MRT、Parkway Parade、i12 Katong 或 Katong V 附近的宾客，也可经 Marine Parade Road 和 Chapel Road 步行前往教堂。',
+  'Marine Parade MRT Exit 4 has lift access. Guests requiring mobility assistance may be dropped off near the church entrance along Chapel Road. Please contact the church in advance if special assistance is required.': 'Marine Parade 地铁站 4 号出口设有电梯。需要行动协助的宾客可在 Chapel Road 教堂入口附近下车。如需特别协助，请提前联系教堂。',
   'Valet parking is available at the main entrance.': '酒店正门提供代客泊车服务。',
   'Please arrive early to settle in before Mass begins.': '请提早抵达，以便在弥撒开始前安顿入座。',
   'A weekend of family, friends, and the city we love.': '与家人、朋友，以及我们喜爱的城市共度周末。',
@@ -220,8 +229,12 @@ const zh: Record<string, string> = {
   'Your table will highlight here after you choose your search result.': '选择搜索结果后，您的餐桌会在此标示。',
   'Back to results': '返回结果',
   'Back to main page': '返回主页',
+  'Guests at your table': '同桌宾客',
+  'Table {table}': '第{table}桌',
+  'Seat {seat}': '第{seat}座',
   'Wedding dinner seating plan': '婚宴座位图',
   'Wedding aisle': '婚礼通道',
+  'Stage': '舞台',
   'Entrance': '入口',
   'You are entering from here': '请从这里入场',
   'Screen': '屏幕',
@@ -250,6 +263,20 @@ const zh: Record<string, string> = {
 
 const SitePreferencesContext = createContext<SitePreferences | null>(null);
 const missingTranslations = new Set<string>();
+
+function normalizeTranslationKey(value: string) {
+  return value
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
+function getMandarinTranslation(source: string) {
+  if (zh[source]) return zh[source];
+  const normalizedSource = normalizeTranslationKey(source);
+  const match = Object.entries(zh).find(([key]) => normalizeTranslationKey(key) === normalizedSource);
+  return match?.[1];
+}
 
 function applyTemplate(text: string, vars?: Record<string, string | number>) {
   if (!vars) return text;
@@ -298,11 +325,12 @@ export function SitePreferencesProvider({ children }: { children: React.ReactNod
       if (!text) return '';
       const source = String(text);
       if (language !== 'zh') return applyTemplate(source, vars);
-      if (!zh[source] && process.env.NODE_ENV === 'development' && !missingTranslations.has(source)) {
+      const translated = getMandarinTranslation(source);
+      if (!translated && process.env.NODE_ENV === 'development' && !missingTranslations.has(source)) {
         missingTranslations.add(source);
         console.warn(`[i18n] Missing Mandarin translation: ${source}`);
       }
-      return applyTemplate(zh[source] || source, vars);
+      return applyTemplate(translated || source, vars);
     },
   }), [fontScale, language]);
 

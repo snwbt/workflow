@@ -534,8 +534,8 @@ export default function EditorPage() {
         <input className={styles.input} value={activeSection?.date || ''} onChange={(e) => updateActiveSection('date', e.target.value)} />
       </div>
       <div className={styles.formGroup}>
-        <label className={styles.label}>Venue Text</label>
-        <input className={styles.input} value={activeSection?.venueText || ''} onChange={(e) => updateActiveSection('venueText', e.target.value)} />
+        <label className={styles.label}>Venue Text (one venue per line)</label>
+        <textarea className={styles.textarea} rows={3} value={activeSection?.venueText || ''} onChange={(e) => updateActiveSection('venueText', e.target.value)} />
       </div>
       <div style={{display: 'flex', gap: '1rem'}}>
         <div className={styles.formGroup} style={{flex: 1}}>
@@ -764,8 +764,8 @@ export default function EditorPage() {
         <input className={styles.input} value={activeSection?.date || ''} onChange={(e) => updateActiveSection('date', e.target.value)} />
       </div>
       <div className={styles.formGroup}>
-        <label className={styles.label}>Venue Text</label>
-        <input className={styles.input} value={activeSection?.venueText || ''} onChange={(e) => updateActiveSection('venueText', e.target.value)} placeholder={config.VENUE_NAME || 'The Westin Singapore'} />
+        <label className={styles.label}>Venue Text (one venue per line)</label>
+        <textarea className={styles.textarea} rows={3} value={activeSection?.venueText || ''} onChange={(e) => updateActiveSection('venueText', e.target.value)} placeholder={[config.VENUE_NAME, config.VENUE_DAY_TWO_NAME].filter(Boolean).join('\n') || 'The Westin Singapore'} />
       </div>
       <div style={{display: 'flex', gap: '1rem'}}>
         <div className={styles.formGroup} style={{flex: 1}}>

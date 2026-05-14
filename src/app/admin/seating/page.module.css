@@ -66,9 +66,10 @@
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(720px, 1fr) minmax(360px, clamp(420px, 34vw, 620px));
   gap: var(--spacing-6);
   align-items: start;
+  overflow: hidden;
 }
 
 .planPanel,
@@ -82,6 +83,7 @@
 .rosterPanel {
   display: grid;
   gap: var(--spacing-4);
+  min-width: 0;
   padding: var(--spacing-4);
 }
 
@@ -156,6 +158,7 @@
 
 .assignmentTable {
   width: 100%;
+  min-width: 520px;
   border-collapse: collapse;
   font-size: 0.82rem;
 }

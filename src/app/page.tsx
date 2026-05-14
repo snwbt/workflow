@@ -55,7 +55,7 @@ export default async function Home() {
         {/* Hero — full-screen, no nav padding needed */}
         {(!config.hero || config.hero.enabled) && (
           <div className={`${styles.section} ${styles.themeHero}`}>
-            <HeroSection config={config.hero} />
+            <HeroSection config={config.hero} globalConfig={globalConfig} />
           </div>
         )}
 

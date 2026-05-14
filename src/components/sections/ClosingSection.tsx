@@ -14,7 +14,7 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
   const heading   = config?.heading  || 'We cannot wait to celebrate with you.';
   const signOff   = config?.signOff  || '';
   const date      = config?.date     || '';
-  const venueText = config?.venueText || globalConfig?.VENUE_NAME || '';
+  const venueText = config?.venueText || [globalConfig?.VENUE_NAME, globalConfig?.VENUE_DAY_TWO_NAME].filter(Boolean).join('\n');
   const mediaSrc  = config?.mediaUrl || '/media/couple-closing.jpg';
   const imageAlt  = config?.imageAlt || (signOff || 'The couple');
   const ctaLabel  = config?.ctaLabel || 'RSVP';
@@ -51,7 +51,13 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
         )}
 
         {date && <p className={styles.date}>{t(date)}</p>}
-        {venueText && <p className={styles.venueText}>{t(venueText)}</p>}
+        {venueText && (
+          <p className={styles.venueText}>
+            {String(venueText).split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => (
+              <span key={line}>{t(line)}</span>
+            ))}
+          </p>
+        )}
         
         <div className={styles.ctaGroup}>
           <a

@@ -13,7 +13,7 @@ interface CollageImage {
   alt?: string;
 }
 
-export default function HeroSection({ config }: { config?: any }) {
+export default function HeroSection({ config, globalConfig }: { config?: any; globalConfig?: any }) {
   const { ref, progress } = useScrollProgress();
   const { t } = useSiteText();
   const [activeMobileImage, setActiveMobileImage] = useState(0);
@@ -26,7 +26,7 @@ export default function HeroSection({ config }: { config?: any }) {
   const heading = config?.heading || 'Russell & Siaw Min';
   const eyebrow = config?.eyebrow || 'The Wedding Of';
   const date = config?.date || '';
-  const venueText = config?.venueText || '';
+  const venueText = config?.venueText || [globalConfig?.VENUE_NAME, globalConfig?.VENUE_DAY_TWO_NAME].filter(Boolean).join('\n');
   const ctaLabel = config?.ctaLabel || 'RSVP';
   const ctaLink = config?.ctaLink || '#rsvp';
 
@@ -43,6 +43,7 @@ export default function HeroSection({ config }: { config?: any }) {
   const img2 = collageImages[2] || null;
   const headingParts = heading.split(/\s*&\s*/);
   const hasStyledAmpersand = headingParts.length === 2 && headingParts.every(Boolean);
+  const venueLines = String(venueText || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
 
   const isExternalLink = ctaLink.startsWith('http');
   const getCtaScrollTarget = () => {
@@ -167,7 +168,9 @@ export default function HeroSection({ config }: { config?: any }) {
           </h1>
           <div className={styles.details}>
             {date && <span>{t(date)}</span>}
-            {venueText && <span>{t(venueText)}</span>}
+            {venueLines.map((line) => (
+              <span key={line}>{t(line)}</span>
+            ))}
           </div>
 
           <a

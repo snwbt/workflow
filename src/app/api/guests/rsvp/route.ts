@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getDb, saveRsvp } from '@/lib/db';
+import { getDb, saveInvitations, saveRsvp } from '@/lib/db';
 import { randomUUID } from 'crypto';
 import { sendRsvpConfirmation, sendAdminNotification } from '@/lib/email';
+import { findInvitationByCode, normalizeInvitationState } from '@/lib/invitations';
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -57,14 +58,16 @@ export async function POST(request: Request) {
     }
 
     const normalizeCode = (value: unknown) => String(value || '').trim().toLowerCase();
+    const invitationState = normalizeInvitationState(db.invitations);
+    const matchedInvitation = findInvitationByCode(invitationState, invite_code);
     const fridaySaturdayCode = normalizeCode(db.config?.RSVP_INVITE_CODE_FRIDAY_SATURDAY || 'FRISAT');
     const saturdayOnlyCode = normalizeCode(db.config?.RSVP_INVITE_CODE_SATURDAY || 'SATURDAY');
     const submittedCode = normalizeCode(invite_code);
-    const resolvedInviteType = submittedCode === fridaySaturdayCode
+    const resolvedInviteType = matchedInvitation?.inviteType || (submittedCode === fridaySaturdayCode
       ? 'friday_saturday'
       : submittedCode === saturdayOnlyCode
         ? 'saturday_only'
-        : '';
+        : '');
 
     if (!resolvedInviteType || resolvedInviteType !== invite_type) {
       return NextResponse.json({ error: 'Please enter a valid invite code.' }, { status: 400 });
@@ -128,6 +131,17 @@ export async function POST(request: Request) {
     }
 
     await saveRsvp(newRsvp);
+
+    if (matchedInvitation) {
+      await saveInvitations({
+        ...invitationState,
+        invitations: invitationState.invitations.map((invite) => (
+          invite.id === matchedInvitation.id
+            ? { ...invite, submittedAt: newRsvp.submitted_at, updatedAt: new Date().toISOString() }
+            : invite
+        )),
+      });
+    }
 
     // Format details for email
     let detailsStr = '';

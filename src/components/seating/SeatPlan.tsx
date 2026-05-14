@@ -39,10 +39,14 @@ interface ViewBoxRect {
   height: number;
 }
 
-const FOLLOW_WIDTH = 500;
-const ROUTE_DRAW_DELAY = 300;
-const ROUTE_DRAW_DURATION = 2;
+const FOLLOW_WIDTH = 560;
+const ROUTE_DRAW_DELAY = 520;
+const ROUTE_DRAW_DURATION = 4.4;
 const EASE_ELEGANT = [0.22, 1, 0.36, 1] as const;
+const AISLE_Y = 335;
+const AISLE_JOIN_X = 1620;
+const CORRIDOR_TURN_Y = 380;
+const ARC_RADIUS = 45;
 
 function seatPosition(table: Table, angle: number, radius: number) {
   const rad = (angle * Math.PI) / 180;
@@ -76,16 +80,16 @@ function buildWayfindingRoute(floorplan: FloorPlanData, selectedSeat?: { tableId
   const seatPoint = seatPosition(table, seat.angle, seat.radius);
   const entranceX = floorplan.entrance.cx;
   const entranceY = floorplan.entrance.cy - floorplan.entrance.height / 2;
-  const aisleY = floorplan.walkway.labelPosition?.y ?? Math.min(Math.max(table.cy, 300), 370);
-  const approachX = Math.max(220, Math.min(table.cx, floorplan.viewBox.width - 160));
-  const approachY = table.cy > aisleY ? Math.min(table.cy - 70, aisleY + 120) : Math.max(table.cy + 70, aisleY - 120);
+  const approachX = Math.max(220, Math.min(table.cx, AISLE_JOIN_X));
+  const verticalLeadY = table.cy > AISLE_Y ? Math.min(table.cy - table.rx - 34, AISLE_Y + 180) : Math.max(table.cy + table.rx + 34, AISLE_Y - 160);
 
   return {
     path: [
       `M ${entranceX} ${entranceY}`,
-      `L ${entranceX} ${aisleY + 42}`,
-      `Q ${entranceX} ${aisleY} ${approachX} ${aisleY}`,
-      `L ${approachX} ${approachY}`,
+      `L ${entranceX} ${CORRIDOR_TURN_Y}`,
+      `A ${ARC_RADIUS} ${ARC_RADIUS} 0 0 0 ${AISLE_JOIN_X} ${AISLE_Y}`,
+      `L ${approachX} ${AISLE_Y}`,
+      `C ${approachX} ${AISLE_Y} ${approachX} ${verticalLeadY} ${approachX} ${verticalLeadY}`,
       `Q ${approachX} ${table.cy} ${table.cx} ${table.cy}`,
       `L ${seatPoint.cx} ${seatPoint.cy}`,
     ].join(' '),
@@ -229,7 +233,7 @@ export default function SeatPlan({
 
     const followHeight = Math.round(FOLLOW_WIDTH * (floorplan.viewBox.height / floorplan.viewBox.width));
     const entranceView = centerViewBox(floorplan, floorplan.entrance.cx, floorplan.entrance.cy, FOLLOW_WIDTH, followHeight);
-    animateViewBox(entranceView, 0.6);
+    animateViewBox(entranceView, 0.95);
 
     let unsubscribeProgress: (() => void) | null = null;
     const timers: number[] = [];
@@ -256,12 +260,12 @@ export default function SeatPlan({
           unsubscribeProgress?.();
           unsubscribeProgress = null;
           const focusView = centerViewBox(floorplan, route.focusX, route.focusY, 540, Math.round(540 * (floorplan.viewBox.height / floorplan.viewBox.width)));
-          animateViewBox(focusView, 0.82);
+          animateViewBox(focusView, 1.15);
 
           const settleTimer = window.setTimeout(() => {
-            animateViewBox(fullView, 0.9);
+            animateViewBox(fullView, 1.25);
             setRouteSettled(true);
-          }, 1250);
+          }, 1650);
           timers.push(settleTimer);
         },
       });
@@ -310,9 +314,14 @@ export default function SeatPlan({
           <rect key={x} x={x} y={622} width={60} height={12} rx={2} className={styles.door} />
         ))}
 
-        <rect x={55} y={140} width={120} height={360} rx={6} className={styles.leftPanel} />
+        <g>
+          <rect x={55} y={140} width={120} height={360} rx={6} className={styles.stageBox} />
+          <text x={115} y={320} textAnchor="middle" dominantBaseline="central" className={styles.stageText}>
+            {t('Stage')}
+          </text>
+        </g>
 
-        {floorplan.decorations.map((decoration, index) => (
+        {floorplan.decorations.filter((decoration) => !['Rostrum', 'Wedding\nCake', 'Champagne\nFountain'].includes(decoration.label)).map((decoration, index) => (
           <g key={`${decoration.type}-${index}`}>
             <rect
               x={decoration.cx - decoration.width / 2}

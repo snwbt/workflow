@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useReveal } from '@/hooks/useReveal';
 import styles from './RsvpSection.module.css';
 import { trackEvent } from '@/lib/analytics';
@@ -40,6 +40,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
 
   const [inviteCode, setInviteCode] = useState('');
   const [inviteType, setInviteType] = useState<InviteType | null>(null);
+  const [prefillInvite, setPrefillInvite] = useState<{ code: string; type: InviteType } | null>(null);
   const [guestName, setGuestName] = useState('');
   const [email, setEmail] = useState('');
   const [attendance, setAttendance] = useState<AttendanceStatus | null>(null);
@@ -72,10 +73,36 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
 
   const resolveInviteType = (code: string): InviteType | null => {
     const normalized = normalizeCode(code);
+    if (prefillInvite && normalized === normalizeCode(prefillInvite.code)) return prefillInvite.type;
     if (normalized && normalized === normalizeCode(fridaySaturdayCode)) return 'friday_saturday';
     if (normalized && normalized === normalizeCode(saturdayOnlyCode)) return 'saturday_only';
     return null;
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('invite') || params.get('code');
+    if (!code) return;
+
+    setInviteCode(code);
+
+    fetch(`/api/guests/invitation?code=${encodeURIComponent(code)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        if (data.guestName) setGuestName(data.guestName);
+        if (data.email) setEmail(data.email);
+        if (data.inviteCode && data.inviteType) {
+          setInviteCode(data.inviteCode);
+          setPrefillInvite({ code: data.inviteCode, type: data.inviteType });
+        }
+      })
+      .catch(() => {
+        setPrefillInvite(null);
+      });
+  }, []);
 
   const fieldInvalid = (value: unknown) => hasSubmitted && !value;
   const additionalNamesRequired = attendance === 'attending' && guestCount > 1;
@@ -99,23 +126,48 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
     });
   };
 
-  const handleInitialSubmit = (e: React.FormEvent) => {
+  const handleInitialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setHasSubmitted(true);
 
-    const resolvedType = resolveInviteType(inviteCode);
+    let resolvedType = resolveInviteType(inviteCode);
+    let nextGuestName = guestName;
+    let nextEmail = email;
+
+    if (!resolvedType && inviteCode.trim()) {
+      try {
+        const res = await fetch(`/api/guests/invitation?code=${encodeURIComponent(inviteCode.trim())}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.inviteCode && data.inviteType) {
+            setPrefillInvite({ code: data.inviteCode, type: data.inviteType });
+            if (!guestName.trim() && data.guestName) {
+              nextGuestName = data.guestName;
+              setGuestName(data.guestName);
+            }
+            if (!email.trim() && data.email) {
+              nextEmail = data.email;
+              setEmail(data.email);
+            }
+            resolvedType = data.inviteType;
+          }
+        }
+      } catch {
+        resolvedType = null;
+      }
+    }
 
     if (!resolvedType) {
       setError('Please enter a valid invite code.');
       return;
     }
 
-    if (!guestName.trim() || !email.trim()) {
+    if (!nextGuestName.trim() || !nextEmail.trim()) {
       setError('Please provide your name and email.');
       return;
     }
 
-    if (!isValidEmail(email)) {
+    if (!isValidEmail(nextEmail)) {
       setError('Please enter a valid email address.');
       return;
     }
