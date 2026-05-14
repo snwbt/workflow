@@ -1,6 +1,13 @@
 {
   "config": {
     "WEDDING_DATE": "2026-10-23T00:00:00Z",
+    "SITE_TITLE": "Russell & Siaw Min Wedding RSVP",
+    "SITE_PREVIEW_TITLE": "Russell & Siaw Min - Wedding Celebration",
+    "SITE_PREVIEW_SITE_NAME": "Russell & Siaw Min",
+    "SITE_PREVIEW_DESCRIPTION": "Together with their families, Russell and Siaw Min invite you to a weekend of celebration.",
+    "SITE_PREVIEW_IMAGE": "",
+    "SITE_FAVICON": "",
+    "RSVP_INITIAL_HEADING": "Begin With Your Invitation",
     "RSVP_DEADLINE": "2026-06-25T00:00:00Z",
     "RSVP_DEADLINE_DISPLAY": "June 25, 2026",
     "COUPLE_NAMES": "Russell & Siaw Min",
@@ -15,7 +22,7 @@
     "VENUE_DAY_TWO_IMAGE": "",
     "VENUE_DAY_TWO_IMAGE_ALT": "Church of the Holy Family illustration",
     "WHATSAPP_NUMBER": "6597553585",
-    "WHATSAPP_LABEL": "Message Wedding Concierge",
+    "WHATSAPP_LABEL": "Message Us",
     "TRAVEL_MRT_STATION": "Downtown MRT (DT17)",
     "TRAVEL_MRT_DIRECTIONS": "Take the Downtown Line to Downtown MRT (DT17). Use Exit A and walk approximately 5 minutes via Marina View.",
     "TRAVEL_BUS_STOP": "Marina Bay Financial Centre",

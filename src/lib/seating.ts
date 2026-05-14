@@ -223,10 +223,34 @@ export function searchAssignedGuests(
             tableId: table.id,
             tableLabel: table.label,
             seatNumber: mateAssignment.seatNumber,
+            dietary: mate.dietary,
+            accessibility: mate.accessibility,
           };
         })
         .filter((item): item is NonNullable<typeof item> => Boolean(item))
         .sort((a, b) => a.seatNumber - b.seatNumber);
+
+      const groupKey = person.rsvpId || person.partyId || '';
+      const groupMembers = groupKey
+        ? assignments
+            .map((groupAssignment) => {
+              const member = peopleById.get(groupAssignment.personId);
+              const memberGroupKey = member?.rsvpId || member?.partyId || '';
+              const memberTable = tablesById.get(groupAssignment.tableId);
+              if (!member || !memberTable || member.id === person.id || memberGroupKey !== groupKey) return null;
+              return {
+                personId: member.id,
+                displayName: member.displayName,
+                tableId: memberTable.id,
+                tableLabel: memberTable.label,
+                seatNumber: groupAssignment.seatNumber,
+                dietary: member.dietary,
+                accessibility: member.accessibility,
+              };
+            })
+            .filter((item): item is NonNullable<typeof item> => Boolean(item))
+            .sort((a, b) => a.displayName.localeCompare(b.displayName))
+        : [];
 
       return {
         personId: person.id,
@@ -234,7 +258,10 @@ export function searchAssignedGuests(
         tableId: table.id,
         tableLabel: table.label,
         seatNumber: assignment.seatNumber,
+        dietary: person.dietary,
+        accessibility: person.accessibility,
         tablemates,
+        groupMembers,
       };
     });
 }

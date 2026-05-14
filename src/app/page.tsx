@@ -13,12 +13,13 @@ import ClosingSection from '@/components/sections/ClosingSection';
 import AnchorNav from '@/components/AnchorNav';
 import ScrollControls from '@/components/ScrollControls';
 import { getDb } from '@/lib/db';
+import { getSiteMetadata } from '@/lib/siteMetadata';
 import { connection } from 'next/server';
+import type { Metadata } from 'next';
 
-export const metadata = {
-  title: 'Russell & Siaw Min - Wedding Celebration',
-  description: 'Together with their families, they invite you to a weekend of celebration.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getSiteMetadata();
+}
 
 export default async function Home() {
   await connection();
@@ -140,7 +141,7 @@ export default async function Home() {
 
         {/* RSVP */}
         <div className={`${styles.section} ${styles.fullscreenSection} ${styles.themeRsvp}`}>
-          <RsvpSection globalConfig={globalConfig} />
+          <RsvpSection globalConfig={globalConfig} scheduleConfig={config.schedule} />
         </div>
 
         {/* Closing */}

@@ -41,7 +41,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-4);
+  gap: var(--spacing-5);
   z-index: 10;
   opacity: 0;
   transform: translateY(30px);
@@ -55,13 +55,13 @@
 }
 
 .message {
-  font-family: var(--font-sans);
-  font-size: clamp(2.25rem, 5.5vw, 4rem);
-  line-height: 1.15;
+  font-family: var(--font-serif);
+  font-size: clamp(2.6rem, 6vw, 4.8rem);
+  line-height: 1.05;
   color: var(--color-surface);
   margin-bottom: var(--spacing-2);
-  font-weight: 800;
-  text-transform: uppercase;
+  font-weight: 400;
+  text-transform: none;
   letter-spacing: 0;
   max-width: 760px;
 }
@@ -70,7 +70,7 @@
   font-family: var(--font-serif);
   font-size: clamp(1.25rem, 2.5vw, 1.625rem);
   font-style: italic;
-  color: var(--color-champagne);
+  color: rgba(255, 250, 240, 0.94);
   margin: 0;
 }
 
@@ -79,19 +79,20 @@
   font-size: 0.875rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(212, 197, 169, 0.75);
+  color: rgba(255, 250, 240, 0.82);
   margin: 0;
 }
 
 .venueText {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.45rem;
   font-family: var(--font-sans);
   font-size: 0.8125rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: rgba(212, 197, 169, 0.6);
+  color: rgba(255, 250, 240, 0.72);
   margin: 0;
+  margin-top: var(--spacing-1);
   margin-bottom: var(--spacing-4);
 }
 

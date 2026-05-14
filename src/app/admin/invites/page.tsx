@@ -21,6 +21,7 @@ interface InvitationPayload {
 
 const emptyForm = {
   guestName: '',
+  plusOneName: '',
   email: '',
   phone: '',
   telegramUsername: '',
@@ -43,6 +44,7 @@ export default function AdminInvitesPage() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState('');
   const [drafts, setDrafts] = useState<Record<string, InvitationView>>({});
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -54,6 +56,7 @@ export default function AdminInvitesPage() {
   const sortedInvitations = useMemo(() => (
     [...(payload?.invitations || [])].sort((a, b) => a.guestName.localeCompare(b.guestName))
   ), [payload?.invitations]);
+  const allSelected = sortedInvitations.length > 0 && sortedInvitations.every((invite) => selectedIds.has(invite.id));
 
   const loadInvitations = () => {
     setError('');
@@ -147,19 +150,35 @@ export default function AdminInvitesPage() {
 
   const deleteInvitation = async (invite: InvitationView) => {
     if (!window.confirm(`Delete invitation for ${invite.guestName}?`)) return;
+    await deleteInvitations([invite.id]);
+  };
+
+  const deleteInvitations = async (ids: string[]) => {
+    if (ids.length === 0) return;
     setSaving(true);
     setError('');
     try {
-      const res = await fetch(`/api/admin/invitations?id=${encodeURIComponent(invite.id)}`, { method: 'DELETE' });
+      const res = await fetch('/api/admin/invitations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to delete invitation.');
+      if (!res.ok) throw new Error(data.error || 'Failed to delete invitations.');
       setPayload(data);
-      setMessage('Invitation deleted.');
+      setSelectedIds(new Set());
+      setMessage(ids.length === 1 ? 'Invitation deleted.' : `${ids.length} invitations deleted.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete invitation.');
+      setError(err instanceof Error ? err.message : 'Failed to delete invitations.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const bulkDelete = () => {
+    const ids = Array.from(selectedIds);
+    if (!window.confirm(`Delete ${ids.length} selected invitation${ids.length === 1 ? '' : 's'}?`)) return;
+    void deleteInvitations(ids);
   };
 
   const sendEmail = async (invite: InvitationView) => {
@@ -259,6 +278,10 @@ export default function AdminInvitesPage() {
             <input value={form.guestName} onChange={(e) => setForm({ ...form, guestName: e.target.value })} required />
           </label>
           <label>
+            Plus-one guest name
+            <input value={form.plusOneName} onChange={(e) => setForm({ ...form, plusOneName: e.target.value })} placeholder="Optional" />
+          </label>
+          <label>
             Email
             <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </label>
@@ -307,19 +330,32 @@ export default function AdminInvitesPage() {
             <input type="file" accept="image/*" onChange={(e) => uploadPhoto(e.target.files?.[0])} />
           </label>
           <button type="button" onClick={() => saveTemplates(templates)} disabled={saving}>Save templates</button>
-          <p className={styles.helper}>Variables: {'{guestName}'}, {'{inviteLink}'}, {'{coupleNames}'}, {'{fridayVenue}'}, {'{saturdayVenue}'}, {'{rsvpDeadline}'}, {'{photoUrl}'}.</p>
+          <p className={styles.helper}>Variables: {'{inviteGreeting}'}, {'{guestName}'}, {'{plusOneName}'}, {'{inviteLink}'}, {'{coupleNames}'}, {'{fridayVenue}'}, {'{saturdayVenue}'}, {'{rsvpDeadline}'}.</p>
         </section>
       </section>
 
       <section className={styles.tablePanel}>
         <div className={styles.tableHeader}>
           <h2>Guest Invites</h2>
-          <span>{sortedInvitations.length} guests</span>
+          <div className={styles.bulkActions}>
+            <span>{selectedIds.size > 0 ? `${selectedIds.size} selected` : `${sortedInvitations.length} guests`}</span>
+            <button type="button" onClick={bulkDelete} disabled={selectedIds.size === 0 || saving}>Delete selected</button>
+          </div>
         </div>
         <div className={styles.tableWrap}>
           <table>
             <thead>
               <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={(e) => {
+                      setSelectedIds(e.target.checked ? new Set(sortedInvitations.map((invite) => invite.id)) : new Set());
+                    }}
+                    aria-label="Select all invitations"
+                  />
+                </th>
                 <th>Guest</th>
                 <th>Invite</th>
                 <th>Contact</th>
@@ -336,11 +372,30 @@ export default function AdminInvitesPage() {
                 return (
                   <tr key={invite.id}>
                     <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(invite.id)}
+                        onChange={(e) => {
+                          setSelectedIds((current) => {
+                            const next = new Set(current);
+                            if (e.target.checked) next.add(invite.id);
+                            else next.delete(invite.id);
+                            return next;
+                          });
+                        }}
+                        aria-label={`Select ${invite.guestName}`}
+                      />
+                    </td>
+                    <td>
                       {isEditing ? (
-                        <input value={draft.guestName} onChange={(e) => setDrafts({ ...drafts, [invite.id]: { ...draft, guestName: e.target.value } })} />
+                        <div className={styles.editStack}>
+                          <input value={draft.guestName} onChange={(e) => setDrafts({ ...drafts, [invite.id]: { ...draft, guestName: e.target.value } })} placeholder="Guest name" />
+                          <input value={draft.plusOneName || ''} onChange={(e) => setDrafts({ ...drafts, [invite.id]: { ...draft, plusOneName: e.target.value } })} placeholder="Plus-one name" />
+                        </div>
                       ) : (
                         <>
                           <strong>{invite.guestName}</strong>
+                          {invite.plusOneName && <small>Plus one: {invite.plusOneName}</small>}
                           <small>{invite.inviteCode}</small>
                         </>
                       )}

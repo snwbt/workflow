@@ -215,6 +215,44 @@ export default function EditorPage() {
 
     return (
     <div style={{maxWidth: '800px'}}>
+      <h3 style={{marginBottom: '1rem'}}>Website Metadata</h3>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Browser Title</label>
+        <input className={styles.input} value={config.SITE_TITLE || ''} onChange={(e) => updateConfig('SITE_TITLE', e.target.value)} placeholder="Wedding RSVP" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Link Preview / Open Graph Title</label>
+        <input className={styles.input} value={config.SITE_PREVIEW_TITLE || ''} onChange={(e) => updateConfig('SITE_PREVIEW_TITLE', e.target.value)} placeholder="Russell & Siaw Min - Wedding Celebration" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Link Preview Site Name</label>
+        <input className={styles.input} value={config.SITE_PREVIEW_SITE_NAME || ''} onChange={(e) => updateConfig('SITE_PREVIEW_SITE_NAME', e.target.value)} placeholder="Russell & Siaw Min" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Link Preview Description</label>
+        <textarea className={styles.textarea} rows={3} value={config.SITE_PREVIEW_DESCRIPTION || ''} onChange={(e) => updateConfig('SITE_PREVIEW_DESCRIPTION', e.target.value)} placeholder="Together with their families, they invite you to a weekend of celebration." />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Favicon URL</label>
+        <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
+          <input className={styles.input} style={{flex: 1}} value={config.SITE_FAVICON || ''} onChange={(e) => updateConfig('SITE_FAVICON', e.target.value)} placeholder="/media/favicon.png" />
+          <label className={styles.secondaryButton} style={{cursor: 'pointer'}}>
+            Upload
+            <input type="file" style={{display: 'none'}} accept="image/*" onChange={(e) => handleFileUpload(e, (url) => updateConfig('SITE_FAVICON', url))} />
+          </label>
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Link Preview Image</label>
+        <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
+          <input className={styles.input} style={{flex: 1}} value={config.SITE_PREVIEW_IMAGE || ''} onChange={(e) => updateConfig('SITE_PREVIEW_IMAGE', e.target.value)} placeholder="/media/preview.jpg" />
+          <label className={styles.secondaryButton} style={{cursor: 'pointer'}}>
+            Upload
+            <input type="file" style={{display: 'none'}} accept="image/*" onChange={(e) => handleFileUpload(e, (url) => updateConfig('SITE_PREVIEW_IMAGE', url))} />
+          </label>
+        </div>
+      </div>
+
       <h3 style={{marginBottom: '1rem'}}>Design Settings</h3>
       <div className={styles.formGroup} style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
         <label className={styles.label} style={{margin: 0}}>
@@ -317,7 +355,7 @@ export default function EditorPage() {
       </div>
       <div className={styles.formGroup}>
         <label className={styles.label}>Concierge Label</label>
-        <input className={styles.input} value={config.WHATSAPP_LABEL || ''} onChange={(e) => updateConfig('WHATSAPP_LABEL', e.target.value)} placeholder="Wedding Concierge" />
+        <input className={styles.input} value={config.WHATSAPP_LABEL || ''} onChange={(e) => updateConfig('WHATSAPP_LABEL', e.target.value)} placeholder="Message Us" />
       </div>
 
       <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>23 October Travel & Directions</h3>
@@ -431,6 +469,10 @@ export default function EditorPage() {
       <div className={styles.formGroup}>
         <label className={styles.label}>RSVP Confirmation Message</label>
         <input className={styles.input} value={config.RSVP_CONFIRMATION_MESSAGE || ''} onChange={(e) => updateConfig('RSVP_CONFIRMATION_MESSAGE', e.target.value)} placeholder="Thank you! We'll see you in October." />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>RSVP Initial Heading</label>
+        <input className={styles.input} value={config.RSVP_INITIAL_HEADING || ''} onChange={(e) => updateConfig('RSVP_INITIAL_HEADING', e.target.value)} placeholder="Begin With Your Invitation" />
       </div>
 
       <h4 style={{marginTop: '1.5rem', marginBottom: '1rem'}}>RSVP Field Labels</h4>

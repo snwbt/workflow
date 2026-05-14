@@ -81,6 +81,13 @@
   padding: 0.65rem 0.75rem;
 }
 
+.tableWrap input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  accent-color: var(--color-espresso);
+}
+
 .panel textarea {
   resize: vertical;
 }
@@ -126,6 +133,30 @@
 .tableHeader span {
   color: var(--color-text-secondary);
   font-size: 0.82rem;
+}
+
+.bulkActions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.bulkActions button {
+  min-height: 34px;
+  border: 1px solid var(--color-error);
+  background: transparent;
+  color: var(--color-error);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0 var(--spacing-3);
+  text-transform: uppercase;
+}
+
+.bulkActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
 }
 
 .tableWrap {

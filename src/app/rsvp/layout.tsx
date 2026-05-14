@@ -2,14 +2,19 @@ import Link from 'next/link';
 import styles from './layout.module.css';
 import { Metadata } from 'next';
 import PrivacyFooter from '@/components/PrivacyFooter';
+import { getSiteMetadata } from '@/lib/siteMetadata';
 
-export const metadata: Metadata = {
-  title: 'RSVP | Our Wedding',
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const metadata = await getSiteMetadata();
+  return {
+    ...metadata,
+    title: `RSVP | ${typeof metadata.title === 'string' ? metadata.title : 'Wedding'}`,
+    robots: {
+      index: false,
+      follow: false,
+    },
+  };
+}
 
 export default function RsvpLayout({
   children,

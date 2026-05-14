@@ -79,7 +79,7 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
               className={styles.whatsappButton}
               onClick={() => trackEvent('whatsapp_cta_clicked')}
             >
-              {t(globalConfig.WHATSAPP_LABEL || 'Wedding Concierge')}
+              {t(globalConfig.WHATSAPP_LABEL || 'Message Us')}
             </a>
           )}
         </div>

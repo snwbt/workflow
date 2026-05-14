@@ -14,7 +14,10 @@ interface SearchResult {
   tableId: string;
   tableLabel: string;
   seatNumber: number;
+  dietary?: string;
+  accessibility?: string;
   tablemates?: SearchResult[];
+  groupMembers?: SearchResult[];
 }
 
 export default function SeatingPage() {
@@ -77,7 +80,7 @@ export default function SeatingPage() {
     selected
       ? [
           { personId: selected.personId, tableId: selected.tableId, seatNumber: selected.seatNumber },
-          ...(selected.tablemates || []).map((mate) => ({
+          ...dedupeGuests([...(selected.tablemates || []), ...(selected.groupMembers || [])]).map((mate) => ({
             personId: mate.personId,
             tableId: mate.tableId,
             seatNumber: mate.seatNumber,
@@ -93,12 +96,16 @@ export default function SeatingPage() {
             id: selected.personId,
             displayName: selected.displayName,
             firstName: selected.displayName.split(/\s+/)[0] || selected.displayName,
+            dietary: selected.dietary,
+            accessibility: selected.accessibility,
             source: 'rsvp',
           },
-          ...(selected.tablemates || []).map((mate) => ({
+          ...dedupeGuests([...(selected.tablemates || []), ...(selected.groupMembers || [])]).map((mate) => ({
             id: mate.personId,
             displayName: mate.displayName,
             firstName: mate.displayName.split(/\s+/)[0] || mate.displayName,
+            dietary: mate.dietary,
+            accessibility: mate.accessibility,
             source: 'rsvp' as const,
           })),
         ]
@@ -201,23 +208,59 @@ export default function SeatingPage() {
               <aside className={styles.tablemates} aria-label={t('Guests at your table')}>
                 <span className={styles.eyebrow}>{t('Guests at your table')}</span>
                 <h3>{t('Table {table}', { table: selected.tableLabel })}</h3>
-                <ul>
-                  <li className={styles.currentGuest}>
-                    <strong>{selected.displayName}</strong>
-                    <span>{t('Seat {seat}', { seat: selected.seatNumber })}</span>
-                  </li>
-                  {(selected.tablemates || []).map((mate) => (
-                    <li key={mate.personId}>
-                      <strong>{mate.displayName}</strong>
-                      <span>{t('Seat {seat}', { seat: mate.seatNumber })}</span>
-                    </li>
-                  ))}
-                </ul>
+                <GuestSeatList guests={[selected]} currentPersonId={selected.personId} />
+                {(selected.groupMembers || []).length > 0 && (
+                  <>
+                    <span className={styles.subheading}>{t('Your group')}</span>
+                    <GuestSeatList guests={selected.groupMembers || []} currentPersonId={selected.personId} />
+                  </>
+                )}
+                {(selected.tablemates || []).length > 0 && (
+                  <>
+                    <span className={styles.subheading}>{t('Others at this table')}</span>
+                    <GuestSeatList
+                      guests={(selected.tablemates || []).filter((mate) => !(selected.groupMembers || []).some((member) => member.personId === mate.personId))}
+                      currentPersonId={selected.personId}
+                    />
+                  </>
+                )}
               </aside>
             )}
           </div>
         </section>
       )}
     </main>
+  );
+}
+
+function dedupeGuests(guests: SearchResult[]) {
+  const byId = new Map<string, SearchResult>();
+  guests.forEach((guest) => {
+    if (guest.personId && !byId.has(guest.personId)) {
+      byId.set(guest.personId, guest);
+    }
+  });
+  return Array.from(byId.values());
+}
+
+function GuestSeatList({ guests, currentPersonId }: { guests: SearchResult[]; currentPersonId: string }) {
+  const { t } = useSiteText();
+  const uniqueGuests = dedupeGuests(guests);
+  if (uniqueGuests.length === 0) return null;
+
+  return (
+    <ul>
+      {uniqueGuests.map((guest) => (
+        <li key={guest.personId} className={guest.personId === currentPersonId ? styles.currentGuest : ''}>
+          <div>
+            <strong>{guest.displayName}</strong>
+            {(guest.dietary || guest.accessibility) && (
+              <small>{[guest.dietary, guest.accessibility].filter(Boolean).join(' | ')}</small>
+            )}
+          </div>
+          <span>{t('Table {table}, seat {seat}.', { table: guest.tableLabel, seat: guest.seatNumber })}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

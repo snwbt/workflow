@@ -83,7 +83,8 @@ export async function sendInvitationEmail(
   guestEmail: string,
   subject: string,
   message: string,
-  coupleNames = 'Russell & Siaw Min'
+  coupleNames = 'Russell & Siaw Min',
+  calendarHtml = ''
 ) {
   if (!resend) {
     console.log('Resend not configured, skipping invitation email to:', guestEmail);
@@ -104,6 +105,7 @@ export async function sendInvitationEmail(
       <div style="font-family: Georgia, serif; color: #2c2420; max-width: 640px; margin: 0 auto; padding: 28px; background: #fffaf3;">
         <div style="border: 1px solid #d8c7a6; padding: 28px; background: #fffdf8;">
           <div style="font-size: 17px; line-height: 1.7;">${safeMessage}</div>
+          ${calendarHtml}
         </div>
       </div>
     `,

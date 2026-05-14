@@ -22,6 +22,7 @@ function sanitizeInvitation(input: Partial<InvitationRecord>, existingCodes: Ite
   return {
     id: cleanString(input.id || existing?.id) || randomUUID(),
     guestName,
+    plusOneName: cleanString(input.plusOneName ?? existing?.plusOneName),
     email: cleanString(input.email ?? existing?.email),
     phone: cleanString(input.phone ?? existing?.phone),
     telegramUsername: cleanString(input.telegramUsername ?? existing?.telegramUsername).replace(/^@/, ''),
@@ -126,11 +127,15 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'Invitation id is required.' }, { status: 400 });
+    const body = await request.json().catch(() => ({}));
+    const ids = Array.isArray(body.ids) ? body.ids.map(cleanString).filter(Boolean) : [];
+    if (id) ids.push(id);
+    if (ids.length === 0) return NextResponse.json({ error: 'At least one invitation id is required.' }, { status: 400 });
 
     const db = await getDb();
     const state = normalizeInvitationState(db.invitations);
-    const nextInvitations = state.invitations.filter((item) => item.id !== id);
+    const idSet = new Set(ids);
+    const nextInvitations = state.invitations.filter((item) => !idSet.has(item.id));
 
     if (nextInvitations.length === state.invitations.length) {
       return NextResponse.json({ error: 'Invitation not found.' }, { status: 404 });

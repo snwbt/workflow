@@ -553,6 +553,88 @@
   font-size: 0.9rem;
 }
 
+.calendarPanel {
+  display: grid;
+  gap: var(--spacing-5);
+  margin: var(--spacing-8) auto 0;
+  padding: var(--spacing-5);
+  border: 1px solid rgba(196, 169, 119, 0.36);
+  background: rgba(255, 253, 248, 0.72);
+  text-align: left;
+}
+
+.calendarPanel h3 {
+  margin: 0;
+  color: var(--color-espresso);
+  font-family: var(--font-serif);
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+  font-weight: 400;
+  text-align: center;
+}
+
+.calendarEvent {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.calendarEvent p {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: 700;
+  text-align: center;
+}
+
+.calendarButtons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-3);
+}
+
+.calendarButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  min-height: 50px;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-espresso);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.calendarButton span {
+  display: inline-grid;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.googleMark {
+  background: #4285f4;
+}
+
+.outlookMark {
+  background: #0078d4;
+}
+
+.appleMark {
+  background: var(--color-espresso);
+}
+
 .resetButton {
   margin-top: var(--spacing-6);
   padding: 0 0 var(--spacing-1);
@@ -585,6 +667,10 @@
   .submitButton,
   .secondaryButton {
     min-height: 48px;
+  }
+
+  .calendarButtons {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -9,6 +9,7 @@ import {
   normalizeInvitationState,
   renderInvitationTemplate,
 } from '@/lib/invitations';
+import { getCalendarEvents, renderCalendarEmailHtml } from '@/lib/calendar';
 
 export async function POST(request: Request) {
   try {
@@ -31,9 +32,11 @@ export async function POST(request: Request) {
     const subject = renderInvitationTemplate(state.templates.emailSubject, vars);
     const message = renderInvitationTemplate(getChannelTemplate(invite, state.templates, 'email'), vars);
     const coupleNames = db.config?.COUPLE_NAMES || 'Russell & Siaw Min';
+    const scheduleConfig = (db.homepage_sections || []).find((section: any) => section.type === 'schedule');
+    const calendarHtml = renderCalendarEmailHtml(getCalendarEvents(invite.inviteType, scheduleConfig, db.config || {}));
 
     try {
-      await sendInvitationEmail(invite.email, subject, message, coupleNames);
+      await sendInvitationEmail(invite.email, subject, message, coupleNames, calendarHtml);
       invite.sent = {
         ...invite.sent,
         email: { status: 'sent', sentAt: new Date().toISOString() },

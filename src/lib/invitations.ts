@@ -8,7 +8,7 @@ import type {
 } from './invitationTypes';
 
 const DEFAULT_EMAIL_BODY = [
-  'Dear {guestName},',
+  '{inviteGreeting},',
   '',
   'We would be honoured to celebrate with you at our wedding.',
   '',
@@ -19,12 +19,10 @@ const DEFAULT_EMAIL_BODY = [
 ].join('\n');
 
 const DEFAULT_CHAT_BODY = [
-  'Dear {guestName},',
+  '{inviteGreeting},',
   '',
   'We would be honoured to celebrate with you at our wedding. Please RSVP here:',
   '{inviteLink}',
-  '',
-  '{photoUrl}',
   '',
   '{coupleNames}',
 ].join('\n');
@@ -56,6 +54,7 @@ export function normalizeInvitationRecord(value: unknown): InvitationRecord {
   return {
     id: String(record.id || ''),
     guestName: String(record.guestName || '').trim(),
+    plusOneName: String(record.plusOneName || '').trim(),
     email: String(record.email || '').trim(),
     phone: String(record.phone || '').trim(),
     telegramUsername: String(record.telegramUsername || '').trim().replace(/^@/, ''),
@@ -122,8 +121,13 @@ export function invitationTemplateVars(
   inviteLink: string,
   templates: InvitationTemplates
 ) {
+  const guestName = String(invite.guestName || '');
+  const plusOneName = String(invite.plusOneName || '').trim();
+  const inviteGreeting = plusOneName ? `Dear ${guestName} and ${plusOneName}` : `Dear ${guestName}`;
   return {
-    guestName: String(invite.guestName || ''),
+    guestName,
+    plusOneName,
+    inviteGreeting,
     inviteLink: String(inviteLink || ''),
     inviteCode: String(invite.inviteCode || ''),
     coupleNames: String(config.COUPLE_NAMES || 'Russell & Siaw Min'),

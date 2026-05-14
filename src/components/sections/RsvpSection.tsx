@@ -7,6 +7,7 @@ import styles from './RsvpSection.module.css';
 import { trackEvent } from '@/lib/analytics';
 import { getRsvpDeadlineDisplay } from '@/lib/eventDisplay';
 import { useSiteText } from '@/lib/sitePreferences';
+import { getCalendarEvents, getCalendarLinks, type CalendarEvent } from '@/lib/calendar';
 
 type AttendanceStatus = 'attending' | 'declined';
 type InviteType = 'friday_saturday' | 'saturday_only';
@@ -33,7 +34,7 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
-export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
+export default function RsvpSection({ globalConfig, scheduleConfig }: { globalConfig?: any; scheduleConfig?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.18 });
   const { t } = useSiteText();
   const [step, setStep] = useState<RsvpStep>('initial');
@@ -57,6 +58,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
   const fridaySaturdayCode = String(globalConfig?.RSVP_INVITE_CODE_FRIDAY_SATURDAY || 'FRISAT');
   const saturdayOnlyCode = String(globalConfig?.RSVP_INVITE_CODE_SATURDAY || 'SATURDAY');
   const confirmationMessage = globalConfig?.RSVP_CONFIRMATION_MESSAGE || "Thank you! We'll see you in October.";
+  const initialHeading = globalConfig?.RSVP_INITIAL_HEADING || 'Begin With Your Invitation';
   const deadlineDisplay = getRsvpDeadlineDisplay(globalConfig);
   const deadlinePassed = globalConfig?.RSVP_DEADLINE && new Date(globalConfig.RSVP_DEADLINE) < new Date();
 
@@ -301,7 +303,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
         {step === 'initial' && (
           <div className={styles.fadeContainer}>
             <p className={styles.eyebrow}>{t('The favour of your reply is requested')}</p>
-            <h2 className={styles.title}>{t('Begin With Your Invite')}</h2>
+            <h2 className={styles.title}>{t(initialHeading)}</h2>
             <p className={styles.subtitle}>{t('Kindly respond by {date}.', { date: deadlineDisplay })}</p>
 
             {error && <p className={styles.error} role="alert">{t(error)}</p>}
@@ -537,6 +539,7 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
                 <h2 className={styles.confTitle}>{t('Thank You')}</h2>
                 <p className={styles.confText}>{t(confirmationMessage)}</p>
                 <p className={styles.confEmail}>{t('A confirmation has been sent to {email}.', { email })}</p>
+                <CalendarActions events={getCalendarEvents(inviteType, scheduleConfig, globalConfig || {})} />
               </>
             )}
 
@@ -547,6 +550,39 @@ export default function RsvpSection({ globalConfig }: { globalConfig?: any }) {
         )}
       </div>
     </section>
+  );
+}
+
+function CalendarActions({ events }: { events: CalendarEvent[] }) {
+  const { t } = useSiteText();
+  if (!events.length) return null;
+
+  return (
+    <div className={styles.calendarPanel}>
+      <h3>{t('Add to Calendar')}</h3>
+      {events.map((event) => {
+        const links = getCalendarLinks(event);
+        return (
+          <div key={event.id} className={styles.calendarEvent}>
+            <p>{t(event.title)}</p>
+            <div className={styles.calendarButtons}>
+              <a href={links.google} target="_blank" rel="noopener noreferrer" className={styles.calendarButton}>
+                <span className={styles.googleMark}>G</span>
+                {t('Add to Google Calendar')}
+              </a>
+              <a href={links.outlook} target="_blank" rel="noopener noreferrer" className={styles.calendarButton}>
+                <span className={styles.outlookMark}>O</span>
+                {t('Add to Outlook Calendar')}
+              </a>
+              <a href={links.ics} download={`${event.id}-wedding.ics`} className={styles.calendarButton}>
+                <span className={styles.appleMark}>ICS</span>
+                {t('Add to Apple Calendar / download .ics')}
+              </a>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

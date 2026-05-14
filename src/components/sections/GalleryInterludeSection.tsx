@@ -2,7 +2,7 @@
 
 import { useReveal } from '@/hooks/useReveal';
 import Image from 'next/image';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSiteText } from '@/lib/sitePreferences';
 import styles from './GalleryInterludeSection.module.css';
 
@@ -11,18 +11,20 @@ interface CollageImage {
   alt?: string;
 }
 
+const EMPTY_COLLAGE_IMAGES: CollageImage[] = [];
+
 export default function GalleryInterludeSection({ config }: { config?: any }) {
   const { ref, isVisible } = useReveal({ threshold: 0.2 });
   const { t } = useSiteText();
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [shuffledImages, setShuffledImages] = useState<CollageImage[] | null>(null);
+  const sourceImages: CollageImage[] = config?.collageImages ?? EMPTY_COLLAGE_IMAGES;
 
-  if (!config || !config.collageImages || config.collageImages.length === 0) return null;
-
-  const images: CollageImage[] = config.collageImages;
-  const motionEnabled = config.motionEnabled !== false && images.length > 1;
-  const motionSpeed = Number(config.motionSpeed || 1);
-  const imageScale = Number(config.imageScale || 1);
+  const images: CollageImage[] = shuffledImages || sourceImages;
+  const motionEnabled = config?.motionEnabled !== false && images.length > 1;
+  const motionSpeed = Number(config?.motionSpeed || 1);
+  const imageScale = Number(config?.imageScale || 1);
   const duration = `${Math.max(28, 54 / Math.max(motionSpeed, 0.5))}s`;
   const renderSlides = (items: CollageImage[], duplicate = false) => (
     items.map((img, i) => (
@@ -64,6 +66,21 @@ export default function GalleryInterludeSection({ config }: { config?: any }) {
     const slides = track.querySelectorAll<HTMLElement>(`.${styles.slide}:not(.${styles.duplicateSlide})`);
     slides[index]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   };
+
+  useEffect(() => {
+    if (sourceImages.length === 0) return;
+    setActiveIndex(0);
+    setShuffledImages(() => {
+      const next = [...sourceImages];
+      for (let i = next.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [next[i], next[j]] = [next[j], next[i]];
+      }
+      return next;
+    });
+  }, [sourceImages]);
+
+  if (!config || sourceImages.length === 0) return null;
 
   return (
     <section id="gallery_interlude" className={styles.container} ref={ref as React.RefObject<HTMLElement>}>

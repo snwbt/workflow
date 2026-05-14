@@ -11,6 +11,7 @@ export interface InvitationSendRecord {
 export interface InvitationRecord {
   id: string;
   guestName: string;
+  plusOneName?: string;
   email?: string;
   phone?: string;
   telegramUsername?: string;
