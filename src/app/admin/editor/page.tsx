@@ -1,12 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   formatEventDate,
   fromDateInputValue,
   hasInvalidRsvpDeadline,
   toDateInputValue,
 } from '@/lib/eventDisplay';
+import {
+  buildInviteLink,
+  defaultInvitationTemplates,
+  invitationTemplateVars,
+} from '@/lib/invitations';
+import type { InvitationInviteType, InvitationTemplates, InvitationView } from '@/lib/invitationTypes';
 import styles from './page.module.css';
 
 interface SectionConfig {
@@ -44,6 +50,85 @@ interface SectionConfig {
   signOff?: string;
 }
 
+interface InvitationPayload {
+  invitations: InvitationView[];
+  templates: InvitationTemplates;
+  config: Record<string, any>;
+}
+
+type ConfigGroupId = 'config_site' | 'config_design' | 'config_venues' | 'config_travel' | 'config_rsvp' | 'config_calendar' | 'config_invite_variables';
+
+const configGroups: { id: ConfigGroupId; label: string }[] = [
+  { id: 'config_site', label: 'Site Settings' },
+  { id: 'config_design', label: 'Design' },
+  { id: 'config_venues', label: 'Venues' },
+  { id: 'config_travel', label: 'Travel' },
+  { id: 'config_rsvp', label: 'RSVP' },
+  { id: 'config_calendar', label: 'Calendar' },
+  { id: 'config_invite_variables', label: 'Invite Variables' },
+];
+
+const editableVariableFields = [
+  { key: 'COUPLE_NAMES', label: 'coupleNames', placeholder: 'Russell & Siaw Min' },
+  { key: 'VENUE_NAME', label: 'fridayVenue', placeholder: 'The Westin Singapore' },
+  { key: 'VENUE_DAY_TWO_NAME', label: 'saturdayVenue', placeholder: 'Church of the Holy Family' },
+  { key: 'RSVP_DEADLINE_DISPLAY', label: 'rsvpDeadline', placeholder: '1 October 2026' },
+  { key: 'CALENDAR_FRIDAY_TITLE', label: 'fridayCalendarTitle', placeholder: 'Wedding Dinner' },
+  { key: 'CALENDAR_FRIDAY_DATE', label: 'fridayCalendarDate', placeholder: '23 October 2026' },
+  { key: 'CALENDAR_FRIDAY_START_TIME', label: 'fridayCalendarStart', placeholder: '6:45 PM' },
+  { key: 'CALENDAR_FRIDAY_END_TIME', label: 'fridayCalendarEnd', placeholder: '10:30 PM' },
+  { key: 'CALENDAR_FRIDAY_VENUE', label: 'fridayCalendarLocation', placeholder: 'The Westin Singapore' },
+  { key: 'CALENDAR_FRIDAY_DESCRIPTION', label: 'fridayCalendarDescription', placeholder: 'Wedding dinner reception.' },
+  { key: 'CALENDAR_SATURDAY_TITLE', label: 'saturdayCalendarTitle', placeholder: 'Nuptial Mass' },
+  { key: 'CALENDAR_SATURDAY_DATE', label: 'saturdayCalendarDate', placeholder: '24 October 2026' },
+  { key: 'CALENDAR_SATURDAY_START_TIME', label: 'saturdayCalendarStart', placeholder: '10:00 AM' },
+  { key: 'CALENDAR_SATURDAY_END_TIME', label: 'saturdayCalendarEnd', placeholder: '1:00 PM' },
+  { key: 'CALENDAR_SATURDAY_VENUE', label: 'saturdayCalendarLocation', placeholder: 'Church of the Holy Family' },
+  { key: 'CALENDAR_SATURDAY_DESCRIPTION', label: 'saturdayCalendarDescription', placeholder: 'Nuptial Mass and celebration.' },
+] as const;
+
+const readOnlyTemplateVariables = [
+  'guestName',
+  'plusOneName',
+  'inviteGreeting',
+  'inviteLink',
+  'inviteCode',
+  'inviteType',
+  'eventDetails',
+  'calendarSummary',
+  'photoUrl',
+];
+
+function stringifyCustomVariables(config: Record<string, any>) {
+  return JSON.stringify(config.INVITE_TEMPLATE_VARIABLES || {}, null, 2);
+}
+
+function parseCustomVariablesText(value: string) {
+  const parsed = JSON.parse(value || '{}');
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Custom variables must be a JSON object.');
+  }
+  return Object.fromEntries(
+    Object.entries(parsed as Record<string, unknown>)
+      .filter(([key]) => /^\w+$/.test(key))
+      .map(([key, item]) => [key, String(item ?? '')])
+  );
+}
+
+function sampleInvite(inviteType: InvitationInviteType): InvitationView {
+  return {
+    id: `sample-${inviteType}`,
+    guestName: inviteType === 'friday_saturday' ? 'Fri + Sat Guest' : 'Saturday Guest',
+    plusOneName: 'Plus One',
+    email: '',
+    phone: '',
+    telegramUsername: '',
+    inviteType,
+    inviteCode: inviteType === 'friday_saturday' ? 'FRISAT123' : 'SAT123',
+    rsvpSubmitted: false,
+  };
+}
+
 const defaultSections: SectionConfig[] = [
   { id: 'hero', type: 'hero', enabled: true, heading: 'Russell & Siaw Min', bodyCopy: 'Together with their families, they invite you to a weekend of celebration.' },
   { id: 'at_a_glance', type: 'at_a_glance', enabled: true, heading: 'A Weekend in Singapore', bodyCopy: '' },
@@ -59,7 +144,9 @@ const defaultSections: SectionConfig[] = [
 export default function EditorPage() {
   const [sections, setSections] = useState<SectionConfig[]>([]);
   const [config, setConfig] = useState<any>({});
-  const [activeSectionId, setActiveSectionId] = useState<string>('config');
+  const [activeSectionId, setActiveSectionId] = useState<string>('config_site');
+  const [invitationPayload, setInvitationPayload] = useState<InvitationPayload | null>(null);
+  const [customVariablesText, setCustomVariablesText] = useState('{}');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -68,15 +155,19 @@ export default function EditorPage() {
   useEffect(() => {
     Promise.all([
       fetch('/api/admin/cms/sections').then(res => res.json()),
-      fetch('/api/admin/config').then(res => res.json())
+      fetch('/api/admin/config').then(res => res.json()),
+      fetch('/api/admin/invitations').then(res => res.ok ? res.json() : null).catch(() => null)
     ])
-    .then(([sectionsData, configData]) => {
+    .then(([sectionsData, configData, invitationsData]) => {
       if (sectionsData.sections && sectionsData.sections.length > 0) {
         setSections(sectionsData.sections);
       } else {
         setSections(defaultSections);
       }
-      setConfig(configData.config || {});
+      const nextConfig = configData.config || {};
+      setConfig(nextConfig);
+      setCustomVariablesText(stringifyCustomVariables(nextConfig));
+      if (invitationsData) setInvitationPayload(invitationsData);
       setLoading(false);
     })
     .catch(() => {
@@ -89,6 +180,10 @@ export default function EditorPage() {
     setSaving(true);
     setMessage('');
     try {
+      const configToSave = {
+        ...config,
+        INVITE_TEMPLATE_VARIABLES: parseCustomVariablesText(customVariablesText),
+      };
       const resSections = await fetch('/api/admin/cms/sections', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -97,9 +192,11 @@ export default function EditorPage() {
       const resConfig = await fetch('/api/admin/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config }),
+        body: JSON.stringify({ config: configToSave }),
       });
       if (resSections.ok && resConfig.ok) {
+        setConfig(configToSave);
+        setCustomVariablesText(stringifyCustomVariables(configToSave));
         setMessage('Changes saved successfully.');
       } else {
         const [sectionsError, configError] = await Promise.all([
@@ -112,14 +209,12 @@ export default function EditorPage() {
         ].filter(Boolean);
         setMessage(`Failed to save ${failures.join(' and ')}.`);
       }
-    } catch {
-      setMessage('Error saving changes.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Error saving changes.');
     }
     setSaving(false);
     setTimeout(() => setMessage(''), 3000);
   };
-
-  if (loading) return <div style={{padding: '2rem'}}>Loading editor...</div>;
 
   const activeSection = sections.find(s => s.id === activeSectionId);
 
@@ -209,11 +304,38 @@ export default function EditorPage() {
     setTimeout(() => setMessage(''), 4000);
   };
 
-  // Site Settings Sub-editor
-  const renderSiteSettings = () => {
-    const invalidRsvpDeadline = hasInvalidRsvpDeadline(config);
+  const previewConfig = useMemo(() => {
+    try {
+      return {
+        ...config,
+        INVITE_TEMPLATE_VARIABLES: parseCustomVariablesText(customVariablesText),
+      };
+    } catch {
+      return config;
+    }
+  }, [config, customVariablesText]);
 
-    return (
+  const variablePreviews = useMemo(() => {
+    const invitations = invitationPayload?.invitations || [];
+    const templates = invitationPayload?.templates || defaultInvitationTemplates;
+    const origin = typeof window === 'undefined' ? 'https://example.com' : window.location.origin;
+    const sections: { inviteType: InvitationInviteType; title: string }[] = [
+      { inviteType: 'friday_saturday', title: 'Fri + Sat templates' },
+      { inviteType: 'saturday_only', title: 'Saturday only templates' },
+    ];
+
+    return sections.map((section) => {
+      const invite = invitations.find((item) => item.inviteType === section.inviteType) || sampleInvite(section.inviteType);
+      return {
+        ...section,
+        vars: invitationTemplateVars(invite, previewConfig, buildInviteLink(origin, invite.inviteCode), templates),
+      };
+    });
+  }, [invitationPayload, previewConfig]);
+
+  if (loading) return <div style={{padding: '2rem'}}>Loading editor...</div>;
+
+  const renderSiteSettings = () => (
     <div style={{maxWidth: '800px'}}>
       <h3 style={{marginBottom: '1rem'}}>Website Metadata</h3>
       <div className={styles.formGroup}>
@@ -252,7 +374,11 @@ export default function EditorPage() {
           </label>
         </div>
       </div>
+    </div>
+  );
 
+  const renderDesignSettings = () => (
+    <div style={{maxWidth: '800px'}}>
       <h3 style={{marginBottom: '1rem'}}>Design Settings</h3>
       <div className={styles.formGroup} style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
         <label className={styles.label} style={{margin: 0}}>
@@ -285,7 +411,11 @@ export default function EditorPage() {
           Enable Monogram Watermarks
         </label>
       </div>
+    </div>
+  );
 
+  const renderVenueSettings = () => (
+    <div style={{maxWidth: '800px'}}>
       <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>23 October Venue Details (Google Maps)</h3>
       <div className={styles.formGroup}>
         <label className={styles.label}>Venue Name</label>
@@ -347,7 +477,11 @@ export default function EditorPage() {
         <label className={styles.label}>Venue Illustration Alt Text</label>
         <input className={styles.input} value={config.VENUE_DAY_TWO_IMAGE_ALT || ''} onChange={(e) => updateConfig('VENUE_DAY_TWO_IMAGE_ALT', e.target.value)} />
       </div>
+    </div>
+  );
 
+  const renderTravelSettings = () => (
+    <div style={{maxWidth: '800px'}}>
       <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>WhatsApp Concierge</h3>
       <div className={styles.formGroup}>
         <label className={styles.label}>WhatsApp Phone Number (include country code, e.g. 1234567890)</label>
@@ -425,7 +559,14 @@ export default function EditorPage() {
         <label className={styles.label}>Accessibility Notes</label>
         <textarea className={styles.textarea} value={config.TRAVEL_DAY_TWO_ACCESSIBILITY || ''} onChange={(e) => updateConfig('TRAVEL_DAY_TWO_ACCESSIBILITY', e.target.value)} />
       </div>
+    </div>
+  );
 
+  const renderRsvpSettings = () => {
+    const invalidRsvpDeadline = hasInvalidRsvpDeadline(config);
+
+    return (
+    <div style={{maxWidth: '800px'}}>
       <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>RSVP Configuration</h3>
       <div className={styles.formGroup}>
         <label className={styles.label}>Couple Names</label>
@@ -473,60 +614,6 @@ export default function EditorPage() {
       <div className={styles.formGroup}>
         <label className={styles.label}>RSVP Initial Heading</label>
         <input className={styles.input} value={config.RSVP_INITIAL_HEADING || ''} onChange={(e) => updateConfig('RSVP_INITIAL_HEADING', e.target.value)} placeholder="Begin With Your Invitation" />
-      </div>
-
-      <h4 style={{marginTop: '1.5rem', marginBottom: '1rem'}}>Calendar Cards</h4>
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Friday Calendar Title</label>
-        <input className={styles.input} value={config.CALENDAR_FRIDAY_TITLE || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_TITLE', e.target.value)} placeholder="Russell & Siaw Min Wedding Dinner" />
-      </div>
-      <div style={{display: 'flex', gap: '1rem'}}>
-        <div className={styles.formGroup} style={{flex: 1}}>
-          <label className={styles.label}>Friday Date</label>
-          <input className={styles.input} value={config.CALENDAR_FRIDAY_DATE || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_DATE', e.target.value)} placeholder="23 October 2026" />
-        </div>
-        <div className={styles.formGroup} style={{flex: 1}}>
-          <label className={styles.label}>Friday Start Time</label>
-          <input className={styles.input} value={config.CALENDAR_FRIDAY_START_TIME || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_START_TIME', e.target.value)} placeholder="6:45 PM" />
-        </div>
-        <div className={styles.formGroup} style={{flex: 1}}>
-          <label className={styles.label}>Friday End Time</label>
-          <input className={styles.input} value={config.CALENDAR_FRIDAY_END_TIME || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_END_TIME', e.target.value)} placeholder="10:30 PM" />
-        </div>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Friday Venue</label>
-        <input className={styles.input} value={config.CALENDAR_FRIDAY_VENUE || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_VENUE', e.target.value)} placeholder="The Westin Singapore, Grand Ballroom" />
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Friday Description</label>
-        <textarea className={styles.textarea} value={config.CALENDAR_FRIDAY_DESCRIPTION || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_DESCRIPTION', e.target.value)} placeholder="Wedding dinner reception." />
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Saturday Calendar Title</label>
-        <input className={styles.input} value={config.CALENDAR_SATURDAY_TITLE || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_TITLE', e.target.value)} placeholder="Russell & Siaw Min Nuptial Mass" />
-      </div>
-      <div style={{display: 'flex', gap: '1rem'}}>
-        <div className={styles.formGroup} style={{flex: 1}}>
-          <label className={styles.label}>Saturday Date</label>
-          <input className={styles.input} value={config.CALENDAR_SATURDAY_DATE || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_DATE', e.target.value)} placeholder="24 October 2026" />
-        </div>
-        <div className={styles.formGroup} style={{flex: 1}}>
-          <label className={styles.label}>Saturday Start Time</label>
-          <input className={styles.input} value={config.CALENDAR_SATURDAY_START_TIME || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_START_TIME', e.target.value)} placeholder="10:00 AM" />
-        </div>
-        <div className={styles.formGroup} style={{flex: 1}}>
-          <label className={styles.label}>Saturday End Time</label>
-          <input className={styles.input} value={config.CALENDAR_SATURDAY_END_TIME || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_END_TIME', e.target.value)} placeholder="1:00 PM" />
-        </div>
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Saturday Venue</label>
-        <input className={styles.input} value={config.CALENDAR_SATURDAY_VENUE || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_VENUE', e.target.value)} placeholder="Church of the Holy Family" />
-      </div>
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Saturday Description</label>
-        <textarea className={styles.textarea} value={config.CALENDAR_SATURDAY_DESCRIPTION || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_DESCRIPTION', e.target.value)} placeholder="Nuptial Mass and celebration." />
       </div>
 
       <h4 style={{marginTop: '1.5rem', marginBottom: '1rem'}}>RSVP Field Labels</h4>
@@ -609,10 +696,127 @@ export default function EditorPage() {
           updateConfig('RSVP_CUSTOM_QUESTIONS', [...(config.RSVP_CUSTOM_QUESTIONS || []), { label: '', type: 'text', required: false, options: [] }]);
         }}>+ Add Custom Question</button>
       </div>
-
     </div>
   );
   };
+
+  const renderCalendarSettings = () => (
+    <div style={{maxWidth: '800px'}}>
+      <h3 style={{marginTop: '2rem', marginBottom: '1rem'}}>Calendar Cards</h3>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Friday Calendar Title</label>
+        <input className={styles.input} value={config.CALENDAR_FRIDAY_TITLE || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_TITLE', e.target.value)} placeholder="Russell & Siaw Min Wedding Dinner" />
+      </div>
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Friday Date</label>
+          <input className={styles.input} value={config.CALENDAR_FRIDAY_DATE || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_DATE', e.target.value)} placeholder="23 October 2026" />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Friday Start Time</label>
+          <input className={styles.input} value={config.CALENDAR_FRIDAY_START_TIME || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_START_TIME', e.target.value)} placeholder="6:45 PM" />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Friday End Time</label>
+          <input className={styles.input} value={config.CALENDAR_FRIDAY_END_TIME || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_END_TIME', e.target.value)} placeholder="10:30 PM" />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Friday Venue</label>
+        <input className={styles.input} value={config.CALENDAR_FRIDAY_VENUE || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_VENUE', e.target.value)} placeholder="The Westin Singapore, Grand Ballroom" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Friday Description</label>
+        <textarea className={styles.textarea} value={config.CALENDAR_FRIDAY_DESCRIPTION || ''} onChange={(e) => updateConfig('CALENDAR_FRIDAY_DESCRIPTION', e.target.value)} placeholder="Wedding dinner reception." />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Saturday Calendar Title</label>
+        <input className={styles.input} value={config.CALENDAR_SATURDAY_TITLE || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_TITLE', e.target.value)} placeholder="Russell & Siaw Min Nuptial Mass" />
+      </div>
+      <div style={{display: 'flex', gap: '1rem'}}>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Saturday Date</label>
+          <input className={styles.input} value={config.CALENDAR_SATURDAY_DATE || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_DATE', e.target.value)} placeholder="24 October 2026" />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Saturday Start Time</label>
+          <input className={styles.input} value={config.CALENDAR_SATURDAY_START_TIME || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_START_TIME', e.target.value)} placeholder="10:00 AM" />
+        </div>
+        <div className={styles.formGroup} style={{flex: 1}}>
+          <label className={styles.label}>Saturday End Time</label>
+          <input className={styles.input} value={config.CALENDAR_SATURDAY_END_TIME || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_END_TIME', e.target.value)} placeholder="1:00 PM" />
+        </div>
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Saturday Venue</label>
+        <input className={styles.input} value={config.CALENDAR_SATURDAY_VENUE || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_VENUE', e.target.value)} placeholder="Church of the Holy Family" />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Saturday Description</label>
+        <textarea className={styles.textarea} value={config.CALENDAR_SATURDAY_DESCRIPTION || ''} onChange={(e) => updateConfig('CALENDAR_SATURDAY_DESCRIPTION', e.target.value)} placeholder="Nuptial Mass and celebration." />
+      </div>
+    </div>
+  );
+
+  const renderInviteVariablesEditor = () => (
+    <div style={{maxWidth: '960px'}}>
+      <div className={styles.variableEditor}>
+        <div>
+          <h3>Invite Variables</h3>
+          <p>Edit shared values used by email, WhatsApp, and Telegram invite templates. Use Publish Changes to save.</p>
+        </div>
+
+        <div className={styles.variableGrid}>
+          {editableVariableFields.map((field) => (
+            <label key={field.key} className={styles.label}>
+              {field.label}
+              <input
+                className={styles.input}
+                value={config[field.key] || ''}
+                onChange={(e) => updateConfig(field.key, e.target.value)}
+                placeholder={field.placeholder}
+              />
+            </label>
+          ))}
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Custom variables JSON</label>
+          <textarea
+            className={styles.textarea}
+            value={customVariablesText}
+            onChange={(e) => setCustomVariablesText(e.target.value)}
+            rows={5}
+            placeholder={'{\n  "dressCode": "Formal garden attire"\n}'}
+          />
+        </div>
+
+        <div className={styles.readOnlyVariables}>
+          <h4>Per-invite variables</h4>
+          <p>These are generated for each guest and can be used in templates, but are not edited globally.</p>
+          <div>
+            {readOnlyTemplateVariables.map((name) => <code key={name}>{`{${name}}`}</code>)}
+          </div>
+        </div>
+
+        <div className={styles.variablePreviewGrid}>
+          {variablePreviews.map((preview) => (
+            <div key={preview.inviteType} className={styles.variablePreview}>
+              <h4>{preview.title} sample values</h4>
+              <dl>
+                {Object.entries(preview.vars).map(([key, value]) => (
+                  <div key={key}>
+                    <dt>{`{${key}}`}</dt>
+                    <dd>{String(value) || '-'}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   // Hero Sub-editor
   const renderHeroEditor = () => (
@@ -1072,6 +1276,19 @@ export default function EditorPage() {
     </>
   );
 
+  const activeConfigGroup = configGroups.find((group) => group.id === activeSectionId);
+  const isConfigGroup = Boolean(activeConfigGroup);
+
+  const renderConfigGroup = () => {
+    if (activeSectionId === 'config_design') return renderDesignSettings();
+    if (activeSectionId === 'config_venues') return renderVenueSettings();
+    if (activeSectionId === 'config_travel') return renderTravelSettings();
+    if (activeSectionId === 'config_rsvp') return renderRsvpSettings();
+    if (activeSectionId === 'config_calendar') return renderCalendarSettings();
+    if (activeSectionId === 'config_invite_variables') return renderInviteVariablesEditor();
+    return renderSiteSettings();
+  };
+
   return (
     <div className={styles.container}>
       <aside className={styles.sidebar}>
@@ -1079,9 +1296,11 @@ export default function EditorPage() {
           <h2 className={styles.title}>Sections</h2>
         </div>
         <div className={styles.sectionList}>
-          <button className={`${styles.sectionItem} ${activeSectionId === 'config' ? styles.active : ''}`} onClick={() => setActiveSectionId('config')}>
-            Site Settings
-          </button>
+          {configGroups.map((group) => (
+            <button key={group.id} className={`${styles.sectionItem} ${activeSectionId === group.id ? styles.active : ''}`} onClick={() => setActiveSectionId(group.id)}>
+              {group.label}
+            </button>
+          ))}
           <div style={{height: '1px', background: 'var(--color-border)', margin: 'var(--spacing-2) 0'}}></div>
           {sections.map(section => (
             <button key={section.id} className={`${styles.sectionItem} ${section.id === activeSectionId ? styles.active : ''}`} onClick={() => setActiveSectionId(section.id)}>
@@ -1094,7 +1313,7 @@ export default function EditorPage() {
       <main className={styles.editor}>
         <div className={styles.header}>
           <h2 className={styles.title}>
-            {activeSectionId === 'config' ? 'Site Settings' : `Edit ${activeSection?.type}`}
+            {activeConfigGroup ? activeConfigGroup.label : `Edit ${activeSection?.type}`}
           </h2>
           <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
             {message && <span style={{color: 'green', fontSize: '0.875rem'}}>{message}</span>}
@@ -1104,7 +1323,7 @@ export default function EditorPage() {
           </div>
         </div>
 
-        {activeSectionId === 'config' ? renderSiteSettings() : (
+        {isConfigGroup ? renderConfigGroup() : (
           <div style={{maxWidth: '800px'}}>
             <div className={styles.formGroup}>
               <label className={styles.label}>
