@@ -9,7 +9,7 @@ import { normalizeInvitationState } from './invitations';
 import { normalizeSeatingState } from './seating';
 
 export type BackupScope = 'rsvps' | 'guests' | 'invitations' | 'seating';
-export type BackupInterval = 'hourly' | 'six_hours' | 'daily' | 'weekly';
+export type BackupInterval = 'daily';
 
 export interface BackupSettings {
   enabled: boolean;
@@ -40,6 +40,7 @@ export interface BackupListItem {
 const allScopes: BackupScope[] = ['rsvps', 'guests', 'invitations', 'seating'];
 const backupPrefix = 'backups/';
 const localBackupDir = path.join(process.cwd(), 'backups');
+const dailyIntervalMs = 24 * 60 * 60 * 1000;
 
 export const defaultBackupSettings: BackupSettings = {
   enabled: false,
@@ -56,9 +57,7 @@ export function normalizeBackupSettings(value: unknown): BackupSettings {
 
   return {
     enabled: Boolean(input.enabled),
-    interval: ['hourly', 'six_hours', 'daily', 'weekly'].includes(String(input.interval))
-      ? input.interval as BackupInterval
-      : defaultBackupSettings.interval,
+    interval: 'daily',
     scopes: scopes.length ? scopes : defaultBackupSettings.scopes,
     retentionCount: Math.max(1, Math.min(200, Number(input.retentionCount || defaultBackupSettings.retentionCount))),
     lastRunAt: input.lastRunAt,
@@ -245,17 +244,10 @@ export async function restoreBackup(envelope: BackupEnvelope, scopes: BackupScop
   return selectedScopes;
 }
 
-function intervalMs(interval: BackupInterval) {
-  if (interval === 'hourly') return 60 * 60 * 1000;
-  if (interval === 'six_hours') return 6 * 60 * 60 * 1000;
-  if (interval === 'weekly') return 7 * 24 * 60 * 60 * 1000;
-  return 24 * 60 * 60 * 1000;
-}
-
 export function isBackupDue(settings: BackupSettings, now = new Date()) {
   if (!settings.enabled) return false;
   if (!settings.lastRunAt) return true;
-  return now.getTime() - new Date(settings.lastRunAt).getTime() >= intervalMs(settings.interval);
+  return now.getTime() - new Date(settings.lastRunAt).getTime() >= dailyIntervalMs;
 }
 
 export async function runScheduledBackup() {

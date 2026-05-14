@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import styles from './page.module.css';
 
 type BackupScope = 'rsvps' | 'guests' | 'invitations' | 'seating';
-type BackupInterval = 'hourly' | 'six_hours' | 'daily' | 'weekly';
+type BackupInterval = 'daily';
 
 interface BackupSettings {
   enabled: boolean;
@@ -34,13 +34,6 @@ const scopeOptions: { value: BackupScope; label: string }[] = [
   { value: 'guests', label: 'Guest roster' },
   { value: 'invitations', label: 'Invites' },
   { value: 'seating', label: 'Seating plan' },
-];
-
-const intervalOptions: { value: BackupInterval; label: string }[] = [
-  { value: 'hourly', label: 'Hourly' },
-  { value: 'six_hours', label: 'Every 6 hours' },
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
 ];
 
 function downloadJson(filename: string, value: unknown) {
@@ -280,12 +273,7 @@ export default function AdminBackupsPage() {
             />
             Enable scheduled backups
           </label>
-          <label className={styles.fieldLabel}>
-            Interval
-            <select className={styles.select} value={settings.interval} onChange={(event) => setSettings({ ...settings, interval: event.target.value as BackupInterval })}>
-              {intervalOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
-          </label>
+          <p className={styles.helper}>Scheduled backups run daily at 2:00 AM Singapore time.</p>
           <label className={styles.fieldLabel}>
             Retention count
             <input className={styles.input} type="number" min={1} max={200} value={settings.retentionCount} onChange={(event) => setSettings({ ...settings, retentionCount: Number(event.target.value) })} />
