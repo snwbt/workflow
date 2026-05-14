@@ -47,10 +47,6 @@ export default function HeroSection({ config, globalConfig }: { config?: any; gl
 
   const isExternalLink = ctaLink.startsWith('http');
   const getCtaScrollTarget = () => {
-    if (ctaLink !== '#rsvp') return ctaLink;
-    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
-      return '#rsvp-form';
-    }
     return ctaLink;
   };
 

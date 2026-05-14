@@ -3,6 +3,26 @@ import fs from 'fs';
 import path from 'path';
 import { put } from '@vercel/blob';
 
+const imageTypes = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/x-icon',
+  'image/vnd.microsoft.icon',
+]);
+
+const videoTypes = new Set(['video/mp4', 'video/webm']);
+
+function getUploadType(file: File) {
+  const ext = path.extname(file.name).toLowerCase();
+  if (ext === '.ico' && (!file.type || file.type === 'application/octet-stream' || imageTypes.has(file.type))) {
+    return { valid: true, contentType: 'image/x-icon', mediaType: 'image' };
+  }
+  if (imageTypes.has(file.type)) return { valid: true, contentType: file.type, mediaType: 'image' };
+  if (videoTypes.has(file.type)) return { valid: true, contentType: file.type, mediaType: 'video' };
+  return { valid: false, contentType: file.type, mediaType: '' };
+}
 
 export async function POST(request: Request) {
   try {
@@ -13,9 +33,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Validate type
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm'];
-    if (!validTypes.includes(file.type)) {
+    const uploadType = getUploadType(file);
+    if (!uploadType.valid) {
       return NextResponse.json({ error: 'Unsupported file type. Please upload an image or video.' }, { status: 400 });
     }
 
@@ -33,13 +52,13 @@ export async function POST(request: Request) {
       const blob = await put(`media/${filename}`, file, {
         access: 'public',
         addRandomSuffix: true,
-        contentType: file.type,
+        contentType: uploadType.contentType,
       });
 
       return NextResponse.json({
         success: true,
         url: blob.url,
-        type: file.type.startsWith('video/') ? 'video' : 'image',
+        type: uploadType.mediaType,
       });
     }
 
@@ -59,7 +78,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       success: true, 
       url: publicUrl,
-      type: file.type.startsWith('video/') ? 'video' : 'image'
+      type: uploadType.mediaType
     });
 
   } catch (error) {

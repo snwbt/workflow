@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   buildInviteLink,
   buildTelegramUrl,
@@ -29,6 +29,8 @@ const emptyForm = {
   inviteType: 'saturday_only' as InvitationInviteType,
 };
 
+const emptyConfig: Record<string, any> = {};
+
 function inviteTypeLabel(value: InvitationInviteType) {
   return value === 'friday_saturday' ? 'Fri + Sat' : 'Sat only';
 }
@@ -46,6 +48,55 @@ const templateSections: { inviteType: InvitationInviteType; title: string; descr
   },
 ];
 
+const editableVariableFields = [
+  { key: 'COUPLE_NAMES', label: 'coupleNames', placeholder: 'Russell & Siaw Min' },
+  { key: 'VENUE_NAME', label: 'fridayVenue', placeholder: 'The Westin Singapore' },
+  { key: 'VENUE_DAY_TWO_NAME', label: 'saturdayVenue', placeholder: 'Church of the Holy Family' },
+  { key: 'RSVP_DEADLINE_DISPLAY', label: 'rsvpDeadline', placeholder: '1 October 2026' },
+  { key: 'CALENDAR_FRIDAY_TITLE', label: 'fridayCalendarTitle', placeholder: 'Wedding Dinner' },
+  { key: 'CALENDAR_FRIDAY_DATE', label: 'fridayCalendarDate', placeholder: '23 October 2026' },
+  { key: 'CALENDAR_FRIDAY_START_TIME', label: 'fridayCalendarStart', placeholder: '6:45 PM' },
+  { key: 'CALENDAR_FRIDAY_END_TIME', label: 'fridayCalendarEnd', placeholder: '10:30 PM' },
+  { key: 'CALENDAR_FRIDAY_VENUE', label: 'fridayCalendarLocation', placeholder: 'The Westin Singapore' },
+  { key: 'CALENDAR_FRIDAY_DESCRIPTION', label: 'fridayCalendarDescription', placeholder: 'Wedding dinner reception.' },
+  { key: 'CALENDAR_SATURDAY_TITLE', label: 'saturdayCalendarTitle', placeholder: 'Nuptial Mass' },
+  { key: 'CALENDAR_SATURDAY_DATE', label: 'saturdayCalendarDate', placeholder: '24 October 2026' },
+  { key: 'CALENDAR_SATURDAY_START_TIME', label: 'saturdayCalendarStart', placeholder: '10:00 AM' },
+  { key: 'CALENDAR_SATURDAY_END_TIME', label: 'saturdayCalendarEnd', placeholder: '1:00 PM' },
+  { key: 'CALENDAR_SATURDAY_VENUE', label: 'saturdayCalendarLocation', placeholder: 'Church of the Holy Family' },
+  { key: 'CALENDAR_SATURDAY_DESCRIPTION', label: 'saturdayCalendarDescription', placeholder: 'Nuptial Mass and celebration.' },
+] as const;
+
+const readOnlyTemplateVariables = [
+  'guestName',
+  'plusOneName',
+  'inviteGreeting',
+  'inviteLink',
+  'inviteCode',
+  'inviteType',
+  'eventDetails',
+  'calendarSummary',
+  'photoUrl',
+];
+
+function stringifyCustomVariables(config: Record<string, any>) {
+  return JSON.stringify(config.INVITE_TEMPLATE_VARIABLES || {}, null, 2);
+}
+
+function sampleInvite(inviteType: InvitationInviteType): InvitationView {
+  return {
+    id: `sample-${inviteType}`,
+    guestName: inviteType === 'friday_saturday' ? 'Fri + Sat Guest' : 'Saturday Guest',
+    plusOneName: 'Plus One',
+    email: '',
+    phone: '',
+    telegramUsername: '',
+    inviteType,
+    inviteCode: inviteType === 'friday_saturday' ? 'FRISAT123' : 'SAT123',
+    rsvpSubmitted: false,
+  };
+}
+
 function channelStatus(invite: InvitationView, channel: InvitationChannel) {
   const status = invite.sent?.[channel];
   if (!status?.status || status.status === 'idle') return 'Not sent';
@@ -62,34 +113,50 @@ export default function AdminInvitesPage() {
   const [importRows, setImportRows] = useState<Record<string, unknown>[]>([]);
   const [importPreview, setImportPreview] = useState<InvitationImportPreviewRow[]>([]);
   const [chatQueue, setChatQueue] = useState<{ channel: 'whatsapp' | 'telegram'; invites: InvitationView[]; index: number } | null>(null);
+  const [customVariablesText, setCustomVariablesText] = useState('{}');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   const origin = typeof window === 'undefined' ? '' : window.location.origin;
   const templates = payload?.templates || defaultInvitationTemplates;
-  const config = payload?.config || {};
+  const config = payload?.config || emptyConfig;
 
   const sortedInvitations = useMemo(() => (
     [...(payload?.invitations || [])].sort((a, b) => a.guestName.localeCompare(b.guestName))
   ), [payload?.invitations]);
   const allSelected = sortedInvitations.length > 0 && sortedInvitations.every((invite) => selectedIds.has(invite.id));
   const selectedInvitations = sortedInvitations.filter((invite) => selectedIds.has(invite.id));
+  const applyPayload = useCallback((nextPayload: InvitationPayload) => {
+    setPayload(nextPayload);
+    setCustomVariablesText(stringifyCustomVariables(nextPayload.config || {}));
+  }, []);
 
-  const loadInvitations = () => {
+  const variablePreviews = useMemo(() => (
+    templateSections.map((section) => {
+      const invite = sortedInvitations.find((item) => item.inviteType === section.inviteType) || sampleInvite(section.inviteType);
+      const linkOrigin = origin || 'https://example.com';
+      return {
+        ...section,
+        vars: invitationTemplateVars(invite, config, buildInviteLink(linkOrigin, invite.inviteCode), templates),
+      };
+    })
+  ), [config, origin, sortedInvitations, templates]);
+
+  const loadInvitations = useCallback(() => {
     setError('');
     fetch('/api/admin/invitations')
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then(setPayload)
+      .then(applyPayload)
       .catch((err) => setError(`Failed to load invitations: ${err.message}`));
-  };
+  }, [applyPayload]);
 
   useEffect(() => {
     loadInvitations();
-  }, []);
+  }, [loadInvitations]);
 
   const saveTemplates = async (nextTemplates: InvitationTemplates) => {
     if (!payload) return;
@@ -103,7 +170,7 @@ export default function AdminInvitesPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save templates.');
-      setPayload(data);
+      applyPayload(data);
       setMessage('Templates saved.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save templates.');
@@ -124,6 +191,59 @@ export default function AdminInvitesPage() {
         },
       },
     });
+  };
+
+  const updateConfigDraft = (key: string, value: string) => {
+    if (!payload) return;
+    setPayload({
+      ...payload,
+      config: {
+        ...payload.config,
+        [key]: value,
+      },
+    });
+  };
+
+  const saveInviteVariables = async () => {
+    if (!payload) return;
+    let customVariables: Record<string, string>;
+    try {
+      const parsed = JSON.parse(customVariablesText || '{}');
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('Custom variables must be a JSON object.');
+      }
+      customVariables = Object.fromEntries(
+        Object.entries(parsed as Record<string, unknown>)
+          .filter(([key]) => /^\w+$/.test(key))
+          .map(([key, value]) => [key, String(value ?? '')])
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Custom variables must be valid JSON.');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    try {
+      const nextConfig = {
+        ...payload.config,
+        INVITE_TEMPLATE_VARIABLES: customVariables,
+      };
+      const res = await fetch('/api/admin/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config: nextConfig }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save invite variables.');
+      setPayload({ ...payload, config: data.config || nextConfig });
+      setCustomVariablesText(stringifyCustomVariables(data.config || nextConfig));
+      setMessage('Invite variables saved.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save invite variables.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const createInvitation = async (event: React.FormEvent) => {
@@ -159,7 +279,7 @@ export default function AdminInvitesPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save invitation.');
-      setPayload(data);
+      applyPayload(data);
       setEditingId('');
       setMessage('Invitation saved.');
     } catch (err) {
@@ -186,7 +306,7 @@ export default function AdminInvitesPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to delete invitations.');
-      setPayload(data);
+      applyPayload(data);
       setSelectedIds(new Set());
       setMessage(ids.length === 1 ? 'Invitation deleted.' : `${ids.length} invitations deleted.`);
     } catch (err) {
@@ -355,7 +475,7 @@ export default function AdminInvitesPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to import invitees.');
-      setPayload(data);
+      applyPayload(data);
       setImportRows([]);
       setImportPreview([]);
       setMessage(`${validCount} invitee row${validCount === 1 ? '' : 's'} imported.`);
@@ -482,8 +602,63 @@ export default function AdminInvitesPage() {
               );
             })}
           </div>
+          <div className={styles.variableEditor}>
+            <div>
+              <h3>Invite Variables</h3>
+              <p>Edit the shared values used by email, WhatsApp, and Telegram templates.</p>
+            </div>
+
+            <div className={styles.variableGrid}>
+              {editableVariableFields.map((field) => (
+                <label key={field.key}>
+                  {field.label}
+                  <input
+                    value={config[field.key] || ''}
+                    onChange={(e) => updateConfigDraft(field.key, e.target.value)}
+                    placeholder={field.placeholder}
+                  />
+                </label>
+              ))}
+            </div>
+
+            <label>
+              Custom variables JSON
+              <textarea
+                value={customVariablesText}
+                onChange={(e) => setCustomVariablesText(e.target.value)}
+                rows={5}
+                placeholder={'{\n  "dressCode": "Formal garden attire"\n}'}
+              />
+            </label>
+
+            <div className={styles.readOnlyVariables}>
+              <h4>Per-invite variables</h4>
+              <p>These are generated for each guest and can be used in templates, but are not edited globally.</p>
+              <div>
+                {readOnlyTemplateVariables.map((name) => <code key={name}>{`{${name}}`}</code>)}
+              </div>
+            </div>
+
+            <div className={styles.variablePreviewGrid}>
+              {variablePreviews.map((preview) => (
+                <div key={preview.inviteType} className={styles.variablePreview}>
+                  <h4>{preview.title} sample values</h4>
+                  <dl>
+                    {Object.entries(preview.vars).map(([key, value]) => (
+                      <div key={key}>
+                        <dt>{`{${key}}`}</dt>
+                        <dd>{String(value) || '-'}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ))}
+            </div>
+
+            <button type="button" onClick={saveInviteVariables} disabled={saving}>Save invite variables</button>
+          </div>
           <button type="button" onClick={() => saveTemplates(templates)} disabled={saving}>Save templates</button>
-          <p className={styles.helper}>Variables: {'{inviteGreeting}'}, {'{guestName}'}, {'{plusOneName}'}, {'{inviteLink}'}, {'{eventDetails}'}, {'{calendarSummary}'}, {'{coupleNames}'}, {'{fridayVenue}'}, {'{saturdayVenue}'}, {'{rsvpDeadline}'}.</p>
+          <p className={styles.helper}>Use placeholders like {'{inviteGreeting}'}, {'{inviteLink}'}, {'{eventDetails}'}, {'{coupleNames}'}, {'{fridayVenue}'}, {'{saturdayVenue}'}, or any saved custom variable.</p>
         </section>
       </section>
 

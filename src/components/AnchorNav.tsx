@@ -162,9 +162,9 @@ export default function AnchorNav({ globalConfig }: { globalConfig?: Record<stri
         </div>
       </nav>
       <a
-        href="#rsvp-form"
+        href="#rsvp"
         className={`${styles.mobileCta} ${isHeroVisible || isRsvpVisible ? styles.mobileCtaHidden : ''}`}
-        onClick={(e) => handleClick(e, 'rsvp-form')}
+        onClick={(e) => handleClick(e, 'rsvp')}
       >
         {t('RSVP')}
       </a>

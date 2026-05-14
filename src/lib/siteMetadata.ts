@@ -19,6 +19,12 @@ function absoluteUrl(value: string) {
   return `${base.replace(/\/$/, '')}/${value.replace(/^\//, '')}`;
 }
 
+function withVersion(url: string, version: string) {
+  if (!url || !version) return url;
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}v=${encodeURIComponent(version)}`;
+}
+
 export async function getSiteMetadata(): Promise<Metadata> {
   const db = await getDb();
   const config = db.config || {};
@@ -28,12 +34,22 @@ export async function getSiteMetadata(): Promise<Metadata> {
   const description = asString(config.SITE_PREVIEW_DESCRIPTION) || FALLBACK_DESCRIPTION;
   const previewImage = absoluteUrl(asString(config.SITE_PREVIEW_IMAGE));
   const favicon = asString(config.SITE_FAVICON);
+  const faviconVersion = asString(config.SITE_FAVICON_VERSION);
+  const faviconUrl = withVersion(favicon, faviconVersion);
+  const faviconIsIco = /\.ico(?:$|[?#])/i.test(favicon);
+  const icons = faviconUrl
+    ? {
+        icon: faviconUrl,
+        shortcut: faviconUrl,
+        ...(faviconIsIco ? {} : { apple: faviconUrl }),
+      }
+    : undefined;
   const images = previewImage ? [{ url: previewImage }] : undefined;
 
   return {
     title,
     description,
-    icons: favicon ? { icon: favicon, shortcut: favicon, apple: favicon } : undefined,
+    icons,
     openGraph: {
       title: previewTitle,
       description,

@@ -25,10 +25,6 @@ export default function ClosingSection({ config, globalConfig }: { config?: any,
   
   const isExternalLink = ctaLink.startsWith('http');
   const getCtaScrollTarget = () => {
-    if (ctaLink !== '#rsvp') return ctaLink;
-    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
-      return '#rsvp-form';
-    }
     return ctaLink;
   };
 

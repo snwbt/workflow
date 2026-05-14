@@ -235,10 +235,10 @@ export default function EditorPage() {
       <div className={styles.formGroup}>
         <label className={styles.label}>Favicon URL</label>
         <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
-          <input className={styles.input} style={{flex: 1}} value={config.SITE_FAVICON || ''} onChange={(e) => updateConfig('SITE_FAVICON', e.target.value)} placeholder="/media/favicon.png" />
+          <input className={styles.input} style={{flex: 1}} value={config.SITE_FAVICON || ''} onChange={(e) => updateConfigFields({ SITE_FAVICON: e.target.value, SITE_FAVICON_VERSION: String(Date.now()) })} placeholder="/media/favicon.ico" />
           <label className={styles.secondaryButton} style={{cursor: 'pointer'}}>
             Upload
-            <input type="file" style={{display: 'none'}} accept="image/*" onChange={(e) => handleFileUpload(e, (url) => updateConfig('SITE_FAVICON', url))} />
+            <input type="file" style={{display: 'none'}} accept=".ico,image/*" onChange={(e) => handleFileUpload(e, (url) => updateConfigFields({ SITE_FAVICON: url, SITE_FAVICON_VERSION: String(Date.now()) }))} />
           </label>
         </div>
       </div>

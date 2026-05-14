@@ -8,6 +8,7 @@ import { trackEvent } from '@/lib/analytics';
 import { getRsvpDeadlineDisplay } from '@/lib/eventDisplay';
 import { useSiteText } from '@/lib/sitePreferences';
 import { getCalendarEvents, getCalendarLinks, type CalendarEvent } from '@/lib/calendar';
+import { MAIN_SCROLL_CONTAINER_ID } from '@/lib/scroll';
 
 type AttendanceStatus = 'attending' | 'declined';
 type InviteType = 'friday_saturday' | 'saturday_only';
@@ -98,6 +99,15 @@ export default function RsvpSection({ globalConfig, scheduleConfig }: { globalCo
     const params = new URLSearchParams(window.location.search);
     const code = params.get('invite') || params.get('code');
     if (!code) return;
+
+    if (window.location.hash === '#rsvp-form' || window.location.hash === '#rsvp') {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+      window.requestAnimationFrame(() => {
+        const scrollContainer = document.getElementById(MAIN_SCROLL_CONTAINER_ID);
+        scrollContainer?.scrollTo({ top: 0, behavior: 'auto' });
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      });
+    }
 
     setInviteCode(code);
 

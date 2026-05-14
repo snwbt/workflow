@@ -163,7 +163,16 @@ export function deriveInvitationViews(state: InvitationState, rsvps: any[] = [])
 
 export function buildInviteLink(origin: string, inviteCode: string) {
   const base = origin.replace(/\/$/, '');
-  return `${base}/?invite=${encodeURIComponent(inviteCode)}#rsvp-form`;
+  return `${base}/?invite=${encodeURIComponent(inviteCode)}`;
+}
+
+function cleanTemplateVariables(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => /^\w+$/.test(key))
+      .map(([key, item]) => [key, String(item ?? '')])
+  );
 }
 
 export function invitationTemplateVars(
@@ -178,7 +187,10 @@ export function invitationTemplateVars(
   const inviteGreeting = plusOneName ? `Dear ${guestName} and ${plusOneName}` : `Dear ${guestName}`;
   const events = getCalendarEvents(invite.inviteType, null, config);
   const eventDetails = renderEventDetailsText(events);
+  const fridayEvent = getCalendarEvents('friday_saturday', null, config).find((event) => event.id === 'friday');
+  const saturdayEvent = getCalendarEvents('saturday_only', null, config).find((event) => event.id === 'saturday');
   return {
+    ...cleanTemplateVariables(config.INVITE_TEMPLATE_VARIABLES),
     guestName,
     plusOneName,
     inviteGreeting,
@@ -188,6 +200,18 @@ export function invitationTemplateVars(
     fridayVenue: String(config.VENUE_NAME || 'The Westin Singapore'),
     saturdayVenue: String(config.VENUE_DAY_TWO_NAME || 'Church of the Holy Family'),
     rsvpDeadline: String(config.RSVP_DEADLINE_DISPLAY || ''),
+    fridayCalendarTitle: String(fridayEvent?.title || ''),
+    fridayCalendarDate: String(config.CALENDAR_FRIDAY_DATE || '23 October 2026'),
+    fridayCalendarStart: String(config.CALENDAR_FRIDAY_START_TIME || '6:45 PM'),
+    fridayCalendarEnd: String(config.CALENDAR_FRIDAY_END_TIME || '10:30 PM'),
+    fridayCalendarLocation: String(fridayEvent?.location || ''),
+    fridayCalendarDescription: String(fridayEvent?.description || ''),
+    saturdayCalendarTitle: String(saturdayEvent?.title || ''),
+    saturdayCalendarDate: String(config.CALENDAR_SATURDAY_DATE || '24 October 2026'),
+    saturdayCalendarStart: String(config.CALENDAR_SATURDAY_START_TIME || '10:00 AM'),
+    saturdayCalendarEnd: String(config.CALENDAR_SATURDAY_END_TIME || '1:00 PM'),
+    saturdayCalendarLocation: String(saturdayEvent?.location || ''),
+    saturdayCalendarDescription: String(saturdayEvent?.description || ''),
     photoUrl: String(templateSet.photoUrl || ''),
     inviteType: invite.inviteType === 'friday_saturday' ? 'Friday + Saturday' : 'Saturday only',
     eventDetails,
