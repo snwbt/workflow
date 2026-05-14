@@ -6,7 +6,11 @@ import { getAdminAuth, saveAdminAuth, type AdminAuthRecord } from '@/lib/db';
 
 const DEFAULT_USERNAME = 'admin';
 const DEFAULT_PASSWORD = 'wedding2026';
-const MIN_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 12;
+
+function isProductionRuntime() {
+  return process.env.NODE_ENV === 'production' || process.env.VERCEL === '1' || Boolean(process.env.VERCEL_ENV);
+}
 
 function hashPassword(
   password: string,
@@ -39,9 +43,14 @@ export async function ensureAdminAuth(): Promise<AdminAuthRecord> {
     return existing;
   }
 
+  const initialPassword = process.env.ADMIN_INITIAL_PASSWORD || (!isProductionRuntime() ? DEFAULT_PASSWORD : '');
+  if (!initialPassword) {
+    throw new Error('Admin password is not configured. Set ADMIN_INITIAL_PASSWORD before first production sign-in.');
+  }
+
   const auth: AdminAuthRecord = {
-    username: DEFAULT_USERNAME,
-    ...hashPassword(DEFAULT_PASSWORD),
+    username: process.env.ADMIN_USERNAME || DEFAULT_USERNAME,
+    ...hashPassword(initialPassword),
     updatedAt: new Date().toISOString(),
   };
 
@@ -116,7 +125,8 @@ export async function validateNewPassword(
     return 'New password and confirmation do not match.';
   }
 
-  if (!(await verifyAdminCredentials(DEFAULT_USERNAME, currentPassword))) {
+  const auth = await ensureAdminAuth();
+  if (!(await verifyAdminCredentials(auth.username, currentPassword))) {
     return 'Current password is incorrect.';
   }
 

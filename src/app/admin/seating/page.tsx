@@ -77,6 +77,9 @@ export default function AdminSeatingPage() {
 
   const selectedAssignment = selectedPersonId ? assignmentByPerson.get(selectedPersonId) : null;
   const assignedCount = roster.filter((person) => assignmentByPerson.has(person.id)).length;
+  const orphanConflicts = (payload?.conflicts || []).filter((conflict) => conflict.type === 'unknown-person');
+  const orphanIds = Array.from(new Set(orphanConflicts.map((conflict) => conflict.personId).filter(Boolean) as string[]));
+  const orphanAssignments = assignments.filter((assignment) => orphanIds.includes(assignment.personId));
 
   const tablesById = useMemo(() => new Map((payload?.floorplan.tables || []).map((table) => [table.id, table])), [payload]);
 
@@ -208,6 +211,19 @@ export default function AdminSeatingPage() {
     void persistAssignments(nextAssignments, `${ids.length} assignment${ids.length === 1 ? '' : 's'} cleared.`);
   };
 
+  const clearOrphanAssignments = () => {
+    if (orphanIds.length === 0) return;
+    if (!window.confirm(`Clear ${orphanAssignments.length} assignment${orphanAssignments.length === 1 ? '' : 's'} for guests no longer in the roster?`)) return;
+    const orphanSet = new Set(orphanIds);
+    const nextAssignments = assignments.filter((assignment) => !orphanSet.has(assignment.personId));
+    setSelectedClearIds((current) => {
+      const next = new Set(current);
+      orphanSet.forEach((id) => next.delete(id));
+      return next;
+    });
+    void persistAssignments(nextAssignments, `${orphanAssignments.length} orphaned assignment${orphanAssignments.length === 1 ? '' : 's'} cleared.`);
+  };
+
   const toggleClearSelection = (personId: string, checked: boolean) => {
     setSelectedClearIds((current) => {
       const next = new Set(current);
@@ -267,6 +283,24 @@ export default function AdminSeatingPage() {
             <p key={`${conflict.type}-${index}`}>{conflict.message}</p>
           ))}
         </div>
+      )}
+
+      {orphanAssignments.length > 0 && (
+        <section className={styles.cleanupPanel}>
+          <div>
+            <span className={styles.kicker}>Roster cleanup</span>
+            <strong>{orphanAssignments.length} assignment{orphanAssignments.length === 1 ? '' : 's'} reference guests no longer in the roster.</strong>
+            <p>
+              {orphanAssignments.map((assignment) => {
+                const table = tablesById.get(assignment.tableId);
+                return `${assignment.personId} at table ${table?.label || assignment.tableId}, seat ${assignment.seatNumber}`;
+              }).join(' | ')}
+            </p>
+          </div>
+          <button type="button" className={styles.dangerButton} onClick={clearOrphanAssignments} disabled={saving}>
+            Clear orphaned assignments
+          </button>
+        </section>
       )}
 
       <div className={styles.workspace}>

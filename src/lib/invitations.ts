@@ -122,12 +122,23 @@ export function generateInviteCode(name: string, existingCodes: Iterable<string>
     .toUpperCase() || 'GUEST';
 
   let index = 0;
-  let code = `${base}${Math.floor(1000 + Math.random() * 9000)}`;
+  let code = `${base}${randomInviteToken()}`;
   while (existing.has(code.toLowerCase())) {
     index += 1;
-    code = `${base}${Math.floor(1000 + Math.random() * 9000)}${index}`;
+    code = `${base}${randomInviteToken()}${index}`;
   }
   return code;
+}
+
+function randomInviteToken(length = 8) {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = new Uint8Array(length);
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index++) bytes[index] = Math.floor(Math.random() * 256);
+  }
+  return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join('');
 }
 
 export function findInvitationByCode(state: InvitationState, code: unknown) {

@@ -75,7 +75,8 @@
 .planPanel,
 .rosterPanel,
 .selectedCard,
-.notice {
+.notice,
+.cleanupPanel {
   border: 1px solid var(--color-border);
   background: var(--color-surface);
 }
@@ -297,6 +298,46 @@
   color: var(--color-error);
 }
 
+.cleanupPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+  padding: var(--spacing-4);
+}
+
+.cleanupPanel strong,
+.cleanupPanel p {
+  display: block;
+  margin: 0;
+}
+
+.cleanupPanel p {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin-top: var(--spacing-2);
+}
+
+.dangerButton {
+  min-height: 36px;
+  border: 1px solid var(--color-error);
+  background: transparent;
+  color: var(--color-error);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0 var(--spacing-3);
+  text-transform: uppercase;
+}
+
+.dangerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 @media (max-width: 1100px) {
   .workspace {
     grid-template-columns: 1fr;
@@ -315,6 +356,11 @@
 
   .header {
     display: grid;
+  }
+
+  .cleanupPanel {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .bulkClearBar {

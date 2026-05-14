@@ -6,6 +6,7 @@ import { neon } from '@neondatabase/serverless';
 import { defaultSeatingState } from './seatingDefaults';
 import { normalizeSeatingState } from './seating';
 import { normalizeInvitationState } from './invitations';
+import { decryptDataIfNeeded, encryptDataIfConfigured, hasDataEncryptionKey } from './cryptoVault';
 import type { InvitationState } from './invitationTypes';
 
 const dbPath = path.join(process.cwd(), 'src/data/db.json');
@@ -49,6 +50,8 @@ let sqlClient: SqlClient | null = null;
 let schemaReady = false;
 let seedReady = false;
 
+const sensitiveStateKeys = new Set(['guests', 'invitations', 'seating', 'rsvps', 'rsvps_secure']);
+
 function isVercelRuntime() {
   return process.env.VERCEL === '1' || Boolean(process.env.VERCEL_ENV);
 }
@@ -77,6 +80,14 @@ function readJsonDbRaw() {
   return JSON.parse(fileContents);
 }
 
+function decodeStateValue(key: string, value: unknown) {
+  return sensitiveStateKeys.has(key) ? decryptDataIfNeeded(value) : value;
+}
+
+function encodeStateValue(key: string, value: unknown) {
+  return sensitiveStateKeys.has(key) ? encryptDataIfConfigured(value) : value;
+}
+
 function stripPrivateConfig(config: Record<string, unknown> = {}) {
   const publicConfig = { ...config };
   delete publicConfig.ADMIN_AUTH;
@@ -84,15 +95,24 @@ function stripPrivateConfig(config: Record<string, unknown> = {}) {
 }
 
 function normalizeDb(data: any) {
-  return {
+  const decoded = {
     ...data,
-    config: stripPrivateConfig(data?.config || {}),
-    homepage_sections: data?.homepage_sections || [],
-    rsvps: data?.rsvps || [],
-    guests: data?.guests || [],
-    events: data?.events || [],
-    seating: normalizeSeatingState(data?.seating || defaultSeatingState),
-    invitations: normalizeInvitationState(data?.invitations),
+    guests: decodeStateValue('guests', data?.guests || []),
+    invitations: decodeStateValue('invitations', data?.invitations),
+    seating: decodeStateValue('seating', data?.seating || defaultSeatingState),
+    rsvps: decodeStateValue('rsvps', data?.rsvps || []),
+  };
+
+  return {
+    ...decoded,
+    config: stripPrivateConfig(decoded?.config || {}),
+    homepage_sections: decoded?.homepage_sections || [],
+    backup_settings: decoded?.backup_settings || undefined,
+    rsvps: decoded?.rsvps || [],
+    guests: decoded?.guests || [],
+    events: decoded?.events || [],
+    seating: normalizeSeatingState(decoded?.seating || defaultSeatingState),
+    invitations: normalizeInvitationState(decoded?.invitations),
   };
 }
 
@@ -157,9 +177,10 @@ async function ensureSchema(sql: SqlClient) {
 }
 
 async function upsertSiteState(sql: SqlClient, key: string, value: unknown) {
+  const persistedValue = encodeStateValue(key, value);
   await sql`
     INSERT INTO site_state (key, value, updated_at)
-    VALUES (${key}, ${JSON.stringify(value)}::jsonb, NOW())
+    VALUES (${key}, ${JSON.stringify(persistedValue)}::jsonb, NOW())
     ON CONFLICT (key) DO UPDATE SET
       value = EXCLUDED.value,
       updated_at = NOW()
@@ -256,7 +277,9 @@ async function seedFromJson(sql: SqlClient) {
     await upsertSiteState(sql, 'invitations', normalizeInvitationState(seed.invitations));
   }
 
-  if (rsvpCount === 0) {
+  if (rsvpCount === 0 && hasDataEncryptionKey()) {
+    await upsertSiteState(sql, 'rsvps_secure', seed.rsvps || []);
+  } else if (rsvpCount === 0) {
     for (const rsvp of seed.rsvps || []) {
       await insertRsvp(sql, rsvp);
     }
@@ -300,6 +323,9 @@ function saveJsonDb(data: any) {
       ADMIN_AUTH: data.config?.ADMIN_AUTH || existing.config?.ADMIN_AUTH,
     },
   };
+  for (const key of sensitiveStateKeys) {
+    if (key in merged) merged[key] = encodeStateValue(key, merged[key]);
+  }
   fs.writeFileSync(dbPath, JSON.stringify(merged, null, 2), 'utf8');
 }
 
@@ -309,7 +335,7 @@ function saveJsonDbKey(key: string, value: unknown) {
   const existing = readJsonDbRaw();
   const merged = {
     ...existing,
-    [key]: value,
+    [key]: encodeStateValue(key, value),
   };
   fs.writeFileSync(dbPath, JSON.stringify(merged, null, 2), 'utf8');
 }
@@ -337,39 +363,42 @@ export async function getDb() {
 
   const stateRows = await sql`SELECT key, value FROM site_state` as Array<{ key: string; value: unknown }>;
   const state = stateRows.reduce((acc: Record<string, unknown>, row: any) => {
-    acc[row.key] = row.value;
+    acc[row.key] = decodeStateValue(row.key, row.value);
     return acc;
   }, {});
-
-  const rsvps = await sql`
-    SELECT
-      rsvp_id::text,
-      guest_name,
-      email,
-      attendance_status,
-      invite_code,
-      invite_type,
-      guest_count,
-      plus_one_name,
-      additional_guest_names,
-      dinner_attendance,
-      mass_attendance,
-      meal_preference,
-      dietary_restrictions,
-      accessibility_requirements,
-      transport_needed,
-      message,
-      custom_answers,
-      submitted_at,
-      updated_at,
-      source
-    FROM rsvps
-    ORDER BY submitted_at DESC
-  ` as Array<Record<string, any>>;
+  const encryptedRsvps = state.rsvps_secure || state.rsvps;
+  const rsvps = Array.isArray(encryptedRsvps)
+    ? encryptedRsvps as Array<Record<string, any>>
+    : await sql`
+      SELECT
+        rsvp_id::text,
+        guest_name,
+        email,
+        attendance_status,
+        invite_code,
+        invite_type,
+        guest_count,
+        plus_one_name,
+        additional_guest_names,
+        dinner_attendance,
+        mass_attendance,
+        meal_preference,
+        dietary_restrictions,
+        accessibility_requirements,
+        transport_needed,
+        message,
+        custom_answers,
+        submitted_at,
+        updated_at,
+        source
+      FROM rsvps
+      ORDER BY submitted_at DESC
+    ` as Array<Record<string, any>>;
 
   return normalizeDb({
     config: state.config || {},
     homepage_sections: state.homepage_sections || [],
+    backup_settings: state.backup_settings,
     guests: state.guests || [],
     events: state.events || [],
     seating: normalizeSeatingState(state.seating || defaultSeatingState),
@@ -395,11 +424,8 @@ export async function saveDb(data: any) {
   await upsertSiteState(sql, 'events', data.events || []);
   await upsertSiteState(sql, 'seating', normalizeSeatingState(data.seating || defaultSeatingState));
   await upsertSiteState(sql, 'invitations', normalizeInvitationState(data.invitations));
-
-  await sql`DELETE FROM rsvps`;
-  for (const rsvp of data.rsvps || []) {
-    await insertRsvp(sql, rsvp);
-  }
+  if (data.backup_settings) await upsertSiteState(sql, 'backup_settings', data.backup_settings);
+  await saveRsvps(data.rsvps || []);
 }
 
 export async function saveConfig(config: Record<string, unknown>) {
@@ -486,6 +512,12 @@ export async function saveRsvps(rsvps: RsvpRecord[]) {
     return rsvps;
   }
 
+  if (hasDataEncryptionKey()) {
+    await upsertSiteState(sql, 'rsvps_secure', rsvps || []);
+    await sql`DELETE FROM rsvps`;
+    return rsvps || [];
+  }
+
   await sql`DELETE FROM rsvps`;
   for (const rsvp of rsvps || []) {
     await insertRsvp(sql, rsvp);
@@ -497,7 +529,7 @@ export async function saveRsvp(rsvp: RsvpRecord) {
   const sql = await ensureDatabase();
 
   if (!sql) {
-    const db = readJsonDbRaw();
+    const db = normalizeDb(readJsonDbRaw());
     const rsvps = db.rsvps || [];
     const index = rsvps.findIndex((item: RsvpRecord) => item.rsvp_id === rsvp.rsvp_id);
 
@@ -511,6 +543,16 @@ export async function saveRsvp(rsvp: RsvpRecord) {
     return rsvp;
   }
 
+  if (hasDataEncryptionKey()) {
+    const db = await getDb();
+    const rsvps = db.rsvps || [];
+    const index = rsvps.findIndex((item: RsvpRecord) => item.rsvp_id === rsvp.rsvp_id);
+    if (index >= 0) rsvps[index] = rsvp;
+    else rsvps.push(rsvp);
+    await saveRsvps(rsvps);
+    return rsvp;
+  }
+
   await insertRsvp(sql, rsvp);
   return rsvp;
 }
@@ -519,13 +561,22 @@ export async function deleteRsvp(rsvpId: string) {
   const sql = await ensureDatabase();
 
   if (!sql) {
-    const db = readJsonDbRaw();
+    const db = normalizeDb(readJsonDbRaw());
     const rsvps = db.rsvps || [];
     const nextRsvps = rsvps.filter((rsvp: RsvpRecord) => rsvp.rsvp_id !== rsvpId);
 
     if (nextRsvps.length === rsvps.length) return false;
 
     saveJsonDbKey('rsvps', nextRsvps);
+    return true;
+  }
+
+  if (hasDataEncryptionKey()) {
+    const db = await getDb();
+    const rsvps = db.rsvps || [];
+    const nextRsvps = rsvps.filter((rsvp: RsvpRecord) => rsvp.rsvp_id !== rsvpId);
+    if (nextRsvps.length === rsvps.length) return false;
+    await saveRsvps(nextRsvps);
     return true;
   }
 
@@ -544,11 +595,20 @@ export async function deleteRsvps(rsvpIds: string[]) {
   const sql = await ensureDatabase();
   if (!sql) {
     assertWritableJsonFallback();
-    const db = readJsonDbRaw();
+    const db = normalizeDb(readJsonDbRaw());
     const rsvps = db.rsvps || [];
     const idSet = new Set(ids);
     const nextRsvps = rsvps.filter((rsvp: RsvpRecord) => !idSet.has(rsvp.rsvp_id));
     saveJsonDbKey('rsvps', nextRsvps);
+    return { deleted: rsvps.length - nextRsvps.length, requested: ids.length };
+  }
+
+  if (hasDataEncryptionKey()) {
+    const db = await getDb();
+    const rsvps = db.rsvps || [];
+    const idSet = new Set(ids);
+    const nextRsvps = rsvps.filter((rsvp: RsvpRecord) => !idSet.has(rsvp.rsvp_id));
+    await saveRsvps(nextRsvps);
     return { deleted: rsvps.length - nextRsvps.length, requested: ids.length };
   }
 
@@ -645,4 +705,34 @@ export async function saveAdminAuth(auth: AdminAuthRecord) {
       digest = EXCLUDED.digest,
       updated_at = EXCLUDED.updated_at
   `;
+}
+
+export async function saveBackupSettings(settings: unknown) {
+  const sql = await ensureDatabase();
+
+  if (!sql) {
+    saveJsonDbKey('backup_settings', settings);
+    return settings;
+  }
+
+  await upsertSiteState(sql, 'backup_settings', settings || {});
+  return settings || {};
+}
+
+export async function rewriteSensitiveDataEncrypted() {
+  if (!hasDataEncryptionKey()) {
+    throw new Error('DATA_ENCRYPTION_KEY is required before encrypting stored data.');
+  }
+
+  const db = await getDb();
+  await saveGuests(db.guests || []);
+  await saveInvitations(db.invitations);
+  await saveSeating(db.seating);
+  await saveRsvps(db.rsvps || []);
+  return {
+    guests: (db.guests || []).length,
+    invitations: (db.invitations?.invitations || []).length,
+    rsvps: (db.rsvps || []).length,
+    seatingAssignments: (db.seating?.assignments || []).length,
+  };
 }

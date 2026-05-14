@@ -23,6 +23,7 @@ export default function AdminLayout({
           <Link href="/admin/guests" className={styles.navLink}>Guests</Link>
           <Link href="/admin/invites" className={styles.navLink}>Invites</Link>
           <Link href="/admin/seating" className={styles.navLink}>Seating</Link>
+          <Link href="/admin/backups" className={styles.navLink}>Backups</Link>
           <Link href="/admin/editor" className={styles.navLink}>Editor</Link>
           <Link href="/admin/import" className={styles.navLink}>Import</Link>
           <Link href="/admin/export" className={styles.navLink}>Export</Link>
