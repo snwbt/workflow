@@ -8,7 +8,7 @@
   --hero-photo-shadow-main: 0 24px 80px rgba(31, 24, 19, 0.18), 0 6px 22px rgba(31, 24, 19, 0.12);
   --hero-photo-shadow-side: 0 20px 54px rgba(31, 24, 19, 0.18), 0 4px 14px rgba(31, 24, 19, 0.12);
   position: relative;
-  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   overflow: hidden;
   background:
@@ -198,6 +198,59 @@
     width: min(42vw, 540px);
     margin-right: clamp(0rem, 2vw, 2rem);
     margin-bottom: clamp(1rem, 5vh, 4rem);
+  }
+}
+
+@media (min-width: 768px) and (max-height: 819px) {
+  .hero {
+    min-height: max(100dvh, 720px);
+  }
+
+  .collageContainer {
+    padding: clamp(1.25rem, 2.6vw, 2rem);
+  }
+
+  .contentOverlay {
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+  }
+
+  .content {
+    width: min(40vw, 500px);
+    gap: var(--spacing-2);
+    padding: clamp(1.6rem, 3.6vh, 2.25rem) clamp(1.5rem, 3vw, 2.5rem);
+    margin-bottom: clamp(0.5rem, 2vh, 1.5rem);
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.13em;
+  }
+
+  .names {
+    font-size: clamp(3rem, 5.6vw, 4.35rem);
+    line-height: 0.92;
+  }
+
+  .details {
+    gap: 0.35rem;
+    font-size: 0.74rem;
+    letter-spacing: 0.085em;
+  }
+
+  .rsvpButton {
+    min-height: 44px;
+    margin-top: var(--spacing-3);
+    padding: var(--spacing-2) var(--spacing-6);
+  }
+}
+
+@media (min-width: 1800px) {
+  .content {
+    width: min(34vw, 560px);
+  }
+
+  .names {
+    font-size: clamp(4.2rem, 4.4vw, 5.7rem);
   }
 }
 

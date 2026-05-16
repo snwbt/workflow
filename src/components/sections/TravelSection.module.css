@@ -9,7 +9,7 @@
 
 .content {
   width: 100%;
-  max-width: 1180px;
+  max-width: var(--layout-max-public);
   margin: 0 auto;
 }
 
@@ -303,6 +303,60 @@
   .cardsGrid {
     grid-template-columns: 1fr;
   }
+}
+
+@media (min-width: 960px) and (max-height: 819px) {
+  .travel {
+    min-height: auto;
+    padding: var(--section-block-padding-compact) var(--layout-gutter);
+    align-items: flex-start;
+  }
+
+  .title {
+    font-size: clamp(2.5rem, 4vw, 3.6rem);
+  }
+
+  .header {
+    margin-bottom: var(--spacing-6);
+  }
+
+  .mapFrame {
+    height: clamp(150px, 24vh, 210px);
+  }
+
+  .mapFallback {
+    min-height: clamp(150px, 24vh, 210px);
+  }
+
+  .card {
+    min-height: auto;
+  }
+}
+
+@media (min-width: 1800px) {
+  .content {
+    max-width: min(var(--layout-max-wide), calc(100vw - (var(--layout-gutter) * 2)));
+  }
+
+  .mapFrame {
+    height: clamp(180px, 18vh, 260px);
+  }
+
+  .mapFallback {
+    min-height: clamp(180px, 18vh, 260px);
+  }
+}
+
+:global(html[data-font-scale='120']) .travel,
+:global(html[data-font-scale='150']) .travel {
+  min-height: auto;
+  padding: var(--section-block-padding) var(--layout-gutter);
+  align-items: flex-start;
+}
+
+:global(html[data-font-scale='120']) .destinationsGrid,
+:global(html[data-font-scale='150']) .destinationsGrid {
+  grid-template-columns: 1fr;
 }
 
 @media (prefers-reduced-motion: reduce) {

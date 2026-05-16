@@ -14,7 +14,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 1180px;
+  max-width: var(--layout-max-public);
   margin: 0 auto;
 }
 
@@ -319,6 +319,50 @@
   .scheduleNote {
     margin-top: var(--spacing-8);
   }
+}
+
+@media (min-width: 960px) and (max-height: 819px) {
+  .schedule {
+    min-height: auto;
+    padding: var(--section-block-padding-compact) var(--layout-gutter);
+    align-items: flex-start;
+    overflow: visible;
+  }
+
+  .title {
+    font-size: clamp(2.6rem, 4vw, 3.6rem);
+  }
+
+  .intro {
+    margin-bottom: var(--spacing-6);
+  }
+
+  .desktopSchedule {
+    row-gap: var(--spacing-8);
+  }
+
+  .event {
+    min-height: auto;
+    padding: var(--spacing-3) 0;
+  }
+
+  .scheduleNote {
+    margin-top: var(--spacing-8);
+  }
+}
+
+:global(html[data-font-scale='120']) .schedule,
+:global(html[data-font-scale='150']) .schedule {
+  min-height: auto;
+  padding: var(--section-block-padding) var(--layout-gutter);
+  align-items: flex-start;
+  overflow: visible;
+}
+
+:global(html[data-font-scale='120']) .event,
+:global(html[data-font-scale='150']) .event {
+  min-height: auto;
+  padding: var(--spacing-4) 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

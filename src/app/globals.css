@@ -17,12 +17,23 @@
   --spacing-2: 0.5rem;
   --spacing-3: 0.75rem;
   --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
   --spacing-6: 1.5rem;
   --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
   --spacing-12: 3rem;
   --spacing-16: 4rem;
+  --spacing-20: 5rem;
   --spacing-24: 6rem;
   --spacing-32: 8rem;
+
+  --layout-max-public: 1180px;
+  --layout-max-wide: 1380px;
+  --layout-gutter: clamp(1rem, 3.5vw, 4rem);
+  --section-block-padding: clamp(4rem, 8vh, 7rem);
+  --section-block-padding-compact: clamp(2.75rem, 6vh, 5rem);
+  --section-readable-width: 760px;
+  --section-page-min: calc(100dvh - var(--nav-height, 58px));
 
   --ease-standard: cubic-bezier(0.4, 0.0, 0.2, 1);
   --ease-editorial: cubic-bezier(0.65, 0, 0.35, 1);

@@ -15,7 +15,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 1120px;
+  max-width: min(1120px, calc(100vw - (var(--layout-gutter) * 2)));
 }
 
 .title {
@@ -132,6 +132,32 @@
     font-size: 0.9375rem;
     line-height: 1.65;
   }
+}
+
+@media (min-width: 768px) and (max-height: 819px) {
+  .faq {
+    min-height: auto;
+    padding: var(--section-block-padding-compact) var(--layout-gutter);
+    align-items: center;
+    justify-content: flex-start;
+    overflow: visible;
+  }
+
+  .title {
+    font-size: clamp(2.5rem, 4.2vw, 3.8rem);
+  }
+
+  .question {
+    min-height: 54px;
+  }
+}
+
+:global(html[data-font-scale='120']) .faq,
+:global(html[data-font-scale='150']) .faq {
+  min-height: auto;
+  padding: var(--section-block-padding) var(--layout-gutter);
+  justify-content: flex-start;
+  overflow: visible;
 }
 
 @media (prefers-reduced-motion: reduce) {

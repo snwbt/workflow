@@ -1,14 +1,14 @@
 .main {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  min-height: 100dvh;
   width: 100%;
-  overflow-y: auto;
+  overflow-y: visible;
   overflow-x: hidden;
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: none;
   scroll-behavior: smooth;
   scrollbar-width: none;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
 }
 
 .main::-webkit-scrollbar {
@@ -18,22 +18,22 @@
 .section {
   position: relative;
   width: 100%;
-  min-height: 100dvh;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+  min-height: auto;
+  scroll-snap-align: none;
+  scroll-snap-stop: normal;
   scroll-margin-top: var(--nav-height, 60px);
 }
 
 /* Sections that sit below the fixed nav need top padding to not clip */
 .withNav {
   padding-top: var(--nav-height, 60px);
-  min-height: 100dvh;
+  min-height: auto;
   box-sizing: border-box;
 }
 
 .compactSection,
 .naturalSection {
-  min-height: 100dvh;
+  min-height: auto;
 }
 
 .fullscreenSection {
@@ -42,17 +42,16 @@
 }
 
 .rsvpSection {
-  height: 100dvh;
   min-height: 100dvh;
-  overflow: hidden;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+  overflow: visible;
+  scroll-snap-align: none;
+  scroll-snap-stop: normal;
   scroll-margin-top: 0;
 }
 
 .compactSection.withNav,
 .naturalSection.withNav {
-  min-height: 100dvh;
+  min-height: auto;
 }
 
 .motifDivider {
@@ -114,6 +113,75 @@
 
 .themeRsvp {
   background: #ffffff;
+}
+
+@media (min-width: 1024px) and (min-height: 820px) {
+  .main {
+    height: 100dvh;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    overscroll-behavior-y: contain;
+  }
+
+  .section {
+    min-height: 100dvh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .withNav,
+  .compactSection,
+  .naturalSection,
+  .compactSection.withNav,
+  .naturalSection.withNav {
+    min-height: 100dvh;
+  }
+
+  .rsvpSection {
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+}
+
+:global(html[data-font-scale='120']) .main,
+:global(html[data-font-scale='150']) .main {
+  height: auto;
+  min-height: 100dvh;
+  overflow-y: visible;
+  scroll-snap-type: none;
+  overscroll-behavior-y: auto;
+}
+
+:global(html[data-font-scale='120']) .section,
+:global(html[data-font-scale='150']) .section {
+  min-height: auto;
+  scroll-snap-align: none;
+  scroll-snap-stop: normal;
+}
+
+:global(html[data-font-scale='120']) .withNav,
+:global(html[data-font-scale='150']) .withNav,
+:global(html[data-font-scale='120']) .compactSection,
+:global(html[data-font-scale='150']) .compactSection,
+:global(html[data-font-scale='120']) .naturalSection,
+:global(html[data-font-scale='150']) .naturalSection,
+:global(html[data-font-scale='120']) .compactSection.withNav,
+:global(html[data-font-scale='150']) .compactSection.withNav,
+:global(html[data-font-scale='120']) .naturalSection.withNav,
+:global(html[data-font-scale='150']) .naturalSection.withNav {
+  min-height: auto;
+}
+
+:global(html[data-font-scale='120']) .rsvpSection,
+:global(html[data-font-scale='150']) .rsvpSection {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+  scroll-snap-align: none;
+  scroll-snap-stop: normal;
 }
 
 @media (max-width: 767px) {
